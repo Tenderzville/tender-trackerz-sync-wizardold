@@ -1,34 +1,51 @@
 
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { 
-  Bell, 
-  Home, 
-  FileText, 
+  LayoutDashboard, 
+  Search, 
   Heart, 
   Users, 
-  Brain, 
-  Store, 
-  BarChart3 
+  Bot, 
+  UserCheck, 
+  BarChart3, 
+  CreditCard,
+  Bell,
+  Settings,
+  LogOut
 } from "lucide-react";
-import { useLocation } from "wouter";
+
+const navigationItems = [
+  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/browse", icon: Search, label: "Browse Tenders" },
+  { href: "/saved", icon: Heart, label: "Saved Tenders" },
+  { href: "/consortiums", icon: Users, label: "Consortiums" },
+  { href: "/ai-analysis", icon: Bot, label: "AI Analysis" },
+  { href: "/service-providers", icon: UserCheck, label: "Service Providers" },
+  { href: "/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/subscription", icon: CreditCard, label: "Subscription" },
+];
 
 export function DesktopSidebar() {
-  const { user } = useAuth();
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: Home, current: location === "/" },
-    { name: "Browse Tenders", href: "/browse", icon: FileText, current: location === "/browse" },
-    { name: "Saved Tenders", href: "/saved", icon: Heart, current: location === "/saved", badge: "12" },
-    { name: "Consortiums", href: "/consortiums", icon: Users, current: location === "/consortiums" },
-    { name: "AI Analysis", href: "/ai-analysis", icon: Brain, current: location === "/ai-analysis", badge: "NEW" },
-    { name: "Service Providers", href: "/service-providers", icon: Store, current: location === "/service-providers" },
-    { name: "Analytics", href: "/analytics", icon: BarChart3, current: location === "/analytics" },
-  ];
+  const getUserDisplayName = () => {
+    if (user && typeof user === 'object' && 'firstName' in user && 'lastName' in user) {
+      return `${user.firstName} ${user.lastName}`;
+    } else if (user && typeof user === 'object' && 'firstName' in user) {
+      return user.firstName as string;
+    } else if (user && typeof user === 'object' && 'firstName' in user) {
+      return user.firstName as string;
+    } else if (user && typeof user === 'object' && 'email' in user) {
+      return (user.email as string).split('@')[0];
+    }
+    return 'User';
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -39,93 +56,80 @@ export function DesktopSidebar() {
       .slice(0, 2);
   };
 
-  const getUserDisplayName = () => {
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName} ${user.lastName}`;
+  const getProfileImageUrl = () => {
+    if (user && typeof user === 'object' && 'profileImageUrl' in user) {
+      return user.profileImageUrl as string;
     }
-    if (user?.firstName) {
-      return user.firstName;
+    return undefined;
+  };
+
+  const getCompany = () => {
+    if (user && typeof user === 'object' && 'company' in user) {
+      return user.company as string;
     }
-    if (user?.email) {
-      return user.email.split('@')[0];
-    }
-    return 'User';
+    return undefined;
   };
 
   return (
-    <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <Bell className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="font-bold text-xl">TenderAlert</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Professional Edition</p>
-          </div>
+    <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:bg-white lg:dark:bg-slate-800 lg:border-r lg:border-slate-200 lg:dark:border-slate-700">
+      {/* Header */}
+      <div className="flex items-center space-x-3 p-6 border-b border-slate-200 dark:border-slate-700">
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <Bell className="h-5 w-5 text-white" />
         </div>
+        <span className="font-semibold text-lg">TenderAlert</span>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        {navigation.map((item) => (
-          <a
-            key={item.name}
-            href={item.href}
-            className={`flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-colors ${
-              item.current
-                ? "bg-primary/10 text-primary dark:bg-primary/20"
-                : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-            }`}
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="flex-1">{item.name}</span>
-            {item.badge && (
-              <Badge 
-                variant="secondary" 
-                className={`text-xs ${
-                  item.badge === "NEW" 
-                    ? "bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400"
-                    : "bg-primary/10 text-primary"
-                }`}
-              >
-                {item.badge}
-              </Badge>
-            )}
-          </a>
-        ))}
+        {navigationItems.map((item) => {
+          const isActive = location === item.href;
+          return (
+            <a
+              key={item.href}
+              href={item.href}
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+              }`}
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </a>
+          );
+        })}
       </nav>
 
-      {/* User Section */}
+      {/* User Profile */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.profileImageUrl || undefined} alt="User profile" />
+            <AvatarImage src={getProfileImageUrl()} alt="User profile" />
             <AvatarFallback className="bg-primary/10 text-primary">
-              {user ? getInitials(getUserDisplayName()) : "U"}
+              {getInitials(getUserDisplayName())}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{getUserDisplayName()}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {user?.company || "Professional User"}
-            </p>
+            <p className="text-sm font-medium truncate">{getUserDisplayName()}</p>
+            {getCompany() && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {getCompany()}
+              </p>
+            )}
           </div>
         </div>
         
-        <div className="space-y-2">
+        <div className="flex items-center justify-between">
           <ThemeToggle />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full justify-start"
-            asChild
-          >
-            <a href="/api/logout">
-              Sign Out
-            </a>
-          </Button>
+          <div className="flex space-x-2">
+            <Button variant="ghost" size="sm">
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={logout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </aside>

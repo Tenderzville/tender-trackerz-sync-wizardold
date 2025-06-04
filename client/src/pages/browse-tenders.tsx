@@ -38,12 +38,16 @@ export default function BrowseTenders() {
   const sortedTenders = tenders ? [...tenders].sort((a, b) => {
     switch (filters.sortBy) {
       case "deadline":
-        return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+        const aDeadline = a.deadline ? new Date(a.deadline) : new Date(0);
+        const bDeadline = b.deadline ? new Date(b.deadline) : new Date(0);
+        return aDeadline.getTime() - bDeadline.getTime();
       case "budget":
         return (b.budgetEstimate || 0) - (a.budgetEstimate || 0);
       case "latest":
       default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        const aCreated = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const bCreated = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        return bCreated.getTime() - aCreated.getTime();
     }
   }) : [];
 

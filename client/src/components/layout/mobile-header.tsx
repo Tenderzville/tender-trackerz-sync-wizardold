@@ -18,16 +18,23 @@ export function MobileHeader() {
   };
 
   const getUserDisplayName = () => {
-    if (user?.firstName && user?.lastName) {
+    if (user && typeof user === 'object' && 'firstName' in user && 'lastName' in user) {
       return `${user.firstName} ${user.lastName}`;
     }
-    if (user?.firstName) {
-      return user.firstName;
+    if (user && typeof user === 'object' && 'firstName' in user) {
+      return user.firstName as string;
     }
-    if (user?.email) {
-      return user.email.split('@')[0];
+    if (user && typeof user === 'object' && 'email' in user) {
+      return (user.email as string).split('@')[0];
     }
     return 'User';
+  };
+
+  const getProfileImageUrl = () => {
+    if (user && typeof user === 'object' && 'profileImageUrl' in user) {
+      return user.profileImageUrl as string;
+    }
+    return undefined;
   };
 
   return (
@@ -53,7 +60,7 @@ export function MobileHeader() {
           </Button>
           
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.profileImageUrl || undefined} alt="User profile" />
+            <AvatarImage src={getProfileImageUrl()} alt="User profile" />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {user ? getInitials(getUserDisplayName()) : "U"}
             </AvatarFallback>
