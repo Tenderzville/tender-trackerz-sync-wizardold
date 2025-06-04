@@ -1,3 +1,4 @@
+
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -7,14 +8,25 @@ import { tenderScraper } from "./tenderScraper";
 import { z } from "zod";
 import { insertTenderSchema, insertSavedTenderSchema, insertConsortiumSchema, insertConsortiumMemberSchema, insertServiceProviderSchema, insertAiAnalysisSchema } from "@shared/schema";
 
+interface AuthenticatedRequest extends Express.Request {
+  user?: {
+    claims: {
+      sub: string;
+    };
+  };
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -37,9 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Social media and loyalty points routes
-  app.post("/api/social/follow-twitter", isAuthenticated, async (req, res) => {
+  app.post("/api/social/follow-twitter", isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.markTwitterFollowed(userId);
       res.json({ 
         success: true, 
@@ -53,10 +68,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/referral/use", isAuthenticated, async (req, res) => {
+  app.post("/api/referral/use", isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
       const { referralCode } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       const referrer = await storage.getUserByReferralCode(referralCode);
       if (!referrer) {
@@ -76,9 +94,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/user/loyalty", isAuthenticated, async (req, res) => {
+  app.get("/api/user/loyalty", isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.getUser(userId);
       
       const discount = Math.floor((user?.loyaltyPoints || 0) / 100) * 5;
@@ -97,9 +118,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AdMob integration for free subscription through ads
-  app.get("/api/ads/status", isAuthenticated, async (req, res) => {
+  app.get("/api/ads/status", isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const user = await storage.getUser(userId);
       
       // Calculate ad watch data
@@ -124,9 +148,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ads/watch", isAuthenticated, async (req, res) => {
+  app.post("/api/ads/watch", isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       
       // Award points for watching ad (10 points per ad)
       await storage.addLoyaltyPoints(userId, 10);
@@ -188,9 +215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Saved tenders routes
-  app.get('/api/saved-tenders', isAuthenticated, async (req: any, res) => {
+  app.get('/api/saved-tenders', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const savedTenders = await storage.getSavedTenders(userId);
       res.json(savedTenders);
     } catch (error) {
@@ -199,9 +229,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/saved-tenders', isAuthenticated, async (req: any, res) => {
+  app.post('/api/saved-tenders', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const { tenderId } = req.body;
       
       const validatedData = insertSavedTenderSchema.parse({
@@ -220,9 +253,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/saved-tenders/:tenderId', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/saved-tenders/:tenderId', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const tenderId = parseInt(req.params.tenderId);
       
       await storage.unsaveTender(userId, tenderId);
@@ -233,9 +269,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/saved-tenders/:tenderId/check', isAuthenticated, async (req: any, res) => {
+  app.get('/api/saved-tenders/:tenderId/check', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const tenderId = parseInt(req.params.tenderId);
       
       const isSaved = await storage.isTenderSaved(userId, tenderId);
@@ -247,9 +286,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Consortium routes
-  app.get('/api/consortiums', isAuthenticated, async (req: any, res) => {
+  app.get('/api/consortiums', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const consortiums = await storage.getConsortiums(userId);
       res.json(consortiums);
     } catch (error) {
@@ -272,9 +314,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/consortiums', isAuthenticated, async (req: any, res) => {
+  app.post('/api/consortiums', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const validatedData = insertConsortiumSchema.parse({
         ...req.body,
         createdBy: userId,
@@ -299,9 +344,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/consortiums/:id/join', isAuthenticated, async (req: any, res) => {
+  app.post('/api/consortiums/:id/join', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const consortiumId = parseInt(req.params.id);
       
       const validatedData = insertConsortiumMemberSchema.parse({
@@ -361,9 +409,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/service-providers', isAuthenticated, async (req: any, res) => {
+  app.post('/api/service-providers', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
       const validatedData = insertServiceProviderSchema.parse({
         ...req.body,
         userId,
@@ -449,7 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: "Construction",
           location: "Kiambu County",
           budgetEstimate: 48500000,
-          deadline: new Date("2024-03-15"),
+          deadline: "2024-03-15",
           status: "active" as const,
           requirements: ["Valid construction license", "Previous school construction experience", "Financial capacity of KSh 50M"],
           documents: ["Technical specifications", "Bill of quantities", "Site plans"],
@@ -461,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: "IT Services",
           location: "Machakos County",
           budgetEstimate: 22000000,
-          deadline: new Date("2024-03-22"),
+          deadline: "2024-03-22",
           status: "active" as const,
           requirements: ["ISO 27001 certification", "Previous government project experience", "Local partnership"],
           documents: ["Technical requirements", "System architecture", "Security specifications"],
@@ -473,7 +524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           category: "Consultancy",
           location: "Multi-County",
           budgetEstimate: 9800000,
-          deadline: new Date("2024-03-28"),
+          deadline: "2024-03-28",
           status: "active" as const,
           requirements: ["Environmental consultant license", "NEMA certification", "Highway project experience"],
           documents: ["Project scope", "Environmental guidelines", "Assessment framework"],
@@ -484,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createTender(tender);
       }
 
-      // Create sample service providers
+      // Create sample service providers with proper rating as string
       const sampleProviders = [
         {
           userId: "sample-user-1",
@@ -494,7 +545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           specialization: "Legal & Compliance Consultant",
           description: "Specialized in tender documentation, compliance auditing, and legal review services for construction and consultancy projects.",
           experience: 8,
-          rating: 4.9,
+          rating: "4.90",
           reviewCount: 127,
           hourlyRate: 5000,
           availability: "available" as const,
@@ -509,7 +560,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           specialization: "Technical Writing Specialist",
           description: "Expert in crafting winning tender proposals, technical specifications, and project documentation for government contracts.",
           experience: 6,
-          rating: 4.7,
+          rating: "4.70",
           reviewCount: 89,
           hourlyRate: 7500,
           availability: "available" as const,
@@ -524,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           specialization: "Quantity Surveying & Estimation",
           description: "Professional quantity surveyor providing accurate cost estimates, bill of quantities, and project valuation services.",
           experience: 12,
-          rating: 5.0,
+          rating: "5.00",
           reviewCount: 156,
           hourlyRate: 10000,
           availability: "busy" as const,
