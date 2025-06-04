@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,8 @@ interface ServiceProviderCardProps {
 }
 
 export function ServiceProviderCard({ provider }: ServiceProviderCardProps) {
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return 0;
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: 'KES',
@@ -28,7 +30,7 @@ export function ServiceProviderCard({ provider }: ServiceProviderCardProps) {
       .slice(0, 2);
   };
 
-  const getAvailabilityColor = (availability: string) => {
+  const getAvailabilityColor = (availability: string | null) => {
     switch (availability) {
       case "available":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
@@ -68,12 +70,14 @@ export function ServiceProviderCard({ provider }: ServiceProviderCardProps) {
     return stars;
   };
 
+  const ratingValue = parseFloat(provider.rating?.toString() || "0") || 0;
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start space-x-4 mb-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={provider.profileImage} alt={provider.name} />
+            <AvatarImage src={provider.profileImage || undefined} alt={provider.name} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {getInitials(provider.name)}
             </AvatarFallback>
@@ -85,14 +89,14 @@ export function ServiceProviderCard({ provider }: ServiceProviderCardProps) {
             </p>
             <div className="flex items-center space-x-2 mb-2">
               <div className="flex items-center space-x-1">
-                {renderStars(parseFloat(provider.rating) || 0)}
+                {renderStars(ratingValue)}
               </div>
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                ({provider.reviewCount})
+                ({provider.reviewCount || 0})
               </span>
             </div>
             <Badge className={getAvailabilityColor(provider.availability)}>
-              {provider.availability}
+              {provider.availability || "unknown"}
             </Badge>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,8 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
-import Dashboard from "@/pages/dashboard";
+import Landing from "@/pages/Landing";
+import Dashboard from "@/pages/Dashboard";
 import BrowseTenders from "@/pages/browse-tenders";
 import SavedTenders from "@/pages/saved-tenders";
 import Consortiums from "@/pages/consortiums";

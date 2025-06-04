@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,7 +53,7 @@ export function MobileHeader() {
           </Button>
           
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.profileImageUrl} alt="User profile" />
+            <AvatarImage src={user?.profileImageUrl || undefined} alt="User profile" />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {user ? getInitials(getUserDisplayName()) : "U"}
             </AvatarFallback>

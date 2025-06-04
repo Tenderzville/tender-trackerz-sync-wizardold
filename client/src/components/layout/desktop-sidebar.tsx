@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -100,7 +101,7 @@ export function DesktopSidebar() {
       <div className="p-4 border-t border-slate-200 dark:border-slate-700">
         <div className="flex items-center space-x-3 mb-4">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user?.profileImageUrl} alt="User profile" />
+            <AvatarImage src={user?.profileImageUrl || undefined} alt="User profile" />
             <AvatarFallback className="bg-primary/10 text-primary">
               {user ? getInitials(getUserDisplayName()) : "U"}
             </AvatarFallback>

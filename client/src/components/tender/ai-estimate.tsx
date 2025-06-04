@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,8 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
     return null;
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return "N/A";
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: 'KES',
@@ -37,13 +39,15 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
     }).format(amount);
   };
 
-  const getWinProbabilityColor = (probability: number) => {
+  const getWinProbabilityColor = (probability: number | null) => {
+    if (!probability) return "text-gray-500";
     if (probability >= 70) return "text-green-600 dark:text-green-400";
     if (probability >= 50) return "text-yellow-600 dark:text-yellow-400";
     return "text-red-600 dark:text-red-400";
   };
 
-  const getConfidenceLevel = (score: number) => {
+  const getConfidenceLevel = (score: number | null) => {
+    if (!score) return { label: "Unknown", color: "text-gray-600" };
     if (score >= 90) return { label: "Very High", color: "text-green-600" };
     if (score >= 70) return { label: "High", color: "text-blue-600" };
     if (score >= 50) return { label: "Medium", color: "text-yellow-600" };
@@ -72,7 +76,7 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
           <span className="mx-2">•</span>
           Win probability: 
           <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.winProbability)}`}>
-            {analysis.winProbability}%
+            {analysis.winProbability || 0}%
           </span>
         </p>
       </div>
@@ -119,7 +123,7 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
               <span className="text-sm font-medium">Win Probability</span>
             </div>
             <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.winProbability)}`}>
-              {analysis.winProbability}%
+              {analysis.winProbability || 0}%
             </p>
           </div>
         </div>
