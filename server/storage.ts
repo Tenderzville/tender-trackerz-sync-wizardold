@@ -36,11 +36,11 @@ export interface IStorage {
   getUserByReferralCode(code: string): Promise<User | undefined>;
   addLoyaltyPoints(userId: string, points: number): Promise<User>;
   markTwitterFollowed(userId: string): Promise<User>;
-  getTenderByReference(referenceNumber: string): Promise<Tender | undefined>;
   
   // Tender operations
   getTenders(filters?: { category?: string; location?: string; search?: string }): Promise<Tender[]>;
   getTender(id: number): Promise<Tender | undefined>;
+  getTenderByReference(referenceNumber: string): Promise<Tender | undefined>;
   createTender(tender: InsertTender): Promise<Tender>;
   updateTender(id: number, tender: Partial<InsertTender>): Promise<Tender>;
   
@@ -246,16 +246,11 @@ export class DatabaseStorage implements IStorage {
 
   // Consortium operations
   async getConsortiums(userId?: string): Promise<Consortium[]> {
+    let query = db.select().from(consortiums);
     if (userId) {
-      return await db
-        .select()
-        .from(consortiums)
-        .innerJoin(consortiumMembers, eq(consortiums.id, consortiumMembers.consortiumId))
-        .where(eq(consortiumMembers.userId, userId))
-        .orderBy(desc(consortiums.createdAt));
+      query = query.where(eq(consortiums.createdBy, userId));
     }
-    
-    return await db.select().from(consortiums).orderBy(desc(consortiums.createdAt));
+    return await query;
   }
 
   async getConsortium(id: number): Promise<Consortium | undefined> {
@@ -290,21 +285,20 @@ export class DatabaseStorage implements IStorage {
 
   // Service provider operations
   async getServiceProviders(filters?: { specialization?: string; search?: string }): Promise<ServiceProvider[]> {
-    let query = db.select().from(serviceProviders).orderBy(desc(serviceProviders.rating));
+    let query = db.select().from(serviceProviders);
     
     if (filters) {
       const conditions = [];
       
       if (filters.specialization) {
-        conditions.push(eq(serviceProviders.specialization, filters.specialization));
+        conditions.push(like(serviceProviders.specializations, `%${filters.specialization}%`));
       }
       
       if (filters.search) {
         conditions.push(
           or(
             like(serviceProviders.name, `%${filters.search}%`),
-            like(serviceProviders.description, `%${filters.search}%`),
-            like(serviceProviders.specialization, `%${filters.search}%`)
+            like(serviceProviders.description, `%${filters.search}%`)
           )
         );
       }
