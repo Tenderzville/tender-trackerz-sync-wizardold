@@ -7,9 +7,435 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
+  }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_analyses: {
+        Row: {
+          analysis_data: Json | null
+          confidence_score: number | null
+          created_at: string | null
+          estimated_value_max: number | null
+          estimated_value_min: number | null
+          id: number
+          model_version: string | null
+          recommendations: string[] | null
+          tender_id: number
+          win_probability: number | null
+        }
+        Insert: {
+          analysis_data?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value_max?: number | null
+          estimated_value_min?: number | null
+          id?: number
+          model_version?: string | null
+          recommendations?: string[] | null
+          tender_id: number
+          win_probability?: number | null
+        }
+        Update: {
+          analysis_data?: Json | null
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value_max?: number | null
+          estimated_value_min?: number | null
+          id?: number
+          model_version?: string | null
+          recommendations?: string[] | null
+          tender_id?: number
+          win_probability?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_analyses_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consortium_members: {
+        Row: {
+          consortium_id: number
+          contribution: string | null
+          expertise: string | null
+          id: number
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          consortium_id: number
+          contribution?: string | null
+          expertise?: string | null
+          id?: number
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          consortium_id?: number
+          contribution?: string | null
+          expertise?: string | null
+          id?: number
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consortium_members_consortium_id_fkey"
+            columns: ["consortium_id"]
+            isOneToOne: false
+            referencedRelation: "consortiums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consortiums: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: number
+          max_members: number | null
+          name: string
+          required_skills: string[] | null
+          status: string | null
+          tender_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: number
+          max_members?: number | null
+          name: string
+          required_skills?: string[] | null
+          status?: string | null
+          tender_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: number
+          max_members?: number | null
+          name?: string
+          required_skills?: string[] | null
+          status?: string | null
+          tender_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consortiums_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          business_type: string | null
+          company: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          is_early_user: boolean | null
+          last_name: string | null
+          location: string | null
+          loyalty_points: number | null
+          paypal_subscription_id: string | null
+          phone_number: string | null
+          profile_image_url: string | null
+          referral_code: string | null
+          referred_by: string | null
+          subscription_end_date: string | null
+          subscription_start_date: string | null
+          subscription_status: string | null
+          subscription_type: string | null
+          total_referrals: number | null
+          twitter_followed: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_type?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id: string
+          is_early_user?: boolean | null
+          last_name?: string | null
+          location?: string | null
+          loyalty_points?: number | null
+          paypal_subscription_id?: string | null
+          phone_number?: string | null
+          profile_image_url?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string | null
+          subscription_type?: string | null
+          total_referrals?: number | null
+          twitter_followed?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_type?: string | null
+          company?: string | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_early_user?: boolean | null
+          last_name?: string | null
+          location?: string | null
+          loyalty_points?: number | null
+          paypal_subscription_id?: string | null
+          phone_number?: string | null
+          profile_image_url?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string | null
+          subscription_type?: string | null
+          total_referrals?: number | null
+          twitter_followed?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      saved_tenders: {
+        Row: {
+          created_at: string | null
+          id: number
+          tender_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          tender_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          tender_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_tenders_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_providers: {
+        Row: {
+          availability: string | null
+          certifications: string[] | null
+          created_at: string | null
+          description: string | null
+          email: string
+          experience: number | null
+          hourly_rate: number | null
+          id: number
+          linkedin: string | null
+          name: string
+          phone: string | null
+          portfolio: string[] | null
+          profile_image: string | null
+          rating: number | null
+          review_count: number | null
+          specialization: string
+          updated_at: string | null
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          availability?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          experience?: number | null
+          hourly_rate?: number | null
+          id?: number
+          linkedin?: string | null
+          name: string
+          phone?: string | null
+          portfolio?: string[] | null
+          profile_image?: string | null
+          rating?: number | null
+          review_count?: number | null
+          specialization: string
+          updated_at?: string | null
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          availability?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          experience?: number | null
+          hourly_rate?: number | null
+          id?: number
+          linkedin?: string | null
+          name?: string
+          phone?: string | null
+          portfolio?: string[] | null
+          profile_image?: string | null
+          rating?: number | null
+          review_count?: number | null
+          specialization?: string
+          updated_at?: string | null
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      tender_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      tenders: {
+        Row: {
+          budget_estimate: number | null
+          category: string
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          deadline: string
+          description: string
+          documents: string[] | null
+          id: number
+          location: string
+          organization: string
+          publish_date: string | null
+          requirements: string[] | null
+          scraped_from: string | null
+          source_url: string | null
+          status: string | null
+          tender_number: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          budget_estimate?: number | null
+          category: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          deadline: string
+          description: string
+          documents?: string[] | null
+          id?: number
+          location: string
+          organization: string
+          publish_date?: string | null
+          requirements?: string[] | null
+          scraped_from?: string | null
+          source_url?: string | null
+          status?: string | null
+          tender_number?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          budget_estimate?: number | null
+          category?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          deadline?: string
+          description?: string
+          documents?: string[] | null
+          id?: number
+          location?: string
+          organization?: string
+          publish_date?: string | null
+          requirements?: string[] | null
+          scraped_from?: string | null
+          source_url?: string | null
+          status?: string | null
+          tender_number?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_alerts: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: number
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: number
+          is_read?: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: number
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -26,21 +452,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -58,14 +488,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -81,14 +513,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -104,14 +538,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -119,14 +555,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
