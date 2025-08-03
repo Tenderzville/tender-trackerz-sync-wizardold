@@ -1,187 +1,194 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Heart, Brain, Users } from "lucide-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { formatDistance } from "date-fns";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Progress } from "./ui/progress";
+import { Calendar, MapPin, Building, DollarSign, Clock, BookmarkIcon, Target, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Tender } from "@shared/schema";
+import { useCheckSavedTender, useSaveTender } from "@/hooks/use-tenders";
+import type { Database } from '../../src/integrations/supabase/types';
+
+type Tender = Database['public']['Tables']['tenders']['Row'] & {
+  ai_analyses?: Database['public']['Tables']['ai_analyses']['Row'][];
+};
 
 interface TenderCardProps {
   tender: Tender;
+  className?: string;
 }
 
-export function TenderCard({ tender }: TenderCardProps) {
-  const { user, isAuthenticated } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+export function TenderCard({ tender, className }: TenderCardProps) {
+  const isSaved = useCheckSavedTender(tender.id);
+  const saveTenderMutation = useSaveTender();
+  
+  const aiAnalysis = tender.ai_analyses?.[0];
 
-  // Check if tender is saved
-  const { data: saveStatus } = useQuery({
-    queryKey: ['/api/saved-tenders', tender.id, 'status'],
-    enabled: isAuthenticated,
-  });
-
-  const isSaved = saveStatus?.isSaved || false;
-
-  // Save/unsave tender mutation
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (isSaved) {
-        await apiRequest('DELETE', `/api/saved-tenders/${tender.id}`);
-      } else {
-        await apiRequest('POST', `/api/saved-tenders/${tender.id}`);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/saved-tenders'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/saved-tenders', tender.id, 'status'] });
-      toast({
-        title: isSaved ? "Tender unsaved" : "Tender saved",
-        description: isSaved ? "Tender removed from your saved list" : "Tender added to your saved list",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update tender save status",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      Construction: "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400",
-      "IT Services": "bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400",
-      Consultancy: "bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400",
-      Supplies: "bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400",
-    };
-    return colors[category] || "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400";
+  const handleSave = () => {
+    saveTenderMutation.mutate({
+      tenderId: tender.id,
+      save: !isSaved
+    });
   };
 
   const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      active: "bg-success-100 dark:bg-success-900 text-success-600 dark:text-success-400",
-      closed: "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400",
-      pending: "bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400",
-    };
-    return colors[status] || colors.active;
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "closed":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    }
   };
 
-  const getDaysLeft = (deadline: Date) => {
+  const getCategoryColor = (category: string) => {
+    const hash = category.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    const colors = [
+      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
+      "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200",
+      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    ];
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return "TBD";
+    return `KSh ${amount.toLocaleString()}`;
+  };
+
+  const getTimeUntilDeadline = () => {
+    const deadline = new Date(tender.deadline);
     const now = new Date();
-    const deadlineDate = new Date(deadline);
-    const diffTime = deadlineDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 0) return "Expired";
-    if (diffDays === 0) return "Due today";
-    if (diffDays === 1) return "1 day left";
-    return `${diffDays} days left`;
+    if (deadline < now) {
+      return "Expired";
+    }
+    
+    return formatDistance(deadline, now, { addSuffix: true });
   };
 
-  const formatCurrency = (amount: string | null) => {
-    if (!amount) return "Amount TBA";
-    const num = parseFloat(amount);
-    if (num >= 1000000) {
-      return `KSh ${(num / 1000000).toFixed(1)}M`;
-    }
-    if (num >= 1000) {
-      return `KSh ${(num / 1000).toFixed(0)}K`;
-    }
-    return `KSh ${num.toLocaleString()}`;
-  };
+  const deadlineDate = new Date(tender.deadline);
+  const isUrgent = deadlineDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000; // 7 days
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex-1 mb-4 lg:mb-0 lg:pr-6">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
-                <Badge className={cn("text-xs", getCategoryColor(tender.category))}>
-                  {tender.category}
+    <Card className={cn("overflow-hidden hover:shadow-lg transition-shadow duration-200", className)}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={getCategoryColor(tender.category)}>
+                {tender.category}
+              </Badge>
+              <Badge className={getStatusColor(tender.status || 'active')}>
+                {tender.status || 'Active'}
+              </Badge>
+              {isUrgent && (
+                <Badge variant="destructive">
+                  Urgent
                 </Badge>
-                <Badge className={cn("text-xs", getStatusColor(tender.status || "active"))}>
-                  {tender.status || "Active"}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {getDaysLeft(tender.deadline)}
-                </Badge>
-              </div>
-              {isAuthenticated && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => saveMutation.mutate()}
-                  disabled={saveMutation.isPending}
-                  className="text-slate-400 hover:text-destructive transition-colors p-1 h-auto"
-                >
-                  <Heart className={cn("h-4 w-4", isSaved && "fill-current text-destructive")} />
-                </Button>
               )}
             </div>
-            
-            <h3 className="text-lg font-semibold mb-2 hover:text-primary cursor-pointer line-clamp-2">
+            <CardTitle className="text-lg leading-tight line-clamp-2">
               {tender.title}
-            </h3>
-            
-            <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">
-              {tender.organization} | {tender.location}
-            </p>
-            
-            <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-2 mb-3">
-              {tender.description}
-            </p>
-            
-            {/* AI Analysis */}
-            {tender.aiAnalysis && (
-              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
-                <div className="flex items-center space-x-2 mb-1">
-                  <Brain className="h-3 w-3 text-purple-500" />
-                  <span className="text-xs font-medium text-purple-600 dark:text-purple-400">AI Estimate</span>
-                </div>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
-                  Estimated winning bid: <span className="font-semibold">KSh 45M - 52M</span> • 
-                  Win probability: <span className="font-semibold">72%</span>
-                </p>
-              </div>
-            )}
+            </CardTitle>
           </div>
           
-          <div className="flex flex-col lg:items-end space-y-3">
-            <div className="text-right">
-              <p className="text-2xl font-bold text-primary">
-                {formatCurrency(tender.budgetEstimate)}
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">Budget Estimate</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSave}
+            disabled={saveTenderMutation.isPending}
+            className="shrink-0"
+          >
+            <BookmarkIcon 
+              className={cn(
+                "h-4 w-4",
+                isSaved ? "fill-primary text-primary" : "text-muted-foreground"
+              )} 
+            />
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* AI Analysis Section */}
+        {aiAnalysis && (
+          <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Win Probability</span>
+              <span className="font-medium text-primary">{aiAnalysis.win_probability}%</span>
             </div>
+            <Progress value={aiAnalysis.win_probability || 0} className="h-2" />
             
-            <div className="text-right text-sm">
-              <p className="text-slate-600 dark:text-slate-300">Deadline:</p>
-              <p className="font-medium">
-                {new Date(tender.deadline).toLocaleDateString('en-GB', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-              <Button size="sm">
-                View Details
-              </Button>
-              <Button size="sm" variant="outline" className="bg-success-500 hover:bg-success-600 text-white border-success-500">
-                <Users className="h-4 w-4 mr-1" />
-                Join Consortium
-              </Button>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Est. Value:</span>
+                <span className="font-medium">
+                  {tender.budget_estimate ? 
+                    `KSh ${tender.budget_estimate.toLocaleString()}` : 
+                    aiAnalysis.estimated_value_min ?
+                    `KSh ${aiAnalysis.estimated_value_min.toLocaleString()}` : 'TBD'
+                  }
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Confidence:</span>
+                <span className="font-medium">{aiAnalysis.confidence_score}%</span>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Tender Details */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Building className="h-4 w-4" />
+            <span>{tender.organization}</span>
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            <span>{tender.location}</span>
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <DollarSign className="h-4 w-4" />
+            <span className="font-medium">{formatCurrency(tender.budget_estimate)}</span>
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className={cn(
+              "font-medium",
+              isUrgent ? "text-destructive" : "text-muted-foreground"
+            )}>
+              {getTimeUntilDeadline()}
+            </span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {tender.description}
+        </p>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-2">
+          <Button size="sm" className="flex-1">
+            View Details
+          </Button>
+          <Button size="sm" variant="outline">
+            Apply
+          </Button>
         </div>
       </CardContent>
     </Card>

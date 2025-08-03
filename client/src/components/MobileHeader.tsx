@@ -7,6 +7,7 @@ import { useProfile } from "@/hooks/use-profile";
 export function MobileHeader() {
   const { isDarkMode, toggleTheme } = useThemeContext();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   return (
     <header className="lg:hidden sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700">
@@ -37,7 +38,7 @@ export function MobileHeader() {
           {user && (
             <button className="w-8 h-8 rounded-full overflow-hidden">
               <img 
-                src={user.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
+                src={profile?.profile_image_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
                 alt="User profile" 
                 className="w-full h-full object-cover"
               />

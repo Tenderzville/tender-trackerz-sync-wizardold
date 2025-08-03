@@ -32,6 +32,7 @@ export function DesktopSidebar() {
   const [location] = useLocation();
   const { isDarkMode, toggleTheme } = useThemeContext();
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   return (
     <aside className="hidden lg:flex w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex-col">
@@ -83,16 +84,16 @@ export function DesktopSidebar() {
         {user && (
           <div className="flex items-center space-x-3 mb-4">
             <img 
-              src={user.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
+              src={profile?.profile_image_url || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
               alt="User profile" 
               className="w-10 h-10 rounded-full object-cover"
             />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">
-                {user.firstName} {user.lastName}
+                {profile?.first_name} {profile?.last_name}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {user.company || "Professional User"}
+                {profile?.company || "Professional User"}
               </p>
             </div>
           </div>
