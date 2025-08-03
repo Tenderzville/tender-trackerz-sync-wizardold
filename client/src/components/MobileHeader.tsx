@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Moon, Sun } from "lucide-react";
 import { useThemeContext } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/use-profile";
 
 export function MobileHeader() {
   const { isDarkMode, toggleTheme } = useThemeContext();

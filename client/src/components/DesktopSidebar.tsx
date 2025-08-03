@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useThemeContext } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 
 const navigation = [
