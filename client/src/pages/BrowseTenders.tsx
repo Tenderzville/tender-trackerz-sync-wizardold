@@ -1,33 +1,28 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TenderCard } from "@/components/TenderCard";
-import { Search, Filter, SlidersHorizontal } from "lucide-react";
+import { useTenders } from "@/hooks/use-tenders";
+import { Search, Filter, SlidersHorizontal, Download } from "lucide-react";
 
 export default function BrowseTenders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
   const [sortBy, setSortBy] = useState("latest");
-  const [page, setPage] = useState(1);
 
-  const { data: tendersData, isLoading } = useQuery({
-    queryKey: ['/api/tenders', { 
-      page, 
-      search: searchTerm, 
-      category: category || undefined, 
-      location: location || undefined 
-    }],
-  });
-
-  const handleSearch = () => {
-    setPage(1);
+  const filters = {
+    search: searchTerm || undefined,
+    category: category || undefined,
+    location: location || undefined,
+    limit: 20
   };
 
-  const handleLoadMore = () => {
-    setPage(prev => prev + 1);
+  const { tenders, isLoading } = useTenders(filters);
+
+  const handleSearch = () => {
+    // Search is handled automatically by the useTenders hook when filters change
   };
 
   return (
@@ -104,8 +99,8 @@ export default function BrowseTenders() {
         {/* Results Header */}
         <div className="flex items-center justify-between">
           <div className="text-sm text-slate-600 dark:text-slate-300">
-            {tendersData?.total ? (
-              <>Showing {tendersData.tenders.length} of {tendersData.total} tenders</>
+            {tenders.length > 0 ? (
+              <>Showing {tenders.length} tenders</>
             ) : (
               "Loading tenders..."
             )}
@@ -156,10 +151,10 @@ export default function BrowseTenders() {
               </div>
             ))}
           </div>
-        ) : tendersData?.tenders && tendersData.tenders.length > 0 ? (
+        ) : tenders && tenders.length > 0 ? (
           // Actual tender cards
           <div className="space-y-4">
-            {tendersData.tenders.map((tender) => (
+            {tenders.map((tender: any) => (
               <TenderCard key={tender.id} tender={tender} />
             ))}
           </div>
@@ -179,7 +174,6 @@ export default function BrowseTenders() {
               setSearchTerm("");
               setCategory("");
               setLocation("");
-              setPage(1);
             }}>
               Clear Filters
             </Button>
@@ -187,18 +181,22 @@ export default function BrowseTenders() {
         )}
       </div>
 
-      {/* Load More */}
-      {tendersData?.tenders && tendersData.tenders.length > 0 && (
-        <div className="text-center">
-          <Button 
-            variant="outline" 
-            onClick={handleLoadMore}
-            disabled={isLoading}
+      {/* Export */}
+      <div className="flex flex-wrap gap-4 items-center">
+        {tenders && tenders.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              // Export/download functionality
+              console.log("Export tenders");
+            }}
+            className="flex items-center gap-2"
           >
-            {isLoading ? "Loading..." : "Load More Tenders"}
+            <Download className="h-4 w-4" />
+            Export Results
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

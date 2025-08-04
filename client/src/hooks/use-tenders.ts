@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import type { Database } from '../../src/integrations/supabase/types';
+import type { Database } from '@/integrations/supabase/types';
 
 type Tender = Database['public']['Tables']['tenders']['Row'];
 type SavedTender = Database['public']['Tables']['saved_tenders']['Row'];

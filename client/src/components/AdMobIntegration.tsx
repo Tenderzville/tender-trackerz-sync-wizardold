@@ -35,8 +35,11 @@ export function AdMobIntegration() {
   });
 
   const watchAdMutation = useMutation({
-    mutationFn: () => apiRequest("/api/ads/watch", { method: "POST" }),
-    onSuccess: (data) => {
+    mutationFn: async () => {
+      const response = await fetch("/api/ads/watch", { method: "POST" });
+      return response.json();
+    },
+    onSuccess: (data: any) => {
       toast({
         title: "Ad Completed! 🎉",
         description: `You earned ${data.pointsEarned} points! ${data.freeSubscriptionMessage || ''}`,

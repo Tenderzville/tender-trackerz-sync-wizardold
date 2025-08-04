@@ -6,7 +6,7 @@ import { Progress } from "./ui/progress";
 import { Calendar, MapPin, Building, DollarSign, Clock, BookmarkIcon, Target, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCheckSavedTender, useSaveTender } from "@/hooks/use-tenders";
-import type { Database } from '../../src/integrations/supabase/types';
+import type { Database } from '@/integrations/supabase/types';
 
 type Tender = Database['public']['Tables']['tenders']['Row'] & {
   ai_analyses?: Database['public']['Tables']['ai_analyses']['Row'][];
