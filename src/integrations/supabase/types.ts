@@ -61,6 +61,42 @@ export type Database = {
           },
         ]
       }
+      backup_logs: {
+        Row: {
+          backup_location: string
+          backup_status: string | null
+          backup_type: string
+          checksum: string | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          file_size: number | null
+          id: number
+        }
+        Insert: {
+          backup_location: string
+          backup_status?: string | null
+          backup_type: string
+          checksum?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_size?: number | null
+          id?: number
+        }
+        Update: {
+          backup_location?: string
+          backup_status?: string | null
+          backup_type?: string
+          checksum?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          file_size?: number | null
+          id?: number
+        }
+        Relationships: []
+      }
       consortium_members: {
         Row: {
           consortium_id: number
@@ -221,6 +257,116 @@ export type Database = {
         }
         Relationships: []
       }
+      rfq_quotes: {
+        Row: {
+          attachments: string[] | null
+          delivery_timeline: string | null
+          id: number
+          proposal_text: string | null
+          quoted_amount: number
+          rfq_id: number
+          status: string | null
+          submitted_at: string | null
+          supplier_id: string
+          terms_and_conditions: string | null
+          updated_at: string | null
+          validity_period: number | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          delivery_timeline?: string | null
+          id?: number
+          proposal_text?: string | null
+          quoted_amount: number
+          rfq_id: number
+          status?: string | null
+          submitted_at?: string | null
+          supplier_id: string
+          terms_and_conditions?: string | null
+          updated_at?: string | null
+          validity_period?: number | null
+        }
+        Update: {
+          attachments?: string[] | null
+          delivery_timeline?: string | null
+          id?: number
+          proposal_text?: string | null
+          quoted_amount?: number
+          rfq_id?: number
+          status?: string | null
+          submitted_at?: string | null
+          supplier_id?: string
+          terms_and_conditions?: string | null
+          updated_at?: string | null
+          validity_period?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_quotes_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfqs: {
+        Row: {
+          budget_range_max: number | null
+          budget_range_min: number | null
+          category: string
+          created_at: string | null
+          deadline: string
+          description: string
+          documents: string[] | null
+          id: number
+          location: string
+          preferred_suppliers: string[] | null
+          requirements: string[] | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          budget_range_max?: number | null
+          budget_range_min?: number | null
+          category: string
+          created_at?: string | null
+          deadline: string
+          description: string
+          documents?: string[] | null
+          id?: number
+          location: string
+          preferred_suppliers?: string[] | null
+          requirements?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          budget_range_max?: number | null
+          budget_range_min?: number | null
+          category?: string
+          created_at?: string | null
+          deadline?: string
+          description?: string
+          documents?: string[] | null
+          id?: number
+          location?: string
+          preferred_suppliers?: string[] | null
+          requirements?: string[] | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_tenders: {
         Row: {
           created_at: string | null
@@ -315,6 +461,47 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      tender_analytics: {
+        Row: {
+          applications_count: number | null
+          created_at: string | null
+          id: number
+          last_viewed: string | null
+          saves_count: number | null
+          tender_id: number
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          applications_count?: number | null
+          created_at?: string | null
+          id?: number
+          last_viewed?: string | null
+          saves_count?: number | null
+          tender_id: number
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          applications_count?: number | null
+          created_at?: string | null
+          id?: number
+          last_viewed?: string | null
+          saves_count?: number | null
+          tender_id?: number
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_analytics_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tender_categories: {
         Row: {
@@ -454,6 +641,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      version_tracking: {
+        Row: {
+          change_type: string | null
+          changed_by: string | null
+          changed_fields: Json | null
+          changes_summary: string | null
+          created_at: string | null
+          entity_id: number
+          entity_type: string
+          id: number
+          version_number: number
+        }
+        Insert: {
+          change_type?: string | null
+          changed_by?: string | null
+          changed_fields?: Json | null
+          changes_summary?: string | null
+          created_at?: string | null
+          entity_id: number
+          entity_type: string
+          id?: number
+          version_number?: number
+        }
+        Update: {
+          change_type?: string | null
+          changed_by?: string | null
+          changed_fields?: Json | null
+          changes_summary?: string | null
+          created_at?: string | null
+          entity_id?: number
+          entity_type?: string
+          id?: number
+          version_number?: number
         }
         Relationships: []
       }

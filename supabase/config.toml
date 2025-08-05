@@ -34,3 +34,6 @@ security_update_password_require_reauthentication = true
 
 [functions.tender-scraper]
 verify_jwt = false
+
+[functions.backup-manager]
+verify_jwt = false
