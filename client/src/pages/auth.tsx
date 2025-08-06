@@ -31,6 +31,7 @@ export default function AuthPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setError(null);
     
     if (!signInData.email || !signInData.password) {
@@ -38,17 +39,23 @@ export default function AuthPage() {
       return;
     }
 
-    const { error } = await signIn(signInData.email, signInData.password);
-    
-    if (error) {
-      setError(error.message);
-    } else {
-      setLocation('/dashboard');
+    try {
+      const { error } = await signIn(signInData.email, signInData.password);
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        // Force a clean navigation
+        window.location.href = '/dashboard';
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setError(null);
     
     if (!signUpData.email || !signUpData.password || !signUpData.confirmPassword) {
@@ -66,16 +73,20 @@ export default function AuthPage() {
       return;
     }
 
-    const { error } = await signUp(signUpData.email, signUpData.password, {
-      first_name: signUpData.firstName,
-      last_name: signUpData.lastName,
-      company: signUpData.company,
-    });
-    
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage('Check your email for the confirmation link!');
+    try {
+      const { error } = await signUp(signUpData.email, signUpData.password, {
+        first_name: signUpData.firstName,
+        last_name: signUpData.lastName,
+        company: signUpData.company,
+      });
+      
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage('Check your email for the confirmation link!');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -119,7 +130,7 @@ export default function AuthPage() {
               </TabsList>
               
               <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-4" action="#" method="post">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
                     <Input
@@ -156,7 +167,7 @@ export default function AuthPage() {
               </TabsContent>
               
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-4" action="#" method="post">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-firstname">First Name</Label>
