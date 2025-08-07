@@ -61,6 +61,39 @@ export type Database = {
           },
         ]
       }
+      automation_logs: {
+        Row: {
+          completed_at: string | null
+          duration_ms: number | null
+          error_message: string | null
+          executed_at: string
+          function_name: string
+          id: number
+          result_data: Json | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          executed_at?: string
+          function_name: string
+          id?: number
+          result_data?: Json | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_message?: string | null
+          executed_at?: string
+          function_name?: string
+          id?: number
+          result_data?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_location: string

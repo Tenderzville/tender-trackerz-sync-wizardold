@@ -17,6 +17,7 @@ import AiAnalysis from "@/pages/ai-analysis";
 import ServiceProviders from "@/pages/service-providers";
 import Analytics from "@/pages/analytics";
 import Subscription from "@/pages/subscription";
+import AutomationPage from "@/pages/admin/automation";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,6 +46,7 @@ function Router() {
           <Route path="/service-providers" component={ServiceProviders} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/subscription" component={Subscription} />
+          <Route path="/admin/automation" component={AutomationPage} />
         </>
       )}
       <Route component={NotFound} />
