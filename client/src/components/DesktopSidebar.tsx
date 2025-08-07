@@ -20,11 +20,11 @@ import { cn } from "@/lib/utils";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
-  { name: "Browse Tenders", href: "/tenders", icon: FileText },
+  { name: "Browse Tenders", href: "/browse", icon: FileText },
   { name: "Saved Tenders", href: "/saved", icon: Heart, badge: "12" },
   { name: "Consortiums", href: "/consortiums", icon: Users },
-  { name: "AI Analysis", href: "/ai", icon: Brain, badge: "NEW", badgeVariant: "secondary" },
-  { name: "Service Providers", href: "/providers", icon: Store },
+  { name: "AI Analysis", href: "/ai-analysis", icon: Brain, badge: "NEW", badgeVariant: "secondary" },
+  { name: "Service Providers", href: "/service-providers", icon: Store },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 

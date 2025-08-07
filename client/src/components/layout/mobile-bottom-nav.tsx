@@ -9,7 +9,7 @@ export function MobileBottomNav() {
     { name: "Search", href: "/browse", icon: Search, current: location === "/browse" },
     { name: "Saved", href: "/saved", icon: Heart, current: location === "/saved" },
     { name: "Teams", href: "/consortiums", icon: Users, current: location === "/consortiums" },
-    { name: "Profile", href: "/analytics", icon: User, current: location === "/analytics" },
+    { name: "Analytics", href: "/analytics", icon: User, current: location === "/analytics" },
   ];
 
   return (
