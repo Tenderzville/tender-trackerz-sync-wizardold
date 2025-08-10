@@ -1,5 +1,5 @@
 import { Home, Search, Heart, Users, User } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export function MobileBottomNav() {
   const [location] = useLocation();
@@ -17,18 +17,17 @@ export function MobileBottomNav() {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-t border-slate-200 dark:border-slate-700 z-50">
         <div className="grid grid-cols-5 h-16">
           {navigation.map((item) => (
-            <a
+            <Link
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center space-y-1 transition-colors ${
-                item.current
-                  ? "text-primary"
-                  : "text-slate-400 dark:text-slate-500"
+                item.current ? "text-primary" : "text-slate-400 dark:text-slate-500"
               }`}
+              aria-current={item.current ? "page" : undefined}
             >
               <item.icon className="h-5 w-5" />
               <span className="text-xs">{item.name}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </nav>
