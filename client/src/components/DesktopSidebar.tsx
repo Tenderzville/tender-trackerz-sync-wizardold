@@ -11,7 +11,8 @@ import {
   Store, 
   BarChart3,
   Moon,
-  Sun 
+  Sun,
+  Settings 
 } from "lucide-react";
 import { useThemeContext } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "AI Analysis", href: "/ai-analysis", icon: Brain, badge: "NEW", badgeVariant: "secondary" },
   { name: "Service Providers", href: "/service-providers", icon: Store },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Automation", href: "/admin/automation", icon: Settings },
 ];
 
 export function DesktopSidebar() {

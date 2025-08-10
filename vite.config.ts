@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => ({
       "@shared": path.resolve(__dirname, "./shared"),
     },
   },
+  publicDir: "client/public",
   server: {
     host: "::",
     port: 8080,
