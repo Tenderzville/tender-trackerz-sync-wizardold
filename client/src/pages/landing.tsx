@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { Link } from "wouter";
 import { 
   Bell, 
   Users, 
@@ -32,7 +33,7 @@ export default function Landing() {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             <Button asChild>
-              <a href="/api/login">Sign In</a>
+              <Link href="/auth">Sign In</Link>
             </Button>
           </div>
         </div>
@@ -53,10 +54,10 @@ export default function Landing() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-8" asChild>
-              <a href="/api/login">
+              <Link href="/auth">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </a>
+              </Link>
             </Button>
             <Button variant="outline" size="lg" className="px-8">
               Watch Demo
@@ -298,7 +299,7 @@ export default function Landing() {
                   </li>
                 </ul>
                 <Button className="w-full mt-6" variant="outline" asChild>
-                  <a href="/api/login">Start Free</a>
+                  <Link href="/auth">Start Free</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -345,7 +346,7 @@ export default function Landing() {
                   </li>
                 </ul>
                 <Button className="w-full mt-6" asChild>
-                  <a href="/api/login">Start Free Trial</a>
+                  <Link href="/auth">Start Free Trial</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -361,10 +362,10 @@ export default function Landing() {
             Join thousands of suppliers already using TenderAlert Pro
           </p>
           <Button size="lg" variant="secondary" className="px-8" asChild>
-            <a href="/api/login">
+            <Link href="/auth">
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
+            </Link>
           </Button>
         </div>
       </section>

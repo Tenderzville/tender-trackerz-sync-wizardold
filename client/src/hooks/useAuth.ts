@@ -36,6 +36,10 @@ interface AuthState {
   logout: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
+  signInWithMagicLink: (email: string) => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
+  cleanupAuthState: () => void;
 }
 
 export function useAuth(): AuthState {
@@ -137,13 +141,74 @@ export function useAuth(): AuthState {
     }
   };
 
+  const cleanupAuthState = () => {
+    // Clear all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('supabase.auth.') || key.startsWith('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+  };
+
+  const signInWithMagicLink = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/auth`;
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectUrl,
+        },
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/auth`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      cleanupAuthState();
+      await supabase.auth.signOut({ scope: 'global' });
       setUser(null);
       setProfile(null);
       setSession(null);
+      // Force page reload for clean state
+      window.location.href = '/';
     } catch (error) {
       console.error('Error logging out:', error);
     } finally {
@@ -159,6 +224,10 @@ export function useAuth(): AuthState {
     isLoading,
     logout,
     signIn,
-    signUp
+    signUp,
+    signInWithMagicLink,
+    resetPassword,
+    updatePassword,
+    cleanupAuthState
   };
 }
