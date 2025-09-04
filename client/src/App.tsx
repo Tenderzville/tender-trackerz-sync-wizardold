@@ -18,6 +18,7 @@ import ServiceProviders from "@/pages/service-providers";
 import Analytics from "@/pages/analytics";
 import Subscription from "@/pages/subscription";
 import AutomationPage from "@/pages/admin/automation";
+import RfqSystem from "@/pages/rfq-system";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,6 +46,7 @@ function Router() {
           <Route path="/ai-analysis" component={AiAnalysis} />
           <Route path="/service-providers" component={ServiceProviders} />
           <Route path="/analytics" component={Analytics} />
+          <Route path="/rfq-system" component={RfqSystem} />
           <Route path="/subscription" component={Subscription} />
           <Route path="/admin/automation" component={AutomationPage} />
         </>

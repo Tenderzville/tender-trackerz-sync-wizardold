@@ -16,7 +16,10 @@ import {
   CreditCard,
   Bell,
   Settings,
-  LogOut
+  LogOut,
+  FileText,
+  Briefcase,
+  Brain
 } from "lucide-react";
 
 const navigationItems = [
@@ -24,8 +27,9 @@ const navigationItems = [
   { href: "/browse", icon: Search, label: "Browse Tenders" },
   { href: "/saved", icon: Heart, label: "Saved Tenders" },
   { href: "/consortiums", icon: Users, label: "Consortiums" },
-  { href: "/ai-analysis", icon: Bot, label: "AI Analysis" },
-  { href: "/service-providers", icon: UserCheck, label: "Service Providers" },
+  { href: "/service-providers", icon: Briefcase, label: "Service Providers" },
+  { href: "/rfq-system", icon: FileText, label: "RFQ System" },
+  { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
   { href: "/subscription", icon: CreditCard, label: "Subscription" },
 ];
