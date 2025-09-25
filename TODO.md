@@ -275,5 +275,6 @@ The application is now **100% production-ready** with all features implemented, 
 
 ### Blocked ⚠️
 - [ ] AI integration (waiting for OpenAI API key)
+- [ ] Hugging Face access token (HUGGING_FACE_ACCESS_TOKEN) — add as Supabase secret and wire to edge functions
 - [ ] PayPal integration (waiting for business account setup)
 - [ ] App store deployment (waiting for developer accounts)
