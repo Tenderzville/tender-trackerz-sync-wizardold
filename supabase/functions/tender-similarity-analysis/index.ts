@@ -1,7 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +11,47 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'));
+// Simple similarity calculation without HuggingFace for now
+const calculateBasicSimilarity = (target: any, candidate: any): number => {
+  let score = 0;
+  let factors = 0;
+
+  // Category match (high weight)
+  if (target.category === candidate.category) {
+    score += 0.4;
+  }
+  factors++;
+
+  // Organization match
+  if (target.organization === candidate.organization) {
+    score += 0.2;
+  }
+  factors++;
+
+  // Budget similarity
+  if (target.budget_estimate && candidate.budget_estimate) {
+    const ratio = Math.min(
+      target.budget_estimate / candidate.budget_estimate,
+      candidate.budget_estimate / target.budget_estimate
+    );
+    score += ratio * 0.3;
+  }
+  factors++;
+
+  // Text similarity (basic keyword matching)
+  const targetWords = (target.title + ' ' + target.description).toLowerCase().split(/\s+/);
+  const candidateWords = (candidate.title + ' ' + candidate.description).toLowerCase().split(/\s+/);
+  
+  const commonWords = targetWords.filter(word => 
+    word.length > 3 && candidateWords.includes(word)
+  );
+  
+  const textSimilarity = Math.min(1, commonWords.length / Math.max(targetWords.length, candidateWords.length) * 4);
+  score += textSimilarity * 0.1;
+  factors++;
+
+  return Math.min(1, score);
+};
 
 interface SimilarityRequest {
   tenderId: number;
@@ -67,31 +106,13 @@ serve(async (req) => {
       });
     }
 
-    // Generate embeddings for target tender
-    const targetText = createTenderText(targetTender);
-    const targetEmbedding = await hf.featureExtraction({
-      model: 'sentence-transformers/all-MiniLM-L6-v2',
-      inputs: targetText
-    });
-
-    console.log('Generated target embedding');
-
     // Calculate similarities with all tenders
     const similarities: SimilarTender[] = [];
 
     for (const tender of allTenders) {
       try {
-        const tenderText = createTenderText(tender);
-        const tenderEmbedding = await hf.featureExtraction({
-          model: 'sentence-transformers/all-MiniLM-L6-v2',
-          inputs: tenderText
-        });
-
-        // Calculate cosine similarity
-        const similarity = cosineSimilarity(
-          targetEmbedding as number[], 
-          tenderEmbedding as number[]
-        );
+        // Calculate basic similarity
+        const similarity = calculateBasicSimilarity(targetTender, tender);
 
         // Add categorical and organizational similarity boosts
         let adjustedSimilarity = similarity;
@@ -124,8 +145,8 @@ serve(async (req) => {
           similarity_score: Math.round(adjustedSimilarity * 100) / 100
         });
 
-      } catch (embeddingError) {
-        console.error(`Error processing tender ${tender.id}:`, embeddingError);
+      } catch (error) {
+        console.error(`Error processing tender ${tender.id}:`, error);
         // Continue with next tender instead of failing completely
       }
     }
@@ -157,7 +178,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in tender-similarity-analysis:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error occurred' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

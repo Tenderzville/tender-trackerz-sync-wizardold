@@ -69,7 +69,7 @@ serve(async (req) => {
         backupResults.push({
           type: 'user_data',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
         });
       }
     }
@@ -114,7 +114,7 @@ serve(async (req) => {
         backupResults.push({
           type: 'tenders',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
         });
       }
     }
@@ -158,7 +158,7 @@ serve(async (req) => {
         backupResults.push({
           type: 'rfqs',
           status: 'failed',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
         });
       }
     }
@@ -172,7 +172,7 @@ serve(async (req) => {
           backup_location: result.location || '',
           backup_status: result.status,
           error_message: result.error || null,
-          file_size: result.location ? (JSON.stringify(result.data || {}).length) : null,
+          file_size: result.location ? (JSON.stringify(result).length) : null,
           completed_at: result.status === 'completed' ? new Date().toISOString() : null
         });
 
@@ -202,7 +202,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
         timestamp: new Date().toISOString()
       }),
       {

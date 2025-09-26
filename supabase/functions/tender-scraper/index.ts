@@ -97,7 +97,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       }),
       {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
@@ -135,7 +135,7 @@ async function scrapeTendersGoKe(): Promise<ScrapedTender[]> {
             organization: item.procuring_entity || item.organization || '',
             category: item.tender_category || item.category || 'General',
             location: item.county || item.location || 'Kenya',
-            budget_estimate: parseFloat(item.tender_value) || null,
+            budget_estimate: parseFloat(item.tender_value) || undefined,
             deadline: item.closing_date || item.deadline || '',
             tender_number: item.tender_no || item.reference_number || '',
             requirements: [],

@@ -68,14 +68,14 @@ serve(async (req) => {
       .insert([{
         function_name: 'tender-scraper',
         status: 'failed',
-        error_message: error.message,
+        error_message: error instanceof Error ? error.message : 'Unknown error occurred',
         executed_at: new Date().toISOString()
       }]);
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       }),
       {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
