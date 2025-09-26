@@ -43,3 +43,12 @@ verify_jwt = false
 
 [functions.manual-scraper-trigger]
 verify_jwt = false
+
+[functions.ai-tender-analysis]
+verify_jwt = false
+
+[functions.tender-similarity-analysis]
+verify_jwt = false
+
+[functions.bid-strategy-optimizer]
+verify_jwt = false
