@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/common/theme-provider";
+import { AppNavigation } from "@/components/common/app-navigation";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing-page";
@@ -32,27 +33,39 @@ function Router() {
   }
 
   return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/browse" component={BrowseTenders} />
-          <Route path="/saved" component={SavedTenders} />
-          <Route path="/consortiums" component={Consortiums} />
-          <Route path="/ai-analysis" component={AiAnalysis} />
-          <Route path="/service-providers" component={ServiceProviders} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/rfq-system" component={RfqSystem} />
-          <Route path="/subscription" component={Subscription} />
-          <Route path="/admin/automation" component={AutomationPage} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      {/* Navigation appears on all pages except auth */}
+      <Switch>
+        <Route path="/auth">
+          {() => null}
+        </Route>
+        <Route>
+          {() => <AppNavigation />}
+        </Route>
+      </Switch>
+
+      <Switch>
+        <Route path="/auth" component={AuthPage} />
+        {!isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : (
+          <>
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/browse" component={BrowseTenders} />
+            <Route path="/saved" component={SavedTenders} />
+            <Route path="/consortiums" component={Consortiums} />
+            <Route path="/ai-analysis" component={AiAnalysis} />
+            <Route path="/service-providers" component={ServiceProviders} />
+            <Route path="/analytics" component={Analytics} />
+            <Route path="/rfq-system" component={RfqSystem} />
+            <Route path="/subscription" component={Subscription} />
+            <Route path="/admin/automation" component={AutomationPage} />
+          </>
+        )}
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

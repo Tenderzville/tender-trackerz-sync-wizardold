@@ -5,15 +5,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, ArrowLeft, Mail, Lock } from 'lucide-react';
+import { useStytch } from '@/hooks/useStytch';
+import { Bell, ArrowLeft, Mail, Lock, Chrome, Github } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
+import authBackground from '@/assets/auth-background.jpg';
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { signIn, signUp, signInWithMagicLink, resetPassword, updatePassword, isAuthenticated, isLoading } = useAuth();
+  const { initiateOAuth, isLoading: stytchLoading } = useStytch();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [authMethod, setAuthMethod] = useState<'supabase' | 'stytch'>('supabase');
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -228,9 +233,24 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col">
-      {/* Header */}
-      <header className="p-4">
+    <div className="min-h-screen relative flex flex-col overflow-hidden">
+      {/* Background Image with Blur */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url(${authBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          filter: 'blur(8px)',
+          transform: 'scale(1.1)',
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-slate-900/60 dark:bg-slate-900/80" />
+      
+      {/* Content */}
+      <div className="relative z-10 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="p-4">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
@@ -250,17 +270,89 @@ export default function AuthPage() {
         </div>
       </header>
 
-      {/* Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome to TenderAlert</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Sign in to your account or create a new one
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+        {/* Auth Form */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md backdrop-blur-md bg-white/95 dark:bg-slate-800/95 shadow-2xl">
+            <CardHeader className="text-center space-y-4">
+              <CardTitle className="text-2xl">Welcome to TenderAlert</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Choose your preferred authentication method
+              </p>
+              
+              {/* Auth Method Toggle */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <Button
+                  variant={authMethod === 'supabase' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAuthMethod('supabase')}
+                >
+                  Email Auth
+                </Button>
+                <Button
+                  variant={authMethod === 'stytch' ? 'default' : 'ghost'}
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => setAuthMethod('stytch')}
+                >
+                  OAuth (Stytch)
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {authMethod === 'stytch' ? (
+                /* Stytch OAuth Options */
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => initiateOAuth('google')}
+                      disabled={stytchLoading}
+                    >
+                      <Chrome className="h-4 w-4 mr-2" />
+                      Continue with Google
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => initiateOAuth('github')}
+                      disabled={stytchLoading}
+                    >
+                      <Github className="h-4 w-4 mr-2" />
+                      Continue with GitHub
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => initiateOAuth('microsoft')}
+                      disabled={stytchLoading}
+                    >
+                      <svg className="h-4 w-4 mr-2" viewBox="0 0 23 23">
+                        <path fill="#f35325" d="M0 0h11v11H0z"/>
+                        <path fill="#81bc06" d="M12 0h11v11H12z"/>
+                        <path fill="#05a6f0" d="M0 12h11v11H0z"/>
+                        <path fill="#ffba08" d="M12 12h11v11H12z"/>
+                      </svg>
+                      Continue with Microsoft
+                    </Button>
+                  </div>
+                  
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="text-center text-sm text-muted-foreground">
+                    <p>Secure OAuth powered by Stytch</p>
+                  </div>
+                </div>
+              ) : (
+                /* Supabase Email Auth */
+                <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="signin"><Lock className="h-4 w-4" /></TabsTrigger>
                 <TabsTrigger value="magiclink"><Mail className="h-4 w-4" /></TabsTrigger>
@@ -455,9 +547,11 @@ export default function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
