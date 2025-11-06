@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings } from 'lucide-react';
+import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings, Shield } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,7 @@ export function AppNavigation() {
     { path: '/analytics', icon: BarChart, label: 'Analytics' },
     { path: '/service-providers', icon: Package, label: 'Providers' },
     { path: '/rfq-system', icon: FileText, label: 'RFQ' },
+    { path: '/admin/dashboard', icon: Shield, label: 'Admin' },
   ];
 
   const initials = profile?.first_name && profile?.last_name

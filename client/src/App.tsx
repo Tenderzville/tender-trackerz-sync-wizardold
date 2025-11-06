@@ -19,6 +19,7 @@ import ServiceProviders from "@/pages/service-providers";
 import Analytics from "@/pages/analytics";
 import Subscription from "@/pages/subscription";
 import AutomationPage from "@/pages/admin/automation";
+import AdminDashboard from "@/pages/admin/dashboard";
 import RfqSystem from "@/pages/rfq-system";
 
 function Router() {
@@ -61,6 +62,7 @@ function Router() {
             <Route path="/rfq-system" component={RfqSystem} />
             <Route path="/subscription" component={Subscription} />
             <Route path="/admin/automation" component={AutomationPage} />
+            <Route path="/admin/dashboard" component={AdminDashboard} />
           </>
         )}
         <Route component={NotFound} />
