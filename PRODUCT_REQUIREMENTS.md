@@ -9,19 +9,30 @@ TenderTracker Pro is a comprehensive tender discovery and management platform de
 ### ✅ IMPLEMENTED FEATURES
 
 #### 1. User Authentication & Management
-- **Supabase Auth Integration**: Email/password and social login
+- **Supabase Auth Integration**: Email/password and social login (Stytch OAuth ready)
 - **User Profiles**: Complete business information management
 - **Role-Based Access Control**: Admin, user, moderator roles
 - **Subscription Management**: Free/Pro tiers with PayPal integration
 - **Database Tables**: `profiles`, `user_roles`, `user_alerts`
 
+#### 1.5. Admin Dashboard (NEW)
+- **System Overview**: Real-time stats for users, tenders, consortiums
+- **Automation Monitoring**: Edge function execution logs and status
+- **Security Audit Logs**: Track all sensitive operations
+- **Manual Controls**: Trigger scraper on-demand
+- **Database Integration**: Direct access to automation_logs and security_audit_log
+- **Access**: Admin-only with proper RLS enforcement
+
 #### 2. Tender Discovery & Management
-- **Automated Tender Scraping**: Live data from tenders.go.ke
+- **Automated Tender Scraping**: Live data from tenders.go.ke with pg_cron scheduling
+- **Scheduled Scraping**: Daily at 2 AM via PostgreSQL cron jobs
+- **Manual Triggers**: Admin dashboard control for on-demand scraping
 - **AI-Powered Analysis**: Win probability estimation and insights
 - **Advanced Search & Filtering**: Category, location, budget filters
 - **Tender Bookmarking**: Save/unsave functionality
 - **Analytics Tracking**: View counts and engagement metrics
-- **Database Tables**: `tenders`, `ai_analyses`, `saved_tenders`, `tender_analytics`
+- **Database Tables**: `tenders`, `ai_analyses`, `saved_tenders`, `tender_analytics`, `automation_logs`
+- **Edge Functions**: `automated-scraper`, `tender-scraper`, `manual-scraper-trigger`
 
 #### 3. Service Provider Marketplace
 - **Provider Profiles**: Ratings, portfolios, certifications
