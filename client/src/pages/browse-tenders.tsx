@@ -1,22 +1,32 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
-import { MobileHeader } from "@/components/layout/mobile-header";
-import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
+import { supabase } from "@/integrations/supabase/client";
 import { TenderCard } from "@/components/tender/tender-card";
-import { TenderFilters } from "@/components/tender/tender-filters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, FileText } from "lucide-react";
-import type { Tender } from "@shared/schema";
+import { Search, FileText } from "lucide-react";
 
 interface FilterState {
   search: string;
   category: string;
   location: string;
   sortBy: string;
+}
+
+interface Tender {
+  id: number;
+  title: string;
+  description: string;
+  organization: string;
+  category: string;
+  location: string;
+  deadline: string;
+  budgetEstimate?: number | null;
+  status?: string | null;
+  createdAt?: string | null;
+  sourceUrl?: string | null;
 }
 
 export default function BrowseTenders() {
@@ -27,8 +37,40 @@ export default function BrowseTenders() {
     sortBy: "latest",
   });
 
-  const { data: tenders, isLoading } = useQuery<Tender[]>({
-    queryKey: ["/api/tenders", filters.category, filters.location, filters.search],
+  const { data: tenders, isLoading } = useQuery({
+    queryKey: ["tenders", filters.category, filters.location, filters.search],
+    queryFn: async () => {
+      let query = supabase
+        .from("tenders")
+        .select("*")
+        .eq("status", "active");
+      
+      if (filters.category) {
+        query = query.eq("category", filters.category);
+      }
+      if (filters.location) {
+        query = query.eq("location", filters.location);
+      }
+      if (filters.search) {
+        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
+      
+      const { data, error } = await query.order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []).map(t => ({
+        id: t.id,
+        title: t.title,
+        description: t.description,
+        organization: t.organization,
+        category: t.category,
+        location: t.location,
+        deadline: t.deadline,
+        budgetEstimate: t.budget_estimate,
+        status: t.status,
+        createdAt: t.created_at,
+        sourceUrl: t.source_url,
+      })) as Tender[];
+    },
   });
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
@@ -52,14 +94,10 @@ export default function BrowseTenders() {
   }) : [];
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
-      <DesktopSidebar />
-      
-      <div className="flex-1 overflow-auto">
-        <MobileHeader />
-        
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4">
         {/* Header */}
-        <section className="p-6 lg:p-8 border-b border-slate-200 dark:border-slate-700">
+        <section className="mb-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
               <h1 className="text-2xl lg:text-3xl font-bold mb-2">Browse Tenders</h1>
@@ -190,8 +228,6 @@ export default function BrowseTenders() {
             )}
           </div>
         </section>
-
-        <MobileBottomNav />
       </div>
     </div>
   );
