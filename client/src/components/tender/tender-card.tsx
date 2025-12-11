@@ -5,13 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AiEstimate } from "./ai-estimate";
 import { Heart, Calendar, MapPin, Building, Users, ExternalLink } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import type { Tender } from "@shared/schema";
+import { supabase } from "@/integrations/supabase/client";
+
+interface TenderData {
+  id: number;
+  title: string;
+  description: string;
+  organization: string;
+  category: string;
+  location: string;
+  deadline: string;
+  budgetEstimate?: number | null;
+  status?: string | null;
+  createdAt?: string | null;
+  sourceUrl?: string | null;
+}
 
 interface TenderCardProps {
-  tender: Tender;
+  tender: TenderData;
   showSaveButton?: boolean;
 }
 
@@ -23,29 +36,47 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
 
   // Check if tender is saved
   const { data: savedStatus } = useQuery({
-    queryKey: [`/api/saved-tenders/${tender.id}/check`],
+    queryKey: ["saved-tender-check", tender.id],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { saved: false };
+      
+      const { data } = await supabase
+        .from("saved_tenders")
+        .select("id")
+        .eq("tender_id", tender.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      return { saved: !!data };
+    },
     enabled: isAuthenticated && showSaveButton,
   });
 
   // Save/unsave mutations
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (false) { // Simplified for now
-        await fetch(`/api/saved-tenders/${tender.id}`, { method: "DELETE" });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      
+      if (savedStatus?.saved) {
+        await supabase
+          .from("saved_tenders")
+          .delete()
+          .eq("tender_id", tender.id)
+          .eq("user_id", user.id);
         return false;
       } else {
-        await fetch("/api/saved-tenders", { 
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tenderId: tender.id })
-        });
+        await supabase
+          .from("saved_tenders")
+          .insert({ tender_id: tender.id, user_id: user.id });
         return true;
       }
     },
     onSuccess: (saved) => {
       setIsSaved(saved);
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-tenders"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/saved-tenders/${tender.id}/check`] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tenders"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tender-check", tender.id] });
       toast({
         title: saved ? "Tender saved" : "Tender removed",
         description: saved 
@@ -99,7 +130,7 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
     return diffDays;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status?: string | null) => {
     switch (status) {
       case "active":
         return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400";
