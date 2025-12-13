@@ -1,19 +1,38 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@components/ui/card";
+import { Badge } from "@components/ui/badge";
+import { Button } from "@components/ui/button";
 import { Brain, TrendingUp, AlertCircle, Lightbulb } from "lucide-react";
-import type { AiAnalysis } from "@shared/schema";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AiEstimateProps {
   tenderId: number;
   showExpanded?: boolean;
 }
 
+interface AiAnalysis {
+  estimated_value_min: number | null;
+  estimated_value_max: number | null;
+  win_probability: number | null;
+  confidence_score: number | null;
+  recommendations: string[] | null;
+}
+
 export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) {
-  const { data: analysis, isLoading } = useQuery<AiAnalysis>({
-    queryKey: [`/api/ai-analysis/${tenderId}`],
+  const { data: analysis, isLoading } = useQuery<AiAnalysis | null>({
+    queryKey: ["ai-analysis", tenderId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke<AiAnalysis>("ai-tender-analysis", {
+        body: { tenderId },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || null;
+    },
   });
 
   if (isLoading) {
@@ -54,7 +73,7 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
     return { label: "Low", color: "text-red-600" };
   };
 
-  const confidence = getConfidenceLevel(analysis.confidenceScore);
+  const confidence = getConfidenceLevel(analysis.confidence_score);
 
   if (!showExpanded) {
     return (
@@ -71,12 +90,12 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
         <p className="text-sm text-purple-700 dark:text-purple-300">
           Estimated winning bid: 
           <span className="font-semibold ml-1">
-            {formatCurrency(analysis.estimatedValueMin)} - {formatCurrency(analysis.estimatedValueMax)}
+             {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
           </span>
           <span className="mx-2">•</span>
           Win probability: 
-          <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.winProbability)}`}>
-            {analysis.winProbability || 0}%
+           <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.win_probability)}`}>
+             {analysis.win_probability || 0}%
           </span>
         </p>
       </div>
@@ -113,7 +132,7 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
               <span className="text-sm font-medium">Estimated Range</span>
             </div>
             <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-              {formatCurrency(analysis.estimatedValueMin)} - {formatCurrency(analysis.estimatedValueMax)}
+              {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
             </p>
           </div>
           
@@ -122,8 +141,8 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
               <AlertCircle className="h-4 w-4 text-blue-500" />
               <span className="text-sm font-medium">Win Probability</span>
             </div>
-            <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.winProbability)}`}>
-              {analysis.winProbability || 0}%
+             <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.win_probability)}`}>
+               {analysis.win_probability || 0}%
             </p>
           </div>
         </div>

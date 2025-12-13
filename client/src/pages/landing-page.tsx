@@ -52,12 +52,12 @@ export default function Landing() {
             and access professional services to boost your success rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="px-8" asChild>
-              <a href="/api/login">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </a>
-            </Button>
+             <Button size="lg" className="px-8" asChild>
+-              <a href="/api/login">
+-                Get Started Free
+-                <ArrowRight className="ml-2 h-5 w-5" />
+-              </a>
+-            </Button>
             <Button variant="outline" size="lg" className="px-8">
               Watch Demo
             </Button>
@@ -360,12 +360,12 @@ export default function Landing() {
           <p className="text-xl mb-8 opacity-90">
             Join thousands of suppliers already using TenderAlert Pro
           </p>
-          <Button size="lg" variant="secondary" className="px-8" asChild>
-            <a href="/api/login">
-              Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </a>
-          </Button>
+           <Button size="lg" variant="secondary" className="px-8" asChild>
+-            <a href="/api/login">
+-              Get Started Now
+-              <ArrowRight className="ml-2 h-5 w-5" />
+-            </a>
+-          </Button>
         </div>
       </section>
 
