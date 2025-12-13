@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Plus, Users, UserPlus } from "lucide-react";
 
 interface Consortium {
@@ -25,8 +31,27 @@ interface Tender {
   deadline: string;
 }
 
+interface CreateConsortiumForm {
+  name: string;
+  description: string;
+  tenderId: string;
+  maxMembers: number;
+  requiredSkills: string;
+}
+
 export default function Consortiums() {
   const [selectedConsortium, setSelectedConsortium] = useState<Consortium | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("my-consortiums");
+  const [formData, setFormData] = useState<CreateConsortiumForm>({
+    name: "",
+    description: "",
+    tenderId: "",
+    maxMembers: 10,
+    requiredSkills: "",
+  });
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: consortiums, isLoading } = useQuery({
     queryKey: ["consortiums"],
@@ -53,6 +78,57 @@ export default function Consortiums() {
     },
   });
 
+  const createConsortiumMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) {
+        throw new Error("You need to be signed in to create a consortium.");
+      }
+
+      const { error } = await supabase.from("consortiums").insert({
+        name: formData.name,
+        description: formData.description || null,
+        tender_id: formData.tenderId ? Number(formData.tenderId) : null,
+        created_by: user.id,
+        status: "active",
+        max_members: formData.maxMembers || null,
+        required_skills: formData.requiredSkills
+          ? formData.requiredSkills.split(",").map((skill) => skill.trim()).filter(Boolean)
+          : null,
+      });
+
+      if (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consortiums"] });
+      setFormData({
+        name: "",
+        description: "",
+        tenderId: "",
+        maxMembers: 10,
+        requiredSkills: "",
+      });
+      setActiveTab("my-consortiums");
+      toast({
+        title: "Consortium created",
+        description: "Your consortium has been created successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error creating consortium",
+        description: error.message ?? "Failed to create consortium.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCreateConsortium = (e: React.FormEvent) => {
+    e.preventDefault();
+    createConsortiumMutation.mutate();
+  };
+
   const getTenderForConsortium = (tenderId: number | null) => {
     if (!tenderId || !tenders) return null;
     return tenders.find(t => t.id === tenderId);
@@ -74,7 +150,7 @@ export default function Consortiums() {
 
         {/* Content */}
         <section>
-          <Tabs defaultValue="my-consortiums" className="space-y-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList>
               <TabsTrigger value="my-consortiums">My Consortiums</TabsTrigger>
               <TabsTrigger value="find-consortium">Find Consortium</TabsTrigger>
@@ -148,7 +224,7 @@ export default function Consortiums() {
                     <p className="text-muted-foreground mb-4">
                       Join or create a consortium to collaborate on tenders.
                     </p>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setActiveTab("create-consortium")}>
                       <Plus className="mr-2 h-4 w-4" />
                       Create Consortium
                     </Button>
@@ -191,10 +267,10 @@ export default function Consortiums() {
                     <p className="text-muted-foreground mb-4">
                       Check back later for available consortiums or create your own.
                     </p>
-                    <Button variant="outline">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Consortium
-                    </Button>
+                     <Button variant="outline" onClick={() => setActiveTab("create-consortium")}>
+                       <Plus className="mr-2 h-4 w-4" />
+                       Create Consortium
+                     </Button>
                   </CardContent>
                 </Card>
               )}
@@ -202,16 +278,96 @@ export default function Consortiums() {
             
             <TabsContent value="create-consortium">
               <Card>
-                <CardContent className="p-6 text-center">
-                  <UserPlus className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Create a Consortium</h3>
-                  <p className="text-muted-foreground mb-4">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Create a Consortium</h3>
+                  <p className="text-muted-foreground mb-6">
                     Start a new consortium to collaborate with others on tender opportunities.
                   </p>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Consortium
-                  </Button>
+                  <form onSubmit={handleCreateConsortium} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Consortium Name</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="tender">Related Tender (optional)</Label>
+                        <Select
+                          value={formData.tenderId}
+                          onValueChange={(value) => setFormData({ ...formData, tenderId: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">No specific tender</SelectItem>
+                            {tenders && tenders.map((tender) => (
+                              <SelectItem key={tender.id} value={String(tender.id)}>
+                                {tender.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe the purpose and focus of this consortium..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="maxMembers">Maximum Members</Label>
+                        <Input
+                          id="maxMembers"
+                          type="number"
+                          min={2}
+                          value={formData.maxMembers}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              maxMembers: Number(e.target.value) || 0,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="skills">Required Skills (comma separated)</Label>
+                        <Input
+                          id="skills"
+                          value={formData.requiredSkills}
+                          onChange={(e) =>
+                            setFormData({ ...formData, requiredSkills: e.target.value })
+                          }
+                          placeholder="e.g. Civil Engineering, QS, Legal"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("my-consortiums")}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={createConsortiumMutation.isPending}>
+                        {createConsortiumMutation.isPending ? "Creating..." : "Create Consortium"}
+                      </Button>
+                    </div>
+                  </form>
                 </CardContent>
               </Card>
             </TabsContent>

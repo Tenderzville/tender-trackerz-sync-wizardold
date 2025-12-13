@@ -214,15 +214,8 @@ export default function BrowseTenders() {
                   <p className="text-slate-500 dark:text-slate-400 mb-6">
                     {filters.search || filters.category || filters.location
                       ? "Try adjusting your search criteria or filters"
-                      : "No tenders available at the moment"}
+                      : "No tenders available at the moment. If you are an admin, run the scraper from the Admin Dashboard to pull live tenders from Supabase."}
                   </p>
-                  {!filters.search && !filters.category && !filters.location && (
-                    <Button asChild>
-                      <a href="/api/seed-data" onClick={() => window.location.reload()}>
-                        Load Sample Data
-                      </a>
-                    </Button>
-                  )}
                 </CardContent>
               </Card>
             )}
