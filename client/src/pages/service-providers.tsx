@@ -5,16 +5,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Store, Star } from "lucide-react";
+import { Search, Plus, Store, Star, Edit, Trash2, Mail, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+const providerSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email").max(255),
+  phone: z.string().max(20).optional(),
+  specialization: z.string().min(1, "Specialization is required"),
+  description: z.string().max(1000).optional(),
+  experience: z.number().min(0).max(50).optional(),
+  hourlyRate: z.number().min(0).optional(),
+  certifications: z.string().max(500).optional(),
+});
+
+type ProviderFormData = z.infer<typeof providerSchema>;
 
 interface ServiceProvider {
   id: number;
+  user_id: string;
   name: string;
   email: string;
   phone: string | null;
@@ -28,33 +47,45 @@ interface ServiceProvider {
   availability: string | null;
 }
 
-interface CreateProviderForm {
-  name: string;
-  email: string;
-  phone: string;
-  specialization: string;
-  description: string;
-  experience: number;
-  hourlyRate: number;
-  certifications: string;
-}
+const specializations = [
+  "Legal & Compliance Consultant",
+  "Technical Writing Specialist", 
+  "Quantity Surveying & Estimation",
+  "Project Management",
+  "Engineering Consultant",
+  "Financial Advisory",
+  "Environmental Consultant",
+  "IT & Technology",
+];
 
 export default function ServiceProviders() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<ServiceProvider | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialization, setSelectedSpecialization] = useState("");
-  const [formData, setFormData] = useState<CreateProviderForm>({
-    name: "",
-    email: "",
-    phone: "",
-    specialization: "",
-    description: "",
-    experience: 0,
-    hourlyRate: 0,
-    certifications: "",
+
+  const form = useForm<ProviderFormData>({
+    resolver: zodResolver(providerSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      specialization: "",
+      description: "",
+      experience: 0,
+      hourlyRate: 0,
+      certifications: "",
+    },
+  });
+
+  const editForm = useForm<ProviderFormData>({
+    resolver: zodResolver(providerSchema),
   });
 
   const { data: providers, isLoading } = useQuery({
@@ -70,8 +101,24 @@ export default function ServiceProviders() {
     },
   });
 
+  const { data: myProvider } = useQuery({
+    queryKey: ["my-provider"],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("service_providers")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data as ServiceProvider | null;
+    },
+    enabled: !!user,
+  });
+
   const createMutation = useMutation({
-    mutationFn: async (data: CreateProviderForm) => {
+    mutationFn: async (data: ProviderFormData) => {
       if (!user) throw new Error("Not authenticated");
       
       const { error } = await supabase
@@ -85,41 +132,108 @@ export default function ServiceProviders() {
           description: data.description || null,
           experience: data.experience || null,
           hourly_rate: data.hourlyRate || null,
-          certifications: data.certifications.split(',').map(s => s.trim()).filter(Boolean),
+          certifications: data.certifications?.split(',').map(s => s.trim()).filter(Boolean) || null,
         });
       
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["service-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["my-provider"] });
       setCreateDialogOpen(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        specialization: "",
-        description: "",
-        experience: 0,
-        hourlyRate: 0,
-        certifications: "",
-      });
-      toast({
-        title: "Provider profile created",
-        description: "Your service provider profile has been created successfully.",
-      });
+      form.reset();
+      toast({ title: "Provider profile created successfully!" });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to create service provider profile.",
+        description: error.message || "Failed to create profile.",
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createMutation.mutate(formData);
+  const updateMutation = useMutation({
+    mutationFn: async (data: ProviderFormData) => {
+      if (!selectedProvider) throw new Error("No provider selected");
+      
+      const { error } = await supabase
+        .from("service_providers")
+        .update({
+          name: data.name,
+          email: data.email,
+          phone: data.phone || null,
+          specialization: data.specialization,
+          description: data.description || null,
+          experience: data.experience || null,
+          hourly_rate: data.hourlyRate || null,
+          certifications: data.certifications?.split(',').map(s => s.trim()).filter(Boolean) || null,
+        })
+        .eq("id", selectedProvider.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["my-provider"] });
+      setEditDialogOpen(false);
+      setSelectedProvider(null);
+      toast({ title: "Profile updated successfully!" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!myProvider) throw new Error("No provider to delete");
+      
+      const { error } = await supabase
+        .from("service_providers")
+        .delete()
+        .eq("id", myProvider.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["my-provider"] });
+      setDeleteDialogOpen(false);
+      toast({ title: "Profile deleted successfully!" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete profile.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const openEdit = () => {
+    if (!myProvider) return;
+    setSelectedProvider(myProvider);
+    editForm.reset({
+      name: myProvider.name,
+      email: myProvider.email,
+      phone: myProvider.phone || "",
+      specialization: myProvider.specialization,
+      description: myProvider.description || "",
+      experience: myProvider.experience || 0,
+      hourlyRate: myProvider.hourly_rate || 0,
+      certifications: myProvider.certifications?.join(", ") || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const openContact = (provider: ServiceProvider) => {
+    setSelectedProvider(provider);
+    setContactDialogOpen(true);
   };
 
   const filteredProviders = providers ? providers.filter(provider => {
@@ -134,18 +248,8 @@ export default function ServiceProviders() {
     return matchesSearch && matchesSpecialization;
   }) : [];
 
-  const specializations = [
-    "Legal & Compliance Consultant",
-    "Technical Writing Specialist", 
-    "Quantity Surveying & Estimation",
-    "Project Management",
-    "Engineering Consultant",
-    "Financial Advisory",
-    "Environmental Consultant",
-    "IT & Technology",
-  ];
-
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null) => {
+    if (!amount) return "N/A";
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: 'KES',
@@ -169,121 +273,399 @@ export default function ServiceProviders() {
               </div>
             </div>
             
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Register as Provider</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Register as Service Provider</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="specialization">Specialization</Label>
-                      <Select value={formData.specialization} onValueChange={(value) => setFormData({ ...formData, specialization: value })}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select specialization" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {specializations.map((spec) => (
-                            <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe your services and expertise..."
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="experience">Years of Experience</Label>
-                      <Input
-                        id="experience"
-                        type="number"
-                        min="0"
-                        value={formData.experience}
-                        onChange={(e) => setFormData({ ...formData, experience: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="hourlyRate">Hourly Rate (KSh)</Label>
-                      <Input
-                        id="hourlyRate"
-                        type="number"
-                        min="0"
-                        value={formData.hourlyRate}
-                        onChange={(e) => setFormData({ ...formData, hourlyRate: parseInt(e.target.value) || 0 })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="certifications">Certifications (comma-separated)</Label>
-                    <Input
-                      id="certifications"
-                      value={formData.certifications}
-                      onChange={(e) => setFormData({ ...formData, certifications: e.target.value })}
-                      placeholder="e.g., LSK Advocate, PMP, ISO 27001"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-end space-x-2">
-                    <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                      Cancel
+            <div className="flex gap-2">
+              {myProvider ? (
+                <>
+                  <Button variant="outline" onClick={openEdit}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit My Profile
+                  </Button>
+                  <Button variant="outline" onClick={() => setDeleteDialogOpen(true)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </>
+              ) : (
+                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center space-x-2">
+                      <Plus className="h-4 w-4" />
+                      <span>Register as Provider</span>
                     </Button>
-                    <Button type="submit" disabled={createMutation.isPending}>
-                      {createMutation.isPending ? "Creating..." : "Register"}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Register as Service Provider</DialogTitle>
+                      <DialogDescription>Create your professional profile to offer services.</DialogDescription>
+                    </DialogHeader>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Email</FormLabel>
+                                <FormControl>
+                                  <Input type="email" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="specialization"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Specialization</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select specialization" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {specializations.map((spec) => (
+                                      <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  placeholder="Describe your services and expertise..."
+                                  rows={3}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="experience"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Years of Experience</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="hourlyRate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Hourly Rate (KSh)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <FormField
+                          control={form.control}
+                          name="certifications"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Certifications (comma-separated)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="e.g., LSK Advocate, PMP, ISO 27001"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={createMutation.isPending}>
+                            {createMutation.isPending ? "Creating..." : "Register"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
         </section>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Provider Profile</DialogTitle>
+              <DialogDescription>Update your professional profile.</DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit((data) => updateMutation.mutate(data))} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="specialization"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Specialization</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {specializations.map((spec) => (
+                              <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={3} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="experience"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Years of Experience</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="hourlyRate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Hourly Rate (KSh)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={editForm.control}
+                  name="certifications"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Certifications (comma-separated)</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Provider Profile</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete your service provider profile? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => deleteMutation.mutate()}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Contact Dialog */}
+        <Dialog open={contactDialogOpen} onOpenChange={setContactDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Contact {selectedProvider?.name}</DialogTitle>
+              <DialogDescription>Get in touch with this service provider.</DialogDescription>
+            </DialogHeader>
+            {selectedProvider && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <a href={`mailto:${selectedProvider.email}`} className="text-primary hover:underline">
+                    {selectedProvider.email}
+                  </a>
+                </div>
+                {selectedProvider.phone && (
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-5 w-5 text-muted-foreground" />
+                    <a href={`tel:${selectedProvider.phone}`} className="text-primary hover:underline">
+                      {selectedProvider.phone}
+                    </a>
+                  </div>
+                )}
+                <div className="pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedProvider.description || "No description provided."}
+                  </p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Search and Filters */}
         <section className="mb-8">
@@ -355,7 +737,15 @@ export default function ServiceProviders() {
                       {provider.description || "No description provided"}
                     </p>
                     
-                    <div className="flex items-center justify-between text-sm">
+                    {provider.certifications && provider.certifications.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {provider.certifications.slice(0, 2).map((cert, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">{cert}</Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between text-sm mb-4">
                       <span className="text-muted-foreground">
                         {provider.experience ? `${provider.experience} years exp.` : "Experience N/A"}
                       </span>
@@ -364,7 +754,7 @@ export default function ServiceProviders() {
                       </span>
                     </div>
                     
-                    <Button className="w-full mt-4" variant="outline">
+                    <Button className="w-full" variant="outline" onClick={() => openContact(provider)}>
                       Contact Provider
                     </Button>
                   </CardContent>
