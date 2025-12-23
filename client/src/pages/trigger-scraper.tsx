@@ -47,9 +47,8 @@ export default function TriggerScraper() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-slate-600 dark:text-slate-300">
--              Click the button below to trigger the tender scraper and populate the database with sample tenders.
-+              Click the button below to trigger the tender scraper and pull live tenders from official government sources into Supabase.
-             </p>
+              Click the button below to trigger the tender scraper and pull live tenders from official government sources into Supabase.
+            </p>
             
             <Button 
               onClick={() => triggerScraperMutation.mutate()}
