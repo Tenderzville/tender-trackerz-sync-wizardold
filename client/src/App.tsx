@@ -21,6 +21,7 @@ import Subscription from "@/pages/subscription";
 import AutomationPage from "@/pages/admin/automation";
 import AdminDashboard from "@/pages/admin/dashboard";
 import RfqSystem from "@/pages/rfq-system";
+import ProfilePage from "@/pages/profile";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -62,6 +63,7 @@ function Router() {
         <Route path="/subscription" component={Subscription} />
         <Route path="/admin/automation" component={AutomationPage} />
         <Route path="/admin/dashboard" component={AdminDashboard} />
+        <Route path="/profile" component={ProfilePage} />
         <Route component={NotFound} />
       </Switch>
     </>
