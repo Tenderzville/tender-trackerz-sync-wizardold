@@ -1,4 +1,4 @@
-import { Home, Search, Heart, Users, User } from "lucide-react";
+import { Home, Search, Heart, Users, User, Brain } from "lucide-react";
 import { useLocation, Link } from "wouter";
 
 export function MobileBottomNav() {
@@ -6,10 +6,10 @@ export function MobileBottomNav() {
 
   const navigation = [
     { name: "Home", href: "/", icon: Home, current: location === "/" },
-    { name: "Search", href: "/browse", icon: Search, current: location === "/browse" },
+    { name: "Browse", href: "/browse", icon: Search, current: location === "/browse" },
     { name: "Saved", href: "/saved", icon: Heart, current: location === "/saved" },
-    { name: "Teams", href: "/consortiums", icon: Users, current: location === "/consortiums" },
-    { name: "Analytics", href: "/analytics", icon: User, current: location === "/analytics" },
+    { name: "AI", href: "/ai-analysis", icon: Brain, current: location === "/ai-analysis" },
+    { name: "Profile", href: "/profile", icon: User, current: location === "/profile" },
   ];
 
   return (

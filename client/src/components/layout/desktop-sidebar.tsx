@@ -31,6 +31,7 @@ const navigationItems = [
   { href: "/rfq-system", icon: FileText, label: "RFQ System" },
   { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/profile", icon: UserCheck, label: "Profile" },
   { href: "/subscription", icon: CreditCard, label: "Subscription" },
 ];
 
