@@ -55,3 +55,6 @@ verify_jwt = false
 
 [functions.ai-tender-intelligence]
 verify_jwt = false
+
+[functions.firecrawl-tender-scraper]
+verify_jwt = false
