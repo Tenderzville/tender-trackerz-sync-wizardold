@@ -52,3 +52,6 @@ verify_jwt = false
 
 [functions.bid-strategy-optimizer]
 verify_jwt = false
+
+[functions.ai-tender-intelligence]
+verify_jwt = false

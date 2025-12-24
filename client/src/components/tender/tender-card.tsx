@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AiEstimate } from "./ai-estimate";
+import { TenderDetailsModal } from "./tender-details-modal";
 import { Heart, Calendar, MapPin, Building, Users, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,6 +34,7 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const [isSaved, setIsSaved] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   // Check if tender is saved
   const { data: savedStatus } = useQuery({
@@ -249,7 +251,11 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
             </div>
             
             <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
-              <Button size="sm" className="flex items-center space-x-1">
+              <Button 
+                size="sm" 
+                className="flex items-center space-x-1"
+                onClick={() => setDetailsOpen(true)}
+              >
                 <ExternalLink className="h-4 w-4" />
                 <span>View Details</span>
               </Button>
@@ -261,6 +267,12 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
           </div>
         </div>
       </CardContent>
+      
+      <TenderDetailsModal 
+        tenderId={tender.id} 
+        open={detailsOpen} 
+        onOpenChange={setDetailsOpen} 
+      />
     </Card>
   );
 }
