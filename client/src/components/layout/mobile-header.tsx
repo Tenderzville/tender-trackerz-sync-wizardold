@@ -2,8 +2,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export function MobileHeader() {
   const { user } = useAuth();
@@ -49,15 +49,7 @@ export function MobileHeader() {
         
         <div className="flex items-center space-x-3">
           <ThemeToggle />
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="relative p-2"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-          </Button>
+          <NotificationBell />
           
           <Avatar className="h-8 w-8">
             <AvatarImage src={getProfileImageUrl()} alt="User profile" />

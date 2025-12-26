@@ -19,7 +19,9 @@ import {
   LogOut,
   FileText,
   Briefcase,
-  Brain
+  Brain,
+  RefreshCw,
+  TrendingUp
 } from "lucide-react";
 
 const navigationItems = [
@@ -30,7 +32,9 @@ const navigationItems = [
   { href: "/service-providers", icon: Briefcase, label: "Service Providers" },
   { href: "/rfq-system", icon: FileText, label: "RFQ System" },
   { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
+  { href: "/performance", icon: TrendingUp, label: "Performance" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
+  { href: "/trigger-scraper", icon: RefreshCw, label: "Scraper" },
   { href: "/profile", icon: UserCheck, label: "Profile" },
   { href: "/subscription", icon: CreditCard, label: "Subscription" },
 ];

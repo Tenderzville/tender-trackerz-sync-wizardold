@@ -58,3 +58,6 @@ verify_jwt = false
 
 [functions.firecrawl-tender-scraper]
 verify_jwt = false
+
+[functions.tender-notifications]
+verify_jwt = false
