@@ -65,6 +65,11 @@ Deno.serve(async (req) => {
         enabled: source === 'all' || source === 'tenders.go.ke',
       },
       {
+        name: 'egpkenya',
+        url: 'https://egpkenya.go.ke/tender',
+        enabled: source === 'all' || source === 'egpkenya',
+      },
+      {
         name: 'ppra',
         url: 'https://ppra.go.ke/contract-awards/',
         enabled: source === 'all' || source === 'ppra',

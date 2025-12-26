@@ -22,6 +22,8 @@ import AutomationPage from "@/pages/admin/automation";
 import AdminDashboard from "@/pages/admin/dashboard";
 import RfqSystem from "@/pages/rfq-system";
 import ProfilePage from "@/pages/profile";
+import TriggerScraper from "@/pages/trigger-scraper";
+import PerformanceDashboard from "@/pages/performance-dashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -59,8 +61,10 @@ function Router() {
         <Route path="/ai-analysis" component={AiAnalysis} />
         <Route path="/service-providers" component={ServiceProviders} />
         <Route path="/analytics" component={Analytics} />
+        <Route path="/performance" component={PerformanceDashboard} />
         <Route path="/rfq-system" component={RfqSystem} />
         <Route path="/subscription" component={Subscription} />
+        <Route path="/trigger-scraper" component={TriggerScraper} />
         <Route path="/admin/automation" component={AutomationPage} />
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/profile" component={ProfilePage} />

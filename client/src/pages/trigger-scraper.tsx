@@ -101,6 +101,7 @@ export default function TriggerScraper() {
     { id: 'all', name: 'All Sources', description: 'Scrape all available government portals' },
     { id: 'mygov', name: 'MyGov Kenya', description: 'www.mygov.go.ke/all-tenders' },
     { id: 'tenders.go.ke', name: 'PPIP Portal', description: 'tenders.go.ke - Official procurement portal' },
+    { id: 'egpkenya', name: 'e-GP Kenya', description: 'egpkenya.go.ke/tender - Electronic procurement' },
     { id: 'ppra', name: 'PPRA Kenya', description: 'ppra.go.ke - Contract awards' },
   ];
 
