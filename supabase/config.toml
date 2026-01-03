@@ -61,3 +61,6 @@ verify_jwt = false
 
 [functions.tender-notifications]
 verify_jwt = false
+
+[functions.smart-tender-matcher]
+verify_jwt = false
