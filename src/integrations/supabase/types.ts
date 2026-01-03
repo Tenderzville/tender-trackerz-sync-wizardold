@@ -733,6 +733,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          counties: string[] | null
+          created_at: string | null
+          eligibility_types: string[] | null
+          id: string
+          keywords: string[] | null
+          notification_email: boolean | null
+          notification_push: boolean | null
+          notification_sms: boolean | null
+          sectors: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          counties?: string[] | null
+          created_at?: string | null
+          eligibility_types?: string[] | null
+          id?: string
+          keywords?: string[] | null
+          notification_email?: boolean | null
+          notification_push?: boolean | null
+          notification_sms?: boolean | null
+          sectors?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          counties?: string[] | null
+          created_at?: string | null
+          eligibility_types?: string[] | null
+          id?: string
+          keywords?: string[] | null
+          notification_email?: boolean | null
+          notification_push?: boolean | null
+          notification_sms?: boolean | null
+          sectors?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

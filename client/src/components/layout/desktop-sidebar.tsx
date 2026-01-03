@@ -36,6 +36,7 @@ const navigationItems = [
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
   { href: "/trigger-scraper", icon: RefreshCw, label: "Scraper" },
   { href: "/profile", icon: UserCheck, label: "Profile" },
+  { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/subscription", icon: CreditCard, label: "Subscription" },
 ];
 
