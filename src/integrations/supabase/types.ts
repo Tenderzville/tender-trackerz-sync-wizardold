@@ -222,6 +222,75 @@ export type Database = {
           },
         ]
       }
+      historical_tender_awards: {
+        Row: {
+          award_date: string | null
+          awarded_amount: number | null
+          bid_count: number | null
+          category: string
+          competition_level: string | null
+          created_at: string | null
+          id: number
+          location: string | null
+          organization: string
+          original_budget: number | null
+          price_to_budget_ratio: number | null
+          procurement_method: string | null
+          scraped_from: string | null
+          source_url: string | null
+          tender_number: string | null
+          tender_type: string | null
+          title: string
+          updated_at: string | null
+          winner_name: string | null
+          winner_type: string | null
+        }
+        Insert: {
+          award_date?: string | null
+          awarded_amount?: number | null
+          bid_count?: number | null
+          category: string
+          competition_level?: string | null
+          created_at?: string | null
+          id?: number
+          location?: string | null
+          organization: string
+          original_budget?: number | null
+          price_to_budget_ratio?: number | null
+          procurement_method?: string | null
+          scraped_from?: string | null
+          source_url?: string | null
+          tender_number?: string | null
+          tender_type?: string | null
+          title: string
+          updated_at?: string | null
+          winner_name?: string | null
+          winner_type?: string | null
+        }
+        Update: {
+          award_date?: string | null
+          awarded_amount?: number | null
+          bid_count?: number | null
+          category?: string
+          competition_level?: string | null
+          created_at?: string | null
+          id?: number
+          location?: string | null
+          organization?: string
+          original_budget?: number | null
+          price_to_budget_ratio?: number | null
+          procurement_method?: string | null
+          scraped_from?: string | null
+          source_url?: string | null
+          tender_number?: string | null
+          tender_type?: string | null
+          title?: string
+          updated_at?: string | null
+          winner_name?: string | null
+          winner_type?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_type: string | null

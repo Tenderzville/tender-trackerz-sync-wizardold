@@ -64,3 +64,6 @@ verify_jwt = false
 
 [functions.smart-tender-matcher]
 verify_jwt = false
+
+[functions.historical-awards-scraper]
+verify_jwt = false
