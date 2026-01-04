@@ -25,6 +25,7 @@ import ProfilePage from "@/pages/profile";
 import TriggerScraper from "@/pages/trigger-scraper";
 import PerformanceDashboard from "@/pages/performance-dashboard";
 import SettingsPage from "@/pages/settings";
+import SmartMatchesPage from "@/pages/smart-matches";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -70,6 +71,7 @@ function Router() {
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/profile" component={ProfilePage} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/smart-matches" component={SmartMatchesPage} />
         <Route component={NotFound} />
       </Switch>
     </>
