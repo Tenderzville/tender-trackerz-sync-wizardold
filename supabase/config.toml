@@ -44,6 +44,15 @@ verify_jwt = false
 [functions.manual-scraper-trigger]
 verify_jwt = false
 
+[functions.import-historical-data]
+verify_jwt = false
+
+[functions.win-probability-engine]
+verify_jwt = false
+
+[functions.paystack-payment]
+verify_jwt = false
+
 [functions.ai-tender-analysis]
 verify_jwt = false
 

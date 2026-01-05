@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings, Shield } from 'lucide-react';
+import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings, Shield, Target } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,7 @@ export function AppNavigation() {
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/browse', icon: Search, label: 'Browse' },
+    { path: '/smart-matches', icon: Target, label: 'Smart Matches' },
     { path: '/saved', icon: Bookmark, label: 'Saved' },
     { path: '/consortiums', icon: Users, label: 'Consortiums' },
     { path: '/ai-analysis', icon: Brain, label: 'AI Analysis' },
