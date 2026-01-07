@@ -6,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
 import { useStytch } from '@/hooks/useStytch';
-import { Bell, ArrowLeft, Mail, Lock, Chrome, Github } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell, ArrowLeft, Mail, Lock, Chrome, Github, Briefcase, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import authBackground from '@/assets/auth-background.jpg';
 
@@ -36,6 +38,7 @@ export default function AuthPage() {
     firstName: '',
     lastName: '',
     company: '',
+    role: 'supplier' as 'buyer' | 'supplier',
   });
 
   // Redirect authenticated users
@@ -100,14 +103,15 @@ export default function AuthPage() {
     }
 
     try {
-      const { error } = await signUp(signUpData.email, signUpData.password, {
+      const result = await signUp(signUpData.email, signUpData.password, {
         first_name: signUpData.firstName,
         last_name: signUpData.lastName,
         company: signUpData.company,
+        role: signUpData.role,
       });
       
-      if (error) {
-        setError(error.message);
+      if (result.error) {
+        setError(result.error.message);
       } else {
         setMessage('Check your email for the confirmation link!');
       }
@@ -492,6 +496,46 @@ export default function AuthPage() {
                       value={signUpData.company}
                       onChange={(e) => setSignUpData({ ...signUpData, company: e.target.value })}
                     />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label>I am a:</Label>
+                    <RadioGroup 
+                      value={signUpData.role} 
+                      onValueChange={(value: 'buyer' | 'supplier') => setSignUpData({ ...signUpData, role: value })}
+                      className="grid grid-cols-2 gap-4"
+                    >
+                      <Label
+                        htmlFor="role-supplier"
+                        className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-colors ${
+                          signUpData.role === 'supplier' 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-muted hover:border-primary/50'
+                        }`}
+                      >
+                        <RadioGroupItem value="supplier" id="role-supplier" className="sr-only" />
+                        <Briefcase className="h-8 w-8 mb-2 text-primary" />
+                        <span className="font-semibold">Supplier</span>
+                        <span className="text-xs text-muted-foreground text-center mt-1">
+                          Bid on tenders
+                        </span>
+                      </Label>
+                      <Label
+                        htmlFor="role-buyer"
+                        className={`flex flex-col items-center justify-center rounded-lg border-2 p-4 cursor-pointer transition-colors ${
+                          signUpData.role === 'buyer' 
+                            ? 'border-primary bg-primary/5' 
+                            : 'border-muted hover:border-primary/50'
+                        }`}
+                      >
+                        <RadioGroupItem value="buyer" id="role-buyer" className="sr-only" />
+                        <ShoppingCart className="h-8 w-8 mb-2 text-primary" />
+                        <span className="font-semibold">Buyer</span>
+                        <span className="text-xs text-muted-foreground text-center mt-1">
+                          Post RFQs
+                        </span>
+                      </Label>
+                    </RadioGroup>
                   </div>
                   
                   <div className="space-y-2">
