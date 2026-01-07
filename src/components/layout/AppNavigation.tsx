@@ -15,11 +15,15 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Send,
+  Inbox,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, UserType } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -29,40 +33,68 @@ interface NavItem {
   href: string;
   icon: React.ElementType;
   roles?: ('admin' | 'moderator' | 'user')[];
-  userType?: ('supplier' | 'buyer' | 'all')[];
+  visibleTo: ('supplier' | 'buyer' | 'all')[];
   badge?: number;
+  description?: string;
 }
 
 export function AppNavigation() {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, isAdmin, userRole, signOut } = useAuth();
+  const { user, isAdmin, userRole, userType, signOut } = useAuth();
   const { unreadCount } = useNotifications(user?.id);
 
-  // Navigation items with role-based visibility
-  const navItems: NavItem[] = [
-    { label: 'Dashboard', href: '/', icon: Home, userType: ['all'] },
-    { label: 'Browse Tenders', href: '/tenders', icon: FileText, userType: ['all'] },
-    { label: 'Saved Tenders', href: '/saved', icon: Bookmark, userType: ['all'] },
-    { label: 'Smart Matches', href: '/smart-matches', icon: Brain, userType: ['supplier', 'all'] },
-    { label: 'AI Analysis', href: '/ai-analysis', icon: BarChart3, userType: ['all'] },
-    { label: 'Consortiums', href: '/consortiums', icon: Handshake, userType: ['all'] },
-    { label: 'Service Providers', href: '/providers', icon: Users, userType: ['buyer', 'all'] },
-    { label: 'RFQ System', href: '/rfq', icon: Building2, userType: ['all'] },
-    { label: 'Subscription', href: '/subscription', icon: CreditCard, userType: ['all'] },
-    { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, userType: ['all'] },
-    { label: 'Settings', href: '/settings', icon: Settings, userType: ['all'] },
+  // BUYER-focused navigation items (RFQ posting, finding suppliers)
+  const buyerNavItems: NavItem[] = [
+    { label: 'Dashboard', href: '/', icon: Home, visibleTo: ['buyer'], description: 'Overview & stats' },
+    { label: 'Post RFQ', href: '/rfq', icon: Send, visibleTo: ['buyer'], description: 'Request quotes from suppliers' },
+    { label: 'My RFQs', href: '/rfq?tab=my-rfqs', icon: Inbox, visibleTo: ['buyer'], description: 'Manage your requests' },
+    { label: 'Find Suppliers', href: '/providers', icon: Users, visibleTo: ['buyer'], description: 'Browse service providers' },
+    { label: 'Browse Tenders', href: '/tenders', icon: FileText, visibleTo: ['buyer'], description: 'View public tenders' },
+    { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['buyer'] },
+    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['buyer'] },
+    { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['buyer'] },
+  ];
+
+  // SUPPLIER-focused navigation items (tender browsing, bidding, AI analysis)
+  const supplierNavItems: NavItem[] = [
+    { label: 'Dashboard', href: '/', icon: Home, visibleTo: ['supplier'], description: 'Overview & opportunities' },
+    { label: 'Browse Tenders', href: '/tenders', icon: FileText, visibleTo: ['supplier'], description: 'Find opportunities' },
+    { label: 'Smart Matches', href: '/smart-matches', icon: Target, visibleTo: ['supplier'], description: 'AI-matched opportunities' },
+    { label: 'Saved Tenders', href: '/saved', icon: Bookmark, visibleTo: ['supplier'], description: 'Your bookmarked tenders' },
+    { label: 'AI Analysis', href: '/ai-analysis', icon: Brain, visibleTo: ['supplier'], description: 'Win probability & insights' },
+    { label: 'Bid on RFQs', href: '/rfq', icon: TrendingUp, visibleTo: ['supplier'], description: 'Submit quotes to buyers' },
+    { label: 'Consortiums', href: '/consortiums', icon: Handshake, visibleTo: ['supplier'], description: 'Team up for big tenders' },
+    { label: 'My Profile', href: '/providers?tab=my-profile', icon: User, visibleTo: ['supplier'], description: 'Manage supplier profile' },
+    { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['supplier'] },
+    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['supplier'] },
+    { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['supplier'] },
+  ];
+
+  // Default/All users navigation (when user_type not set)
+  const defaultNavItems: NavItem[] = [
+    { label: 'Dashboard', href: '/', icon: Home, visibleTo: ['all'] },
+    { label: 'Browse Tenders', href: '/tenders', icon: FileText, visibleTo: ['all'] },
+    { label: 'Saved Tenders', href: '/saved', icon: Bookmark, visibleTo: ['all'] },
+    { label: 'Smart Matches', href: '/smart-matches', icon: Target, visibleTo: ['all'] },
+    { label: 'AI Analysis', href: '/ai-analysis', icon: Brain, visibleTo: ['all'] },
+    { label: 'Consortiums', href: '/consortiums', icon: Handshake, visibleTo: ['all'] },
+    { label: 'Service Providers', href: '/providers', icon: Users, visibleTo: ['all'] },
+    { label: 'RFQ System', href: '/rfq', icon: Building2, visibleTo: ['all'] },
+    { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['all'] },
+    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['all'] },
+    { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['all'] },
   ];
 
   // Admin-only items (hidden from non-admins completely)
   const adminItems: NavItem[] = [
-    { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['admin'] },
-    { label: 'Automation', href: '/admin/automation', icon: BarChart3, roles: ['admin'] },
+    { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['admin'], visibleTo: ['all'] },
+    { label: 'Automation', href: '/admin/automation', icon: BarChart3, roles: ['admin'], visibleTo: ['all'] },
   ];
 
   const isActive = (href: string) => {
     if (href === '/') return location === '/';
-    return location.startsWith(href);
+    return location.startsWith(href.split('?')[0]);
   };
 
   const handleSignOut = async () => {
@@ -70,14 +102,25 @@ export function AppNavigation() {
     setMobileOpen(false);
   };
 
-  // Filter nav items based on user role
-  const visibleNavItems = navItems.filter(item => {
-    if (item.roles && !item.roles.includes(userRole || 'user')) return false;
-    return true;
-  });
+  // Get navigation items based on user type
+  const getNavItemsForUserType = (type: UserType): NavItem[] => {
+    if (type === 'buyer') return buyerNavItems;
+    if (type === 'supplier') return supplierNavItems;
+    return defaultNavItems;
+  };
+
+  const visibleNavItems = getNavItemsForUserType(userType);
 
   // Only show admin items if user is admin
   const visibleAdminItems = isAdmin ? adminItems : [];
+
+  // Get user type label for display
+  const getUserTypeLabel = () => {
+    if (isAdmin) return 'Admin';
+    if (userType === 'buyer') return 'Buyer';
+    if (userType === 'supplier') return 'Supplier';
+    return userRole || 'User';
+  };
 
   return (
     <>
@@ -148,16 +191,24 @@ export function AppNavigation() {
           {user && (
             <div className="p-4 border-t border-sidebar-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-sidebar-accent rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-sidebar-foreground" />
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center",
+                  userType === 'buyer' ? 'bg-blue-500/20' : 
+                  userType === 'supplier' ? 'bg-green-500/20' : 'bg-sidebar-accent'
+                )}>
+                  <User className={cn(
+                    "w-5 h-5",
+                    userType === 'buyer' ? 'text-blue-500' : 
+                    userType === 'supplier' ? 'text-green-500' : 'text-sidebar-foreground'
+                  )} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-sidebar-foreground truncate">
                     {user.email}
                   </p>
-                  <p className="text-xs text-sidebar-foreground/60 capitalize">
-                    {userRole || 'User'}
-                  </p>
+                  <Badge variant={userType === 'buyer' ? 'default' : userType === 'supplier' ? 'secondary' : 'outline'} className="text-xs">
+                    {getUserTypeLabel()}
+                  </Badge>
                 </div>
                 <Button variant="ghost" size="icon" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4" />
@@ -266,7 +317,9 @@ export function AppNavigation() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{user.email}</p>
-                <p className="text-xs text-muted-foreground capitalize">{userRole || 'User'}</p>
+                <Badge variant={userType === 'buyer' ? 'default' : userType === 'supplier' ? 'secondary' : 'outline'} className="text-xs">
+                  {getUserTypeLabel()}
+                </Badge>
               </div>
               <Button variant="ghost" size="icon" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4" />
