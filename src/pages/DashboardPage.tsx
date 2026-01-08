@@ -209,17 +209,24 @@ export default function DashboardPage() {
       </div>
 
       {/* Disclaimer */}
-      <Card className="border-warning">
+      <Card className="border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>⚠️ Important Disclaimer:</strong> All tender information, win probability calculations, 
-            and price estimations are provided for informational purposes only. These calculations may 
-            contain errors due to inflation adjustments, incomplete data, or market changes. Always 
-            conduct your own due diligence before making business decisions. TenderKenya is not 
-            responsible for any decisions made based on this information.
+            <strong>⚠️ Important Disclaimer:</strong> All tender information and insights 
+            are provided for informational purposes only. This platform does not predict 
+            tender outcomes or guarantee success. Historical patterns do not indicate 
+            future results. Tender awards are determined solely by procuring entities. 
+            Always conduct your own due diligence before making business decisions.
           </p>
         </CardContent>
       </Card>
+
+      {/* Terms Link */}
+      <div className="text-center text-sm text-muted-foreground">
+        <Link href="/terms" className="hover:underline">Terms & Conditions</Link>
+        <span className="mx-2">•</span>
+        <span>© 2026 TenderKenya</span>
+      </div>
     </div>
   );
 }

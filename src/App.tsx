@@ -12,6 +12,8 @@ import ProvidersPage from '@/pages/ProvidersPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import AuthPage from '@/pages/AuthPage';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AIAnalysisPage from '@/pages/AIAnalysisPage';
+import TermsPage from '@/pages/TermsPage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -37,6 +39,8 @@ function AppRoutes() {
         <Route path="/providers" component={ProvidersPage} />
         <Route path="/notifications" component={NotificationsPage} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/ai-analysis" component={AIAnalysisPage} />
+        <Route path="/terms" component={TermsPage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>
