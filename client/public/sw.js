@@ -1,18 +1,29 @@
-const CACHE_NAME = 'tenderalert-v1';
+const CACHE_NAME = 'tenderalert-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json'
 ];
 
-// Install event
+// Install event - skip waiting to activate immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Activate new SW immediately
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(urlsToCache);
+      .then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+// Activate - claim clients immediately for seamless updates
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      self.clients.claim(), // Take control of all pages immediately
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
+        );
       })
+    ])
   );
 });
 

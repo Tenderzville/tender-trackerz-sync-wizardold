@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, FileText, Activity, Database, AlertCircle } from 'lucide-react';
+import { Shield, Users, FileText, Activity, Database, AlertCircle, Download, Zap, History } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 interface Stats {
@@ -16,6 +16,8 @@ interface Stats {
   totalConsortiums: number;
   totalServiceProviders: number;
   recentAuditLogs: number;
+  historicalAwards: number;
+  earlyUserCount: number;
 }
 
 interface AutomationLog {
@@ -45,6 +47,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [automationLogs, setAutomationLogs] = useState<AutomationLog[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [importingData, setImportingData] = useState(false);
+  const [importOffset, setImportOffset] = useState(0);
 
   useEffect(() => {
     checkAdminAccess();
@@ -86,13 +90,15 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       // Load stats
-      const [users, tenders, activeTenders, consortiums, serviceProviders, auditCount] = await Promise.all([
+      const [users, tenders, activeTenders, consortiums, serviceProviders, auditCount, historicalCount, earlyUsers] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('tenders').select('id', { count: 'exact', head: true }),
         supabase.from('tenders').select('id', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('consortiums').select('id', { count: 'exact', head: true }),
         supabase.from('service_providers').select('id', { count: 'exact', head: true }),
         supabase.from('security_audit_log').select('id', { count: 'exact', head: true }),
+        supabase.from('historical_tender_awards').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_early_user', true),
       ]);
 
       setStats({
@@ -102,6 +108,8 @@ export default function AdminDashboard() {
         totalConsortiums: consortiums.count || 0,
         totalServiceProviders: serviceProviders.count || 0,
         recentAuditLogs: auditCount.count || 0,
+        historicalAwards: historicalCount.count || 0,
+        earlyUserCount: earlyUsers.count || 0,
       });
 
       // Load automation logs
@@ -136,28 +144,90 @@ export default function AdminDashboard() {
   const triggerScraper = async () => {
     try {
       toast({
-        title: 'Starting Scraper',
-        description: 'Manual scraper triggered...',
+        title: 'Starting Firecrawl Scraper',
+        description: 'Fetching real tenders from government portals...',
       });
 
-      const { data, error } = await supabase.functions.invoke('manual-scraper-trigger', {
-        body: { manual_trigger: true },
+      const { data, error } = await supabase.functions.invoke('firecrawl-tender-scraper', {
+        body: { source: 'all' },
       });
 
       if (error) throw error;
 
       toast({
-        title: 'Scraper Started',
-        description: 'Tender scraping is in progress',
+        title: 'Scraper Complete',
+        description: data.message || 'Tender scraping finished',
       });
 
-      // Refresh automation logs
       setTimeout(loadDashboardData, 2000);
     } catch (error) {
       console.error('Scraper trigger error:', error);
       toast({
         title: 'Error',
         description: 'Failed to trigger scraper',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const importHistoricalData = async () => {
+    try {
+      setImportingData(true);
+      
+      toast({
+        title: 'Importing Historical Data',
+        description: `Importing batch from offset ${importOffset}...`,
+      });
+
+      const { data, error } = await supabase.functions.invoke('import-historical-data', {
+        body: { limit: 5000, offset: importOffset },
+      });
+
+      if (error) throw error;
+
+      const nextOffset = data.stats?.next_offset || importOffset + 5000;
+      setImportOffset(nextOffset);
+
+      toast({
+        title: 'Import Complete',
+        description: `${data.stats?.saved || 0} records imported. Total in DB: ${data.stats?.total_in_db || 0}`,
+      });
+
+      loadDashboardData();
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: 'Import Error',
+        description: error instanceof Error ? error.message : 'Failed to import data',
+        variant: 'destructive',
+      });
+    } finally {
+      setImportingData(false);
+    }
+  };
+
+  const checkSubscriptionExpiry = async () => {
+    try {
+      toast({
+        title: 'Running Subscription Check',
+        description: 'Checking for expired subscriptions...',
+      });
+
+      const { data, error } = await supabase.functions.invoke('check-subscription-expiry', {});
+
+      if (error) throw error;
+
+      toast({
+        title: 'Check Complete',
+        description: `Found ${data.stats?.expired || 0} expired, ${data.stats?.expiring_soon || 0} expiring soon`,
+      });
+
+      loadDashboardData();
+    } catch (error) {
+      console.error('Subscription check error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to check subscriptions',
         variant: 'destructive',
       });
     }
@@ -184,10 +254,20 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-muted-foreground mt-1">System overview and management</p>
         </div>
-        <Button onClick={triggerScraper} size="lg">
-          <Activity className="h-4 w-4 mr-2" />
-          Run Scraper
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={triggerScraper} size="lg">
+            <Zap className="h-4 w-4 mr-2" />
+            Run Scraper
+          </Button>
+          <Button onClick={importHistoricalData} size="lg" variant="outline" disabled={importingData}>
+            <Download className="h-4 w-4 mr-2" />
+            {importingData ? 'Importing...' : 'Import Historical'}
+          </Button>
+          <Button onClick={checkSubscriptionExpiry} size="lg" variant="secondary">
+            <History className="h-4 w-4 mr-2" />
+            Check Expiry
+          </Button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -247,8 +327,30 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Status</CardTitle>
+            <CardTitle className="text-sm font-medium">Historical Awards</CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.historicalAwards?.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">For AI analysis</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Early Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.earlyUserCount}/100</div>
+            <p className="text-xs text-muted-foreground">Free Pro spots</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">System Status</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <Badge variant="default">Operational</Badge>
