@@ -295,74 +295,101 @@ export type Database = {
         Row: {
           business_type: string | null
           company: string | null
+          company_verified: boolean | null
           created_at: string | null
           email: string | null
           first_name: string | null
+          founding_member_expires_at: string | null
+          founding_member_granted_at: string | null
           id: string
           is_early_user: boolean | null
+          is_founding_member: boolean | null
           last_name: string | null
           location: string | null
+          lock_reason: string | null
           loyalty_points: number | null
           paypal_subscription_id: string | null
+          paystack_customer_code: string | null
+          paystack_subscription_code: string | null
           phone_number: string | null
           profile_image_url: string | null
           referral_code: string | null
           referred_by: string | null
           subscription_end_date: string | null
+          subscription_locked: boolean | null
           subscription_start_date: string | null
           subscription_status: string | null
           subscription_type: string | null
           total_referrals: number | null
           twitter_followed: boolean | null
           updated_at: string | null
+          verified_at: string | null
         }
         Insert: {
           business_type?: string | null
           company?: string | null
+          company_verified?: boolean | null
           created_at?: string | null
           email?: string | null
           first_name?: string | null
+          founding_member_expires_at?: string | null
+          founding_member_granted_at?: string | null
           id: string
           is_early_user?: boolean | null
+          is_founding_member?: boolean | null
           last_name?: string | null
           location?: string | null
+          lock_reason?: string | null
           loyalty_points?: number | null
           paypal_subscription_id?: string | null
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
           phone_number?: string | null
           profile_image_url?: string | null
           referral_code?: string | null
           referred_by?: string | null
           subscription_end_date?: string | null
+          subscription_locked?: boolean | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_type?: string | null
           total_referrals?: number | null
           twitter_followed?: boolean | null
           updated_at?: string | null
+          verified_at?: string | null
         }
         Update: {
           business_type?: string | null
           company?: string | null
+          company_verified?: boolean | null
           created_at?: string | null
           email?: string | null
           first_name?: string | null
+          founding_member_expires_at?: string | null
+          founding_member_granted_at?: string | null
           id?: string
           is_early_user?: boolean | null
+          is_founding_member?: boolean | null
           last_name?: string | null
           location?: string | null
+          lock_reason?: string | null
           loyalty_points?: number | null
           paypal_subscription_id?: string | null
+          paystack_customer_code?: string | null
+          paystack_subscription_code?: string | null
           phone_number?: string | null
           profile_image_url?: string | null
           referral_code?: string | null
           referred_by?: string | null
           subscription_end_date?: string | null
+          subscription_locked?: boolean | null
           subscription_start_date?: string | null
           subscription_status?: string | null
           subscription_type?: string | null
           total_referrals?: number | null
           twitter_followed?: boolean | null
           updated_at?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -633,6 +660,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_history: {
+        Row: {
+          action: string
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          from_plan: string | null
+          id: number
+          metadata: Json | null
+          payment_reference: string | null
+          to_plan: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          from_plan?: string | null
+          id?: number
+          metadata?: Json | null
+          payment_reference?: string | null
+          to_plan?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          from_plan?: string | null
+          id?: number
+          metadata?: Json | null
+          payment_reference?: string | null
+          to_plan?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       tender_analytics: {
         Row: {
@@ -912,6 +978,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_founding_members_count: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -26,6 +26,8 @@ import TriggerScraper from "@/pages/trigger-scraper";
 import PerformanceDashboard from "@/pages/performance-dashboard";
 import SettingsPage from "@/pages/settings";
 import SmartMatchesPage from "@/pages/smart-matches";
+import SubscriptionCallback from "@/pages/subscription-callback";
+import TermsPage from "@/pages/terms";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -66,7 +68,9 @@ function Router() {
         <Route path="/performance" component={PerformanceDashboard} />
         <Route path="/rfq-system" component={RfqSystem} />
         <Route path="/subscription" component={Subscription} />
+        <Route path="/subscription/callback" component={SubscriptionCallback} />
         <Route path="/trigger-scraper" component={TriggerScraper} />
+        <Route path="/terms" component={TermsPage} />
         <Route path="/admin/automation" component={AutomationPage} />
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/profile" component={ProfilePage} />

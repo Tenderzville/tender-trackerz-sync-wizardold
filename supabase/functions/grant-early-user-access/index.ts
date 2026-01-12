@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const EARLY_USER_LIMIT = 100;
-const FREE_PERIOD_MONTHS = 12;
+const FOUNDING_MEMBER_LIMIT = 100;
+const FREE_PERIOD_DAYS = 30; // 1 month free
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,14 +14,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id } = await req.json();
-
-    if (!user_id) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'user_id is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const { user_id, action } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -32,62 +25,118 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check current early user count
-    const { count: earlyUserCount } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_early_user', true);
+    // Action: check_status - Check founding member availability
+    if (action === 'check_status') {
+      const { count: foundingCount } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_founding_member', true);
 
-    const currentCount = earlyUserCount || 0;
-    console.log(`Current early user count: ${currentCount}/${EARLY_USER_LIMIT}`);
-
-    // Check if user already has early user status
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id, is_early_user, subscription_type, subscription_status')
-      .eq('id', user_id)
-      .single();
-
-    if (existingProfile?.is_early_user) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'User already has early user access',
-          is_early_user: true,
-          early_user_count: currentCount,
-          spots_remaining: EARLY_USER_LIMIT - currentCount
+          founding_member_count: foundingCount || 0,
+          spots_remaining: FOUNDING_MEMBER_LIMIT - (foundingCount || 0),
+          is_available: (foundingCount || 0) < FOUNDING_MEMBER_LIMIT
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate user_id for other actions
+    if (!user_id) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'user_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get current founding member count
+    const { count: foundingCount } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_founding_member', true);
+
+    const currentCount = foundingCount || 0;
+    console.log(`Founding members: ${currentCount}/${FOUNDING_MEMBER_LIMIT}`);
+
+    // Get user profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user_id)
+      .single();
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'User profile not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user already is a founding member
+    if (profile.is_founding_member) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'User is already a Founding Member',
+          is_founding_member: true,
+          founding_member_number: currentCount,
+          expires_at: profile.founding_member_expires_at,
+          spots_remaining: FOUNDING_MEMBER_LIMIT - currentCount
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Check if spots available
-    if (currentCount >= EARLY_USER_LIMIT) {
+    if (currentCount >= FOUNDING_MEMBER_LIMIT) {
       return new Response(
         JSON.stringify({
           success: false,
-          message: 'Early user program is full. All 100 spots have been claimed.',
-          is_early_user: false,
-          early_user_count: currentCount,
+          message: 'Founding Members program is full. All 100 spots have been claimed.',
+          is_founding_member: false,
           spots_remaining: 0
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Grant early user access
+    // Verify business requirements
+    // Business must have company name filled
+    if (!profile.company || profile.company.trim().length < 2) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'verification_required',
+          message: 'Company name is required for Founding Member access. Please complete your profile.',
+          is_founding_member: false,
+          spots_remaining: FOUNDING_MEMBER_LIMIT - currentCount
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Grant Founding Member access
     const now = new Date();
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + FREE_PERIOD_MONTHS);
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + FREE_PERIOD_DAYS);
 
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        is_early_user: true,
+        is_founding_member: true,
+        is_early_user: true, // Backward compatibility
+        founding_member_granted_at: now.toISOString(),
+        founding_member_expires_at: expiresAt.toISOString(),
+        company_verified: true,
+        verified_at: now.toISOString(),
         subscription_type: 'pro',
         subscription_status: 'active',
         subscription_start_date: now.toISOString(),
-        subscription_end_date: endDate.toISOString(),
+        subscription_end_date: expiresAt.toISOString(),
+        subscription_locked: true, // Lock to prevent downgrade during free month
+        lock_reason: 'founding_member_free_period',
         updated_at: now.toISOString()
       })
       .eq('id', user_id);
@@ -96,38 +145,55 @@ Deno.serve(async (req) => {
       throw updateError;
     }
 
+    // Log subscription history
+    await supabase.from('subscription_history').insert({
+      user_id,
+      action: 'founding_member_granted',
+      from_plan: profile.subscription_type || 'free',
+      to_plan: 'pro',
+      amount: 0,
+      currency: 'KES',
+      metadata: {
+        founding_member_number: currentCount + 1,
+        free_period_days: FREE_PERIOD_DAYS,
+        expires_at: expiresAt.toISOString()
+      }
+    });
+
     // Create welcome notification
     await supabase.from('user_alerts').insert({
       user_id,
-      type: 'early_user_welcome',
-      title: '🎉 Welcome, Early Adopter!',
-      message: `Congratulations! You're one of our first 100 users and have been granted FREE Pro access for 1 year! Enjoy all premium features including AI analysis, smart matching, and unlimited tender saves.`,
+      type: 'founding_member_welcome',
+      title: '🏆 Welcome, Founding Member!',
+      message: `Congratulations! You're Founding Member #${currentCount + 1} of ${FOUNDING_MEMBER_LIMIT}! You've received 1 month FREE Pro access. After ${FREE_PERIOD_DAYS} days, you'll be prompted to subscribe to continue enjoying premium features.`,
       is_read: false,
-      data: { 
-        early_user_number: currentCount + 1,
-        free_until: endDate.toISOString()
+      data: {
+        founding_member_number: currentCount + 1,
+        free_until: expiresAt.toISOString(),
+        free_period_days: FREE_PERIOD_DAYS
       }
     });
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Early user access granted!',
-        is_early_user: true,
-        early_user_number: currentCount + 1,
-        spots_remaining: EARLY_USER_LIMIT - currentCount - 1,
-        free_until: endDate.toISOString(),
+        message: 'Founding Member access granted!',
+        is_founding_member: true,
+        founding_member_number: currentCount + 1,
+        spots_remaining: FOUNDING_MEMBER_LIMIT - currentCount - 1,
+        expires_at: expiresAt.toISOString(),
+        free_period_days: FREE_PERIOD_DAYS,
         subscription: {
           type: 'pro',
           status: 'active',
-          end_date: endDate.toISOString()
+          end_date: expiresAt.toISOString()
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Early user grant error:', error);
+    console.error('Founding member grant error:', error);
     
     return new Response(
       JSON.stringify({
