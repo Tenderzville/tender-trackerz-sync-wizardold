@@ -52,7 +52,7 @@ export function AppNavigation() {
     { label: 'Find Suppliers', href: '/providers', icon: Users, visibleTo: ['buyer'], description: 'Browse service providers' },
     { label: 'Browse Tenders', href: '/tenders', icon: FileText, visibleTo: ['buyer'], description: 'View public tenders' },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['buyer'] },
-    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['buyer'] },
+    { label: 'Profile', href: '/profile', icon: User, visibleTo: ['buyer'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['buyer'] },
   ];
 
@@ -67,7 +67,7 @@ export function AppNavigation() {
     { label: 'Consortiums', href: '/consortiums', icon: Handshake, visibleTo: ['supplier'], description: 'Team up for big tenders' },
     { label: 'My Profile', href: '/providers?tab=my-profile', icon: User, visibleTo: ['supplier'], description: 'Manage supplier profile' },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['supplier'] },
-    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['supplier'] },
+    { label: 'Profile', href: '/profile', icon: User, visibleTo: ['supplier'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['supplier'] },
   ];
 
@@ -82,7 +82,7 @@ export function AppNavigation() {
     { label: 'Service Providers', href: '/providers', icon: Users, visibleTo: ['all'] },
     { label: 'RFQ System', href: '/rfq', icon: Building2, visibleTo: ['all'] },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['all'] },
-    { label: 'Subscription', href: '/subscription', icon: CreditCard, visibleTo: ['all'] },
+    { label: 'Profile', href: '/profile', icon: User, visibleTo: ['all'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['all'] },
   ];
 
