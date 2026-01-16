@@ -40,6 +40,7 @@ const rfqSchema = z.object({
   budget_range_min: z.number().min(1, "Minimum budget is required"),
   budget_range_max: z.number().min(1, "Maximum budget is required"),
   deadline: z.string().min(1, "Deadline is required"),
+  document_links: z.array(z.string().url("Must be a valid URL")).optional().default([]),
 });
 
 const quoteSchema = z.object({
@@ -90,6 +91,8 @@ export default function RfqSystem() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [newDocumentLink, setNewDocumentLink] = useState("");
+
   const form = useForm<RfqFormData>({
     resolver: zodResolver(rfqSchema),
     defaultValues: {
@@ -98,6 +101,7 @@ export default function RfqSystem() {
       category: "",
       location: "",
       budget_range_min: 0,
+      document_links: [],
       budget_range_max: 0,
       deadline: "",
     },
@@ -499,6 +503,60 @@ export default function RfqSystem() {
                             <FormControl>
                               <Input type="date" {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Document Links Section */}
+                      <FormField
+                        control={form.control}
+                        name="document_links"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Document Links (Optional)</FormLabel>
+                            <div className="space-y-2">
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="https://example.com/document.pdf"
+                                  value={newDocumentLink}
+                                  onChange={(e) => setNewDocumentLink(e.target.value)}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    if (newDocumentLink && newDocumentLink.startsWith('http')) {
+                                      field.onChange([...(field.value || []), newDocumentLink]);
+                                      setNewDocumentLink("");
+                                    }
+                                  }}
+                                >
+                                  Add
+                                </Button>
+                              </div>
+                              {field.value && field.value.length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {field.value.map((link, index) => (
+                                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                                      <a href={link} target="_blank" rel="noopener noreferrer" className="truncate max-w-[200px]">
+                                        {new URL(link).hostname}
+                                      </a>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newLinks = field.value?.filter((_, i) => i !== index) || [];
+                                          field.onChange(newLinks);
+                                        }}
+                                        className="ml-1 text-muted-foreground hover:text-foreground"
+                                      >
+                                        ×
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
