@@ -468,6 +468,7 @@ export type Database = {
           created_at: string | null
           deadline: string
           description: string
+          document_links: string[] | null
           documents: string[] | null
           id: number
           location: string
@@ -486,6 +487,7 @@ export type Database = {
           created_at?: string | null
           deadline: string
           description: string
+          document_links?: string[] | null
           documents?: string[] | null
           id?: number
           location: string
@@ -504,6 +506,7 @@ export type Database = {
           created_at?: string | null
           deadline?: string
           description?: string
+          document_links?: string[] | null
           documents?: string[] | null
           id?: number
           location?: string
