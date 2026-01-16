@@ -15,6 +15,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import AIAnalysisPage from '@/pages/AIAnalysisPage';
 import TermsPage from '@/pages/TermsPage';
 import SettingsPage from '@/pages/SettingsPage';
+import ProfilePage from '@/pages/ProfilePage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -45,6 +46,7 @@ function AppRoutes() {
         <Route path="/ai-analysis" component={AIAnalysisPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/settings" component={SettingsPage} />
+        <Route path="/profile" component={ProfilePage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>
