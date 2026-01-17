@@ -940,6 +940,54 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_requests: {
+        Row: {
+          company_name: string
+          created_at: string
+          document_type: string
+          document_url: string
+          id: string
+          registration_number: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          document_type?: string
+          document_url: string
+          id?: string
+          registration_number?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          document_type?: string
+          document_url?: string
+          id?: string
+          registration_number?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       version_tracking: {
         Row: {
           change_type: string | null

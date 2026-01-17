@@ -16,6 +16,10 @@ import AIAnalysisPage from '@/pages/AIAnalysisPage';
 import TermsPage from '@/pages/TermsPage';
 import SettingsPage from '@/pages/SettingsPage';
 import ProfilePage from '@/pages/ProfilePage';
+import SmartMatchesPage from '@/pages/SmartMatchesPage';
+import RFQPage from '@/pages/RFQPage';
+import ConsortiumsPage from '@/pages/ConsortiumsPage';
+import SubscriptionPage from '@/pages/SubscriptionPage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -47,6 +51,10 @@ function AppRoutes() {
         <Route path="/terms" component={TermsPage} />
         <Route path="/settings" component={SettingsPage} />
         <Route path="/profile" component={ProfilePage} />
+        <Route path="/smart-matches" component={SmartMatchesPage} />
+        <Route path="/rfq" component={RFQPage} />
+        <Route path="/consortiums" component={ConsortiumsPage} />
+        <Route path="/subscription" component={SubscriptionPage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>
