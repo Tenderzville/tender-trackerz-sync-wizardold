@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { User, Building2, Phone, MapPin, Save, Shield, Crown, Calendar } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { User, Building2, Phone, MapPin, Save, Shield, Crown, Calendar, Camera, Upload, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
 
 interface Profile {
   first_name: string | null;
@@ -26,6 +27,7 @@ interface Profile {
   founding_member_expires_at: string | null;
   company_verified: boolean | null;
   loyalty_points: number | null;
+  profile_image_url: string | null;
 }
 
 const BUSINESS_TYPES = [
@@ -46,8 +48,17 @@ const KENYAN_COUNTIES = [
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const verifyDocInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [verifyingCompany, setVerifyingCompany] = useState(false);
+  const [registrationNumber, setRegistrationNumber] = useState('');
+  
   const [profile, setProfile] = useState<Profile>({
     first_name: '',
     last_name: '',
@@ -63,6 +74,26 @@ export default function ProfilePage() {
     founding_member_expires_at: null,
     company_verified: false,
     loyalty_points: 0,
+    profile_image_url: null,
+  });
+
+  // Fetch verification request status
+  const { data: verificationRequest } = useQuery({
+    queryKey: ['verification-request', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('verification_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   useEffect(() => {
@@ -97,6 +128,7 @@ export default function ProfilePage() {
           founding_member_expires_at: data.founding_member_expires_at || null,
           company_verified: data.company_verified || false,
           loyalty_points: data.loyalty_points || 0,
+          profile_image_url: data.profile_image_url || null,
         });
       }
     } catch (error) {
@@ -138,6 +170,110 @@ export default function ProfilePage() {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      toast({ title: 'Invalid file type', description: 'Please upload a JPEG, PNG, WebP, or GIF image', variant: 'destructive' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'Maximum file size is 5MB', variant: 'destructive' });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_image_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, profile_image_url: publicUrl }));
+      toast({ title: 'Profile image updated!' });
+    } catch (error: any) {
+      toast({ title: 'Error uploading image', description: error.message, variant: 'destructive' });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleVerificationSubmit = async () => {
+    const file = verifyDocInputRef.current?.files?.[0];
+    if (!file || !user || !profile.company) return;
+
+    // Validate file
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.type)) {
+      toast({ title: 'Invalid file type', description: 'Please upload a PDF, JPEG, or PNG file', variant: 'destructive' });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'Maximum file size is 10MB', variant: 'destructive' });
+      return;
+    }
+
+    setVerifyingCompany(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      // Upload document
+      const { error: uploadError } = await supabase.storage
+        .from('verification-documents')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get URL (private bucket, so we store the path)
+      const documentPath = `${user.id}/${Date.now()}.${fileExt}`;
+
+      // Create verification request
+      const { error: requestError } = await supabase
+        .from('verification_requests')
+        .insert({
+          user_id: user.id,
+          company_name: profile.company,
+          registration_number: registrationNumber || null,
+          document_url: fileName,
+          document_type: 'business_registration',
+          status: 'pending',
+        });
+
+      if (requestError) throw requestError;
+
+      queryClient.invalidateQueries({ queryKey: ['verification-request'] });
+      toast({ title: 'Verification request submitted!', description: 'Our team will review your documents within 48 hours.' });
+      setVerifyDialogOpen(false);
+      setRegistrationNumber('');
+    } catch (error: any) {
+      toast({ title: 'Error submitting verification', description: error.message, variant: 'destructive' });
+    } finally {
+      setVerifyingCompany(false);
+    }
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-KE', {
@@ -146,6 +282,21 @@ export default function ProfilePage() {
       day: 'numeric'
     });
   };
+
+  const getVerificationStatus = () => {
+    if (profile.company_verified) {
+      return { icon: CheckCircle, color: 'text-green-500', text: 'Verified', badge: 'default' as const };
+    }
+    if (verificationRequest?.status === 'pending') {
+      return { icon: Clock, color: 'text-yellow-500', text: 'Pending Review', badge: 'secondary' as const };
+    }
+    if (verificationRequest?.status === 'rejected') {
+      return { icon: XCircle, color: 'text-red-500', text: 'Rejected', badge: 'destructive' as const };
+    }
+    return null;
+  };
+
+  const verificationStatus = getVerificationStatus();
 
   if (loading) {
     return (
@@ -174,9 +325,68 @@ export default function ProfilePage() {
         </Button>
       </div>
 
+      {/* Profile Image Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                {profile.profile_image_url ? (
+                  <img 
+                    src={profile.profile_image_url} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-12 h-12 text-muted-foreground" />
+                )}
+              </div>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute bottom-0 right-0 rounded-full w-8 h-8"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+              >
+                {uploadingImage ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">
+                {profile.first_name || profile.last_name 
+                  ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+                  : 'Your Name'}
+              </h3>
+              <p className="text-muted-foreground">{profile.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                {profile.business_type && (
+                  <Badge variant="outline" className="capitalize">{profile.business_type}</Badge>
+                )}
+                {profile.is_founding_member && (
+                  <Badge variant="default" className="bg-primary">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Founding Member
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Account Status Cards */}
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Subscription Status */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -200,7 +410,6 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Founding Member Status */}
         {profile.is_founding_member && (
           <Card className="border-primary/50 bg-primary/5">
             <CardContent className="pt-6">
@@ -222,12 +431,11 @@ export default function ProfilePage() {
           </Card>
         )}
 
-        {/* Loyalty Points */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-warning/20 flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-warning" />
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-amber-500" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Loyalty Points</p>
@@ -245,9 +453,7 @@ export default function ProfilePage() {
             <User className="w-5 h-5" />
             Personal Information
           </CardTitle>
-          <CardDescription>
-            Your basic contact information
-          </CardDescription>
+          <CardDescription>Your basic contact information</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -296,16 +502,14 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Company Details */}
+      {/* Company Details with Verification */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="w-5 h-5" />
             Company Details
           </CardTitle>
-          <CardDescription>
-            Information about your business
-          </CardDescription>
+          <CardDescription>Information about your business</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
@@ -317,10 +521,11 @@ export default function ProfilePage() {
                   value={profile.company || ''}
                   onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
                   placeholder="Your company name"
+                  className={verificationStatus ? 'pr-24' : ''}
                 />
-                {profile.company_verified && (
-                  <Badge variant="default" className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">
-                    Verified
+                {verificationStatus && (
+                  <Badge variant={verificationStatus.badge} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs">
+                    {verificationStatus.text}
                   </Badge>
                 )}
               </div>
@@ -336,14 +541,39 @@ export default function ProfilePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {KENYAN_COUNTIES.map((county) => (
-                    <SelectItem key={county} value={county}>
-                      {county}
-                    </SelectItem>
+                    <SelectItem key={county} value={county}>{county}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Verification Section */}
+          {!profile.company_verified && profile.company && (
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Company Verification
+                  </h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {verificationRequest?.status === 'pending' 
+                      ? 'Your verification is being reviewed. We\'ll notify you once complete.'
+                      : verificationRequest?.status === 'rejected'
+                      ? `Rejected: ${verificationRequest.rejection_reason || 'Please submit valid documents'}`
+                      : 'Verify your company to build trust with other users and access premium features.'}
+                  </p>
+                </div>
+                {verificationRequest?.status !== 'pending' && (
+                  <Button variant="outline" size="sm" onClick={() => setVerifyDialogOpen(true)}>
+                    <Upload className="w-4 h-4 mr-1" />
+                    {verificationRequest?.status === 'rejected' ? 'Re-submit' : 'Verify'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -386,13 +616,11 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Danger Zone - Future */}
+      {/* Danger Zone */}
       <Card className="border-destructive/50">
         <CardHeader>
           <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions
-          </CardDescription>
+          <CardDescription>Irreversible actions</CardDescription>
         </CardHeader>
         <CardContent>
           <Button variant="destructive" disabled>
@@ -400,6 +628,61 @@ export default function ProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Verification Dialog */}
+      <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verify Your Company</DialogTitle>
+            <DialogDescription>
+              Upload your business registration certificate or equivalent document
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Company Name</Label>
+              <Input value={profile.company || ''} disabled className="bg-muted" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Business Registration Number (Optional)</Label>
+              <Input 
+                value={registrationNumber}
+                onChange={(e) => setRegistrationNumber(e.target.value)}
+                placeholder="e.g., PVT-XXXXX"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Upload Document *</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                <input
+                  ref={verifyDocInputRef}
+                  type="file"
+                  accept="application/pdf,image/jpeg,image/png"
+                  className="hidden"
+                  id="verify-doc"
+                />
+                <label htmlFor="verify-doc" className="cursor-pointer">
+                  <FileText className="w-10 h-10 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm font-medium">Click to upload</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    PDF, JPEG, or PNG (max 10MB)
+                  </p>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setVerifyDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleVerificationSubmit} disabled={verifyingCompany}>
+              {verifyingCompany ? 'Submitting...' : 'Submit for Verification'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
