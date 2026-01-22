@@ -89,6 +89,7 @@ export function AppNavigation() {
   // Admin-only items (hidden from non-admins completely)
   const adminItems: NavItem[] = [
     { label: 'Admin Dashboard', href: '/admin', icon: ShieldCheck, roles: ['admin'], visibleTo: ['all'] },
+    { label: 'Company Verification', href: '/admin/verification', icon: Building2, roles: ['admin'], visibleTo: ['all'] },
     { label: 'Automation', href: '/admin/automation', icon: BarChart3, roles: ['admin'], visibleTo: ['all'] },
   ];
 

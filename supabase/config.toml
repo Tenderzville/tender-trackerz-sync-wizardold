@@ -26,8 +26,14 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://6b0dfe13-5e2f-4146-b22f-22d3a7ae6e2a.lovableproject.com"]
+site_url = "https://tenderproapp.tenderzville-portal.co.ke"
+additional_redirect_urls = [
+  "https://tenderproapp.tenderzville-portal.co.ke",
+  "https://tenderproapp.tenderzville-portal.co.ke/**",
+  "https://tenderproapp.tenderzville-portal.co.ke/subscription/callback",
+  "https://6b0dfe13-5e2f-4146-b22f-22d3a7ae6e2a.lovableproject.com",
+  "http://localhost:3000"
+]
 jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 security_update_password_require_reauthentication = true
