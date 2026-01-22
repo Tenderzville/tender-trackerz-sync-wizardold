@@ -12,6 +12,7 @@ import ProvidersPage from '@/pages/ProvidersPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import AuthPage from '@/pages/AuthPage';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AdminVerificationPage from '@/pages/AdminVerificationPage';
 import AIAnalysisPage from '@/pages/AIAnalysisPage';
 import TermsPage from '@/pages/TermsPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -20,6 +21,7 @@ import SmartMatchesPage from '@/pages/SmartMatchesPage';
 import RFQPage from '@/pages/RFQPage';
 import ConsortiumsPage from '@/pages/ConsortiumsPage';
 import SubscriptionPage from '@/pages/SubscriptionPage';
+import SubscriptionCallbackPage from '@/pages/SubscriptionCallbackPage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -47,6 +49,7 @@ function AppRoutes() {
         <Route path="/service-providers" component={ProvidersPage} />
         <Route path="/notifications" component={NotificationsPage} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/verification" component={AdminVerificationPage} />
         <Route path="/ai-analysis" component={AIAnalysisPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/settings" component={SettingsPage} />
@@ -55,6 +58,7 @@ function AppRoutes() {
         <Route path="/rfq" component={RFQPage} />
         <Route path="/consortiums" component={ConsortiumsPage} />
         <Route path="/subscription" component={SubscriptionPage} />
+        <Route path="/subscription/callback" component={SubscriptionCallbackPage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>

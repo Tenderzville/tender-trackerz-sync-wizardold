@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePaystack, PAYSTACK_PLANS } from '@/hooks/usePaystack';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift } from 'lucide-react';
+import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift, Loader2 } from 'lucide-react';
 
 const PLANS = [
   {
@@ -29,8 +30,9 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 999,
+    price: 500,
     period: 'month',
+    paystack_plan: 'pro',
     features: [
       'Unlimited tender saves',
       'Full tender details',
@@ -43,10 +45,11 @@ const PLANS = [
     popular: true,
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 4999,
+    id: 'business',
+    name: 'Business',
+    price: 1500,
     period: 'month',
+    paystack_plan: 'business',
     features: [
       'Everything in Pro',
       'Multiple team members',
@@ -62,7 +65,10 @@ const PLANS = [
 export default function SubscriptionPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { initializePayment, isLoading: paymentLoading } = usePaystack();
   const [copiedReferral, setCopiedReferral] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   // Fetch profile
   const { data: profile } = useQuery({
@@ -88,12 +94,33 @@ export default function SubscriptionPage() {
     }
   };
 
-  const handleSubscribe = (planId: string) => {
-    // In production, this would integrate with Paystack
-    toast({ 
-      title: 'Coming Soon', 
-      description: 'Payment integration will be available soon!',
-    });
+  const handleSubscribe = async (planId: string) => {
+    if (!user?.email || !user?.id) {
+      toast({ 
+        title: 'Login Required', 
+        description: 'Please log in to subscribe',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (planId === 'free') {
+      toast({ 
+        title: 'Free Plan', 
+        description: 'You are already on the free plan!',
+      });
+      return;
+    }
+
+    setSelectedPlan(planId);
+    
+    try {
+      await initializePayment(planId, user.email, user.id);
+    } catch (error) {
+      console.error('Payment error:', error);
+    } finally {
+      setSelectedPlan(null);
+    }
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -103,6 +130,11 @@ export default function SubscriptionPage() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const isCurrentPlan = (planId: string) => {
+    if (!profile) return planId === 'free';
+    return profile.subscription_type === planId;
   };
 
   return (
@@ -134,6 +166,9 @@ export default function SubscriptionPage() {
                   <span className="text-2xl font-bold capitalize">{profile.subscription_type || 'Free'}</span>
                   {profile.is_founding_member && (
                     <Badge variant="default" className="bg-primary">Founding Member</Badge>
+                  )}
+                  {profile.subscription_status === 'active' && profile.subscription_type !== 'free' && (
+                    <Badge variant="outline" className="text-green-600 border-green-300">Active</Badge>
                   )}
                 </div>
                 {profile.subscription_end_date && (
@@ -194,7 +229,7 @@ export default function SubscriptionPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {plan.id === 'pro' && <Star className="w-5 h-5 text-primary" />}
-                {plan.id === 'enterprise' && <Zap className="w-5 h-5 text-primary" />}
+                {plan.id === 'business' && <Zap className="w-5 h-5 text-primary" />}
                 {plan.name}
               </CardTitle>
               <div className="mt-2">
@@ -220,16 +255,77 @@ export default function SubscriptionPage() {
               <Button 
                 className="w-full"
                 variant={plan.popular ? 'default' : 'outline'}
-                disabled={profile?.subscription_type === plan.id}
+                disabled={isCurrentPlan(plan.id) || (paymentLoading && selectedPlan === plan.id)}
                 onClick={() => handleSubscribe(plan.id)}
               >
-                {profile?.subscription_type === plan.id ? 'Current Plan' : 
-                 plan.price === 0 ? 'Get Started' : 'Subscribe'}
+                {paymentLoading && selectedPlan === plan.id ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : isCurrentPlan(plan.id) ? (
+                  'Current Plan'
+                ) : plan.price === 0 ? (
+                  'Get Started'
+                ) : (
+                  'Subscribe'
+                )}
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Annual Plans */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="w-5 h-5 text-primary" />
+            Annual Plans - Save 20%
+          </CardTitle>
+          <CardDescription>
+            Pay annually and get 2 months free
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="p-4 border rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold">Pro Annual</span>
+                <Badge variant="secondary">Save KSh 1,200</Badge>
+              </div>
+              <p className="text-2xl font-bold">KSh 4,800<span className="text-sm text-muted-foreground">/year</span></p>
+              <Button 
+                className="w-full mt-4" 
+                variant="outline"
+                disabled={paymentLoading && selectedPlan === 'pro_annual'}
+                onClick={() => handleSubscribe('pro_annual')}
+              >
+                {paymentLoading && selectedPlan === 'pro_annual' ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+                ) : 'Subscribe Annually'}
+              </Button>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-semibold">Business Annual</span>
+                <Badge variant="secondary">Save KSh 3,600</Badge>
+              </div>
+              <p className="text-2xl font-bold">KSh 14,400<span className="text-sm text-muted-foreground">/year</span></p>
+              <Button 
+                className="w-full mt-4" 
+                variant="outline"
+                disabled={paymentLoading && selectedPlan === 'business_annual'}
+                onClick={() => handleSubscribe('business_annual')}
+              >
+                {paymentLoading && selectedPlan === 'business_annual' ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing...</>
+                ) : 'Subscribe Annually'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Referral Section */}
       <Card>
@@ -262,6 +358,19 @@ export default function SubscriptionPage() {
                 <span className="text-2xl font-bold">{profile?.total_referrals || 0}</span>
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Info */}
+      <Card className="bg-muted/50">
+        <CardContent className="pt-6">
+          <div className="text-center text-sm text-muted-foreground">
+            <p className="flex items-center justify-center gap-2 mb-2">
+              <Shield className="w-4 h-4" />
+              Secure payments powered by Paystack
+            </p>
+            <p>All payments are processed in Kenyan Shillings (KES) via M-Pesa, Card, or Bank Transfer</p>
           </div>
         </CardContent>
       </Card>
