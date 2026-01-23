@@ -228,7 +228,33 @@ serve(async (req) => {
               }
             });
 
-            // Create success notification
+            // Create payment receipt notification
+            const amountPaid = data.data.amount / 100;
+            const currency = data.data.currency || 'KES';
+            const receiptNumber = `TPA-${Date.now().toString(36).toUpperCase()}`;
+            
+            await supabase.from('user_alerts').insert({
+              user_id: userId,
+              type: 'payment_receipt',
+              title: '🧾 Payment Receipt',
+              message: `Receipt #${receiptNumber} - ${currency} ${amountPaid.toLocaleString()} paid for ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} plan. Valid until ${endDate.toLocaleDateString()}.`,
+              is_read: false,
+              data: {
+                receipt_number: receiptNumber,
+                amount: amountPaid,
+                currency,
+                plan: subscriptionType,
+                plan_name: metadata?.plan_name || plan,
+                payment_reference: reference,
+                payment_date: now.toISOString(),
+                subscription_start: now.toISOString(),
+                subscription_end: endDate.toISOString(),
+                payment_method: 'Paystack',
+                customer_email: data.data.customer?.email,
+              }
+            });
+
+            // Create subscription activated notification
             await supabase.from('user_alerts').insert({
               user_id: userId,
               type: 'subscription_activated',
@@ -286,9 +312,26 @@ serve(async (req) => {
                 subscription_end_date: endDate.toISOString(),
                 subscription_locked: false,
                 lock_reason: null,
-                is_founding_member: false, // Remove badge after payment
+                is_founding_member: false,
               })
               .eq('id', userId);
+
+            // Create webhook payment receipt
+            const webhookReceiptNumber = `TPA-${Date.now().toString(36).toUpperCase()}`;
+            await supabase.from('user_alerts').insert({
+              user_id: userId,
+              type: 'payment_receipt',
+              title: '🧾 Payment Confirmed',
+              message: `Receipt #${webhookReceiptNumber} - Payment confirmed for ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} plan. Your subscription is now active.`,
+              is_read: false,
+              data: {
+                receipt_number: webhookReceiptNumber,
+                plan: subscriptionType,
+                payment_date: now.toISOString(),
+                subscription_end: endDate.toISOString(),
+                source: 'webhook',
+              }
+            });
           }
         }
 
