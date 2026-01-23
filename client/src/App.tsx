@@ -28,6 +28,7 @@ import SettingsPage from "@/pages/settings";
 import SmartMatchesPage from "@/pages/smart-matches";
 import SubscriptionCallback from "@/pages/subscription-callback";
 import TermsPage from "@/pages/terms";
+import TransactionHistory from "@/pages/transaction-history";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -69,6 +70,7 @@ function Router() {
         <Route path="/rfq-system" component={RfqSystem} />
         <Route path="/subscription" component={Subscription} />
         <Route path="/subscription/callback" component={SubscriptionCallback} />
+        <Route path="/transactions" component={TransactionHistory} />
         <Route path="/trigger-scraper" component={TriggerScraper} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/admin/automation" component={AutomationPage} />

@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings, Shield, Target } from 'lucide-react';
+import { Bell, Home, Search, Bookmark, Users, Brain, BarChart, Package, FileText, Settings, Shield, Target, Receipt } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,6 +136,12 @@ export function AppNavigation() {
                   <Link href="/subscription">
                     <Settings className="h-4 w-4 mr-2" />
                     Subscription
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/transactions">
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Transactions
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
