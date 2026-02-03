@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import jsPDF from "jspdf";
 import { 
   FileText, 
   Download, 
@@ -16,7 +17,9 @@ import {
   XCircle,
   Clock,
   TrendingUp,
-  Filter
+  Filter,
+  FileDown,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   Select,
@@ -25,6 +28,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 
 interface PaymentReceipt {
@@ -63,7 +72,7 @@ interface SubscriptionHistoryItem {
 }
 
 export default function TransactionHistoryPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [filter, setFilter] = useState<'all' | 'receipts' | 'history'>('all');
 
   // Fetch payment receipts from user_alerts
@@ -101,52 +110,243 @@ export default function TransactionHistoryPage() {
     enabled: !!user?.id,
   });
 
-  // Generate PDF receipt
-  const downloadReceiptPDF = (receipt: PaymentReceipt) => {
+  // Generate simple receipt PDF
+  const downloadSimpleReceipt = (receipt: PaymentReceipt) => {
+    const doc = new jsPDF();
     const receiptData = receipt.data;
-    const content = `
-╔══════════════════════════════════════════════════════════════╗
-║                      TENDERALERT                             ║
-║                    PAYMENT RECEIPT                           ║
-╠══════════════════════════════════════════════════════════════╣
-║                                                              ║
-║  Receipt Number: ${receiptData.receipt_number || 'N/A'}
-║  
-║  Date: ${receiptData.payment_date ? format(new Date(receiptData.payment_date), 'PPP') : format(new Date(receipt.created_at), 'PPP')}
-║  
-║  ─────────────────────────────────────────────────────────── ║
-║  PAYMENT DETAILS                                             ║
-║  ─────────────────────────────────────────────────────────── ║
-║  
-║  Plan: ${receiptData.plan_name || receiptData.plan || 'N/A'}
-║  Amount: ${receiptData.currency || 'KES'} ${receiptData.amount?.toLocaleString() || 'N/A'}
-║  Payment Method: ${receiptData.payment_method || 'Paystack'}
-║  Reference: ${receiptData.payment_reference || 'N/A'}
-║  
-║  ─────────────────────────────────────────────────────────── ║
-║  SUBSCRIPTION PERIOD                                         ║
-║  ─────────────────────────────────────────────────────────── ║
-║  
-║  Start Date: ${receiptData.subscription_start ? format(new Date(receiptData.subscription_start), 'PPP') : 'N/A'}
-║  End Date: ${receiptData.subscription_end ? format(new Date(receiptData.subscription_end), 'PPP') : 'N/A'}
-║  
-║  ─────────────────────────────────────────────────────────── ║
-║                                                              ║
-║  Thank you for your subscription!                            ║
-║  Support: support@tenderalert.co.ke                          ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
-    `.trim();
+    
+    // Header
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TenderAlert Pro', 20, 25);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Payment Receipt', 20, 35);
+    
+    // Receipt details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    
+    let y = 60;
+    const lineHeight = 10;
+    
+    // Receipt number
+    doc.setFont('helvetica', 'bold');
+    doc.text('Receipt Number:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.receipt_number || `TPA-${receipt.id}`, 80, y);
+    y += lineHeight;
+    
+    // Date
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.payment_date ? format(new Date(receiptData.payment_date), 'PPP') : format(new Date(receipt.created_at), 'PPP'), 80, y);
+    y += lineHeight * 2;
+    
+    // Divider
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, y, 190, y);
+    y += lineHeight;
+    
+    // Payment details section
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Details', 20, y);
+    y += lineHeight;
+    doc.setFontSize(11);
+    
+    // Plan
+    doc.setFont('helvetica', 'bold');
+    doc.text('Plan:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text((receiptData.plan_name || receiptData.plan || 'Pro').toUpperCase(), 80, y);
+    y += lineHeight;
+    
+    // Amount
+    doc.setFont('helvetica', 'bold');
+    doc.text('Amount Paid:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(14);
+    doc.text(`${receiptData.currency || 'KES'} ${(receiptData.amount || 0).toLocaleString()}`, 80, y);
+    doc.setFontSize(11);
+    y += lineHeight;
+    
+    // Payment method
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment Method:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.payment_method || 'Paystack', 80, y);
+    y += lineHeight;
+    
+    // Reference
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reference:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.payment_reference || 'N/A', 80, y);
+    y += lineHeight * 2;
+    
+    // Divider
+    doc.line(20, y, 190, y);
+    y += lineHeight;
+    
+    // Subscription period
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Subscription Period', 20, y);
+    y += lineHeight;
+    doc.setFontSize(11);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Start Date:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.subscription_start ? format(new Date(receiptData.subscription_start), 'PPP') : 'N/A', 80, y);
+    y += lineHeight;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('End Date:', 20, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.subscription_end ? format(new Date(receiptData.subscription_end), 'PPP') : 'N/A', 80, y);
+    y += lineHeight * 2;
+    
+    // Footer
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 250, 210, 47, 'F');
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Thank you for your subscription!', 20, 265);
+    doc.text('Support: support@tenderalert.co.ke', 20, 275);
+    doc.text('www.tenderalert.co.ke', 20, 285);
+    
+    doc.save(`TenderAlert-Receipt-${receiptData.receipt_number || receipt.id}.pdf`);
+  };
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `TenderAlert-Receipt-${receiptData.receipt_number || receipt.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // Generate invoice-style PDF
+  const downloadInvoicePDF = (receipt: PaymentReceipt) => {
+    const doc = new jsPDF();
+    const receiptData = receipt.data;
+    
+    // Company header
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, 210, 50, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INVOICE', 150, 30);
+    doc.setFontSize(16);
+    doc.text('TenderAlert Pro', 20, 25);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Kenya Tender Intelligence Platform', 20, 35);
+    doc.text('support@tenderalert.co.ke', 20, 43);
+    
+    // Invoice details - right side
+    doc.setTextColor(0, 0, 0);
+    let y = 65;
+    
+    // Invoice number box
+    doc.setFillColor(245, 245, 245);
+    doc.rect(120, 55, 70, 35, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Invoice Number:', 125, 65);
+    doc.setFont('helvetica', 'normal');
+    doc.text(receiptData.receipt_number || `INV-${receipt.id}`, 125, 73);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Date:', 125, 82);
+    doc.setFont('helvetica', 'normal');
+    doc.text(format(new Date(receipt.created_at), 'PP'), 125, 90);
+    
+    // Bill to section
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', 20, y);
+    y += 8;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(profile?.first_name && profile?.last_name 
+      ? `${profile.first_name} ${profile.last_name}` 
+      : 'Customer', 20, y);
+    y += 6;
+    doc.text(profile?.company || '', 20, y);
+    y += 6;
+    doc.text(receiptData.customer_email || user?.email || '', 20, y);
+    y += 20;
+    
+    // Items table header
+    doc.setFillColor(30, 64, 175);
+    doc.rect(20, y, 170, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Description', 25, y + 7);
+    doc.text('Period', 100, y + 7);
+    doc.text('Amount', 160, y + 7);
+    y += 15;
+    
+    // Item row
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    const planName = `${(receiptData.plan_name || receiptData.plan || 'Pro').toUpperCase()} Subscription`;
+    doc.text(planName, 25, y);
+    
+    const period = receiptData.subscription_start && receiptData.subscription_end
+      ? `${format(new Date(receiptData.subscription_start), 'MMM dd')} - ${format(new Date(receiptData.subscription_end), 'MMM dd, yyyy')}`
+      : '1 Month';
+    doc.text(period, 100, y);
+    doc.text(`${receiptData.currency || 'KES'} ${(receiptData.amount || 0).toLocaleString()}`, 160, y);
+    y += 15;
+    
+    // Divider
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, y, 190, y);
+    y += 10;
+    
+    // Subtotal
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal:', 130, y);
+    doc.text(`${receiptData.currency || 'KES'} ${(receiptData.amount || 0).toLocaleString()}`, 160, y);
+    y += 8;
+    
+    // Tax (VAT 16% for Kenya)
+    const taxAmount = Math.round((receiptData.amount || 0) * 0.16);
+    doc.text('VAT (16%):', 130, y);
+    doc.text(`${receiptData.currency || 'KES'} ${taxAmount.toLocaleString()}`, 160, y);
+    y += 10;
+    
+    // Total
+    doc.setFillColor(30, 64, 175);
+    doc.rect(120, y - 3, 70, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    const totalAmount = (receiptData.amount || 0) + taxAmount;
+    doc.text('Total:', 130, y + 5);
+    doc.text(`${receiptData.currency || 'KES'} ${totalAmount.toLocaleString()}`, 160, y + 5);
+    y += 25;
+    
+    // Payment status
+    doc.setTextColor(34, 197, 94);
+    doc.setFontSize(12);
+    doc.text('✓ PAID', 20, y);
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Payment Reference: ${receiptData.payment_reference || 'N/A'}`, 20, y + 8);
+    doc.text(`Payment Method: ${receiptData.payment_method || 'Paystack'}`, 20, y + 16);
+    
+    // Footer
+    doc.setFillColor(245, 245, 245);
+    doc.rect(0, 260, 210, 37, 'F');
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text('This is a computer-generated invoice and is valid without signature.', 20, 272);
+    doc.text('For any queries, please contact support@tenderalert.co.ke', 20, 280);
+    doc.text('TenderAlert Pro - Kenya\'s Premier Tender Intelligence Platform', 20, 288);
+    
+    doc.save(`TenderAlert-Invoice-${receiptData.receipt_number || receipt.id}.pdf`);
   };
 
   const getStatusBadge = (action: string) => {
@@ -175,7 +375,7 @@ export default function TransactionHistoryPage() {
             Transaction History
           </h1>
           <p className="text-muted-foreground">
-            View your payment receipts and subscription history
+            View your payment receipts, download PDFs, and track subscription history
           </p>
         </div>
 
@@ -302,15 +502,24 @@ export default function TransactionHistoryPage() {
                             </div>
                           </div>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => downloadReceiptPDF(receipt)}
-                          className="ml-4"
-                        >
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="ml-4">
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => downloadSimpleReceipt(receipt)}>
+                              <FileDown className="h-4 w-4 mr-2" />
+                              Simple Receipt (PDF)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => downloadInvoicePDF(receipt)}>
+                              <FileSpreadsheet className="h-4 w-4 mr-2" />
+                              Invoice (PDF)
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </CardContent>
                   </Card>

@@ -68,6 +68,7 @@
     "google-spreadsheet": "^4.1.4",
     "googleapis": "^149.0.0",
     "input-otp": "^1.4.2",
+    "jspdf": "^4.1.0",
     "lovable-tagger": "^1.1.8",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",

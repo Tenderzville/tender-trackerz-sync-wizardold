@@ -21,8 +21,16 @@ export function usePaystack() {
   const { toast } = useToast();
 
   const initializePayment = async (plan: string, email: string, userId: string) => {
+    if (isLoading) {
+      console.warn('Payment already in progress');
+      return;
+    }
+    
     setIsLoading(true);
+    
     try {
+      console.log('Initializing Paystack payment:', { plan, email, userId });
+      
       const { data, error } = await supabase.functions.invoke('paystack-payment', {
         body: {
           action: 'initialize',
@@ -33,15 +41,37 @@ export function usePaystack() {
         },
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
+      if (error) {
+        console.error('Paystack function error:', error);
+        throw new Error(error.message || 'Failed to connect to payment service');
+      }
+      
+      if (!data?.success) {
+        console.error('Paystack initialization failed:', data);
+        throw new Error(data?.error || 'Payment initialization failed');
+      }
+      
+      if (!data?.data?.authorization_url) {
+        console.error('No authorization URL in response:', data);
+        throw new Error('Invalid payment response - no redirect URL');
+      }
 
+      toast({
+        title: 'Redirecting to Payment',
+        description: 'You will be redirected to Paystack to complete your payment.',
+      });
+
+      // Small delay to show toast before redirect
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Redirect to Paystack checkout
       window.location.href = data.data.authorization_url;
       
       return data.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Payment initialization failed';
+      const message = err instanceof Error ? err.message : 'Payment initialization failed. Please try again.';
+      console.error('Payment error:', message, err);
+      
       toast({
         title: 'Payment Error',
         description: message,
@@ -56,6 +86,8 @@ export function usePaystack() {
   const verifyPayment = async (reference: string) => {
     setIsLoading(true);
     try {
+      console.log('Verifying payment:', reference);
+      
       const { data, error } = await supabase.functions.invoke('paystack-payment', {
         body: {
           action: 'verify',
@@ -63,17 +95,25 @@ export function usePaystack() {
         },
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
+      if (error) {
+        console.error('Verification error:', error);
+        throw new Error(error.message || 'Verification failed');
+      }
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Payment verification failed');
+      }
 
       toast({
         title: 'Payment Successful!',
-        description: data.data.message,
+        description: data.data?.message || 'Your subscription is now active.',
       });
 
       return data.data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Payment verification failed';
+      console.error('Verification error:', message, err);
+      
       toast({
         title: 'Verification Error',
         description: message,
@@ -94,8 +134,12 @@ export function usePaystack() {
         },
       });
 
-      if (error) throw error;
-      return data.data;
+      if (error) {
+        console.error('Access check error:', error);
+        return { has_access: false };
+      }
+      
+      return data?.data || { has_access: false };
     } catch (err) {
       console.error('Access check error:', err);
       return { has_access: false };
