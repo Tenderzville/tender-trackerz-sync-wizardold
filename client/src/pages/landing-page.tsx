@@ -32,7 +32,7 @@ export default function Landing() {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             <Button asChild>
-              <a href="/api/login">Sign In</a>
+              <a href="/auth">Sign In</a>
             </Button>
           </div>
         </div>
