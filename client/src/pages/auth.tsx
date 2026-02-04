@@ -51,10 +51,27 @@ export default function AuthPage() {
   // Handle password recovery URL parameters and errors
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    const hash = window.location.hash;
     
-    // Check for recovery type
+    // Parse hash parameters (Supabase puts tokens in hash)
+    const hashString = hash.startsWith('#') ? hash.substring(1) : hash;
+    const hashParams = new URLSearchParams(hashString);
+    
+    // Check for recovery type in hash (from successful email link click)
     const type = urlParams.get('type') || hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
+    
+    // If we have an access token with recovery type, show password reset form
+    if (type === 'recovery' && accessToken) {
+      console.log('Recovery flow detected with access token');
+      setIsPasswordRecovery(true);
+      setMessage('Please enter your new password below.');
+      // Clean URL but keep Supabase session handling
+      window.history.replaceState({}, document.title, '/auth');
+      return;
+    }
+    
+    // Check for recovery type without token (fallback)
     if (type === 'recovery') {
       setIsPasswordRecovery(true);
       setMessage('Please enter your new password below.');
@@ -67,7 +84,6 @@ export default function AuthPage() {
     
     if (errorCode === 'otp_expired') {
       setError('Your password reset link has expired. Please request a new one below.');
-      // Clear the URL params
       window.history.replaceState({}, document.title, '/auth');
     } else if (errorCode === 'access_denied') {
       setError(decodeURIComponent(errorDescription || 'Access denied. Please try again.'));

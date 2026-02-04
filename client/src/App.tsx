@@ -1,5 +1,5 @@
 
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/common/theme-provider";
 import { AppNavigation } from "@/components/common/app-navigation";
 import { ErrorBoundary } from "@/components/common/error-boundary";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing-page";
 import Dashboard from "@/pages/dashboard-page";
@@ -54,11 +54,50 @@ function useGlobalErrorHandler() {
   }, []);
 }
 
+// Hook to detect auth recovery flow and redirect appropriately
+function useAuthRecoveryRedirect() {
+  const [, setLocation] = useLocation();
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    // Check for recovery tokens in URL hash (Supabase puts them there after email verification)
+    const hash = window.location.hash;
+    const searchParams = new URLSearchParams(window.location.search);
+    
+    // Check for recovery type in hash (e.g., #access_token=...&type=recovery)
+    if (hash && hash.includes('type=recovery')) {
+      // Redirect to auth page with the hash preserved
+      window.location.href = `/auth${hash}`;
+      return;
+    }
+    
+    // Check for error codes (expired links, etc.)
+    const errorCode = searchParams.get('error_code');
+    if (errorCode) {
+      // Redirect to auth page with the error params
+      window.location.href = `/auth${window.location.search}${hash}`;
+      return;
+    }
+    
+    // Check for access_token in hash (successful auth callback)
+    if (hash && hash.includes('access_token')) {
+      // This is a successful auth, let Supabase handle it
+      setChecked(true);
+      return;
+    }
+    
+    setChecked(true);
+  }, [setLocation]);
+
+  return checked;
+}
+
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const recoveryChecked = useAuthRecoveryRedirect();
   useGlobalErrorHandler();
 
-  if (isLoading) {
+  if (isLoading || !recoveryChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
