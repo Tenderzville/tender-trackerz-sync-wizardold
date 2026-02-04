@@ -48,13 +48,33 @@ export default function AuthPage() {
     }
   }, [isAuthenticated, setLocation]);
 
-  // Handle password recovery URL parameters
+  // Handle password recovery URL parameters and errors
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type');
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+    
+    // Check for recovery type
+    const type = urlParams.get('type') || hashParams.get('type');
     if (type === 'recovery') {
       setIsPasswordRecovery(true);
       setMessage('Please enter your new password below.');
+      return;
+    }
+    
+    // Check for auth errors (expired link, invalid OTP, etc.)
+    const errorCode = urlParams.get('error_code') || hashParams.get('error_code');
+    const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
+    
+    if (errorCode === 'otp_expired') {
+      setError('Your password reset link has expired. Please request a new one below.');
+      // Clear the URL params
+      window.history.replaceState({}, document.title, '/auth');
+    } else if (errorCode === 'access_denied') {
+      setError(decodeURIComponent(errorDescription || 'Access denied. Please try again.'));
+      window.history.replaceState({}, document.title, '/auth');
+    } else if (errorCode) {
+      setError(decodeURIComponent(errorDescription || 'An authentication error occurred. Please try again.'));
+      window.history.replaceState({}, document.title, '/auth');
     }
   }, []);
 
