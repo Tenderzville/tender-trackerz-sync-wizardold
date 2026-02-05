@@ -42,12 +42,18 @@ export default function AuthPage() {
     role: 'supplier' as 'buyer' | 'supplier',
   });
 
-  // Redirect authenticated users
+  // Redirect authenticated users (but never during password-recovery)
   useEffect(() => {
-    if (isAuthenticated) {
+    const recoveryInUrl =
+      window.location.search.includes('code=') ||
+      window.location.search.includes('type=recovery') ||
+      window.location.hash.includes('type=recovery') ||
+      window.location.hash.includes('access_token');
+
+    if (isAuthenticated && !isPasswordRecovery && !recoveryInUrl) {
       setLocation('/dashboard');
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isAuthenticated, isPasswordRecovery, setLocation]);
 
   // Handle password recovery URL parameters and errors
   useEffect(() => {
@@ -368,7 +374,11 @@ export default function AuthPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => initiateOAuth('google')}
+                      onClick={async () => {
+                        setError(null);
+                        const result = await initiateOAuth('google');
+                        if (!result.success) setError(result.error || 'OAuth failed');
+                      }}
                       disabled={stytchLoading}
                     >
                       <Chrome className="h-4 w-4 mr-2" />
@@ -378,7 +388,11 @@ export default function AuthPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => initiateOAuth('github')}
+                      onClick={async () => {
+                        setError(null);
+                        const result = await initiateOAuth('github');
+                        if (!result.success) setError(result.error || 'OAuth failed');
+                      }}
                       disabled={stytchLoading}
                     >
                       <Github className="h-4 w-4 mr-2" />
@@ -388,7 +402,11 @@ export default function AuthPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => initiateOAuth('microsoft')}
+                      onClick={async () => {
+                        setError(null);
+                        const result = await initiateOAuth('microsoft');
+                        if (!result.success) setError(result.error || 'OAuth failed');
+                      }}
                       disabled={stytchLoading}
                     >
                       <svg className="h-4 w-4 mr-2" viewBox="0 0 23 23">
@@ -413,7 +431,7 @@ export default function AuthPage() {
                 </div>
               ) : (
                 /* Supabase Email Auth */
-                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="signin"><Lock className="h-4 w-4" /></TabsTrigger>
                 <TabsTrigger value="magiclink"><Mail className="h-4 w-4" /></TabsTrigger>

@@ -259,6 +259,21 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
                 <ExternalLink className="h-4 w-4" />
                 <span>View Details</span>
               </Button>
+
+              {tender.sourceUrl && (
+                <Button asChild variant="outline" size="sm" className="flex items-center space-x-1">
+                  <a
+                    href={tender.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    aria-label={`Open original tender source for ${tender.title}`}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>Source</span>
+                  </a>
+                </Button>
+              )}
+
               <Button variant="outline" size="sm" className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
                 <span>Join Consortium</span>
