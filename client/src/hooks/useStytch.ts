@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StytchConfig {
   projectId: string;
@@ -21,31 +22,29 @@ export function useStytch() {
     setError(null);
 
     try {
-      // Build redirect URL
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-      
-      // In production, this would call Stytch's OAuth API
-      // For now, we'll use edge function to handle OAuth flow
-      const response = await fetch('/api/stytch-oauth-init', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // NOTE:
+      // This project currently authenticates users via Supabase Auth sessions.
+      // The previous Stytch flow relied on /api/* routes that don't exist in this codebase.
+      // We route social OAuth through Supabase providers so the user ends up with a valid
+      // Supabase session (required by the rest of the app).
+
+      const redirectUrl = `${window.location.origin}/auth`;
+      const supabaseProvider = provider === 'microsoft' ? 'azure' : provider;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: supabaseProvider as any,
+        options: {
+          redirectTo: redirectUrl,
         },
-        body: JSON.stringify({
-          provider,
-          redirect_url: redirectUrl,
-        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to initiate OAuth flow');
+      if (error) throw error;
+
+      // Some environments require explicit navigation.
+      if (data?.url) {
+        window.location.href = data.url;
       }
 
-      const { oauth_url } = await response.json();
-      
-      // Redirect to OAuth provider
-      window.location.href = oauth_url;
-      
       return { success: true };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'OAuth initiation failed';
