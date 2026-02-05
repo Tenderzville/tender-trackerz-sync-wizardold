@@ -21,6 +21,7 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [authMethod, setAuthMethod] = useState<'supabase' | 'stytch'>('supabase');
+  const [activeTab, setActiveTab] = useState<'signin' | 'magiclink' | 'reset' | 'signup'>('signin');
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [resetEmail, setResetEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -84,14 +85,34 @@ export default function AuthPage() {
     
     if (errorCode === 'otp_expired') {
       setError('Your password reset link has expired. Please request a new one below.');
+      setActiveTab('reset');
       window.history.replaceState({}, document.title, '/auth');
     } else if (errorCode === 'access_denied') {
       setError(decodeURIComponent(errorDescription || 'Access denied. Please try again.'));
+      setActiveTab('reset');
       window.history.replaceState({}, document.title, '/auth');
     } else if (errorCode) {
       setError(decodeURIComponent(errorDescription || 'An authentication error occurred. Please try again.'));
+      setActiveTab('reset');
       window.history.replaceState({}, document.title, '/auth');
     }
+  }, []);
+
+  // Supabase PKCE recovery links can arrive as /auth?code=... (no #type=recovery).
+  // Supabase will exchange the code and then emit PASSWORD_RECOVERY.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setError(null);
+        setAuthMethod('supabase');
+        setIsPasswordRecovery(true);
+        setMessage('Please enter your new password below.');
+        // Now safe to clean the URL.
+        window.history.replaceState({}, document.title, '/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -392,7 +413,7 @@ export default function AuthPage() {
                 </div>
               ) : (
                 /* Supabase Email Auth */
-                <Tabs defaultValue="signin" className="w-full">
+                 <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="signin"><Lock className="h-4 w-4" /></TabsTrigger>
                 <TabsTrigger value="magiclink"><Mail className="h-4 w-4" /></TabsTrigger>

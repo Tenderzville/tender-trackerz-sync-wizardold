@@ -63,17 +63,27 @@ function useAuthRecoveryRedirect() {
     // Check for recovery tokens in URL hash (Supabase puts them there after email verification)
     const hash = window.location.hash;
     const searchParams = new URLSearchParams(window.location.search);
+    const pathname = window.location.pathname;
     
+    const isAuthRoute = pathname === '/auth';
+
+    // Supabase PKCE/magic-link/recovery can return as: /?code=...
+    // Ensure we always land on /auth so the reset UI is available.
+    if (!isAuthRoute && searchParams.has('code')) {
+      window.location.href = `/auth${window.location.search}${hash}`;
+      return;
+    }
+
     // Check for recovery type in hash (e.g., #access_token=...&type=recovery)
-    if (hash && hash.includes('type=recovery')) {
+    if (!isAuthRoute && hash && hash.includes('type=recovery')) {
       // Redirect to auth page with the hash preserved
-      window.location.href = `/auth${hash}`;
+      window.location.href = `/auth${window.location.search}${hash}`;
       return;
     }
     
     // Check for error codes (expired links, etc.)
     const errorCode = searchParams.get('error_code');
-    if (errorCode) {
+    if (!isAuthRoute && errorCode) {
       // Redirect to auth page with the error params
       window.location.href = `/auth${window.location.search}${hash}`;
       return;
