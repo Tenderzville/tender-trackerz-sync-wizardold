@@ -261,6 +261,7 @@ Deno.serve(async (req) => {
             score: m.matchScore,
             level: m.matchLevel,
             reasons: m.matchReasons,
+            source_url: m.tender.source_url,
           })),
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

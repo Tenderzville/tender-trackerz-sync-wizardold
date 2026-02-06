@@ -119,12 +119,12 @@ export default function BrowseTenders() {
               </div>
               
               <div className="flex flex-wrap gap-3">
-                <Select value={filters.category} onValueChange={(value) => handleFilterChange("category", value)}>
+              <Select value={filters.category || "all"} onValueChange={(value) => handleFilterChange("category", value === "all" ? "" : value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="Construction">Construction</SelectItem>
                     <SelectItem value="IT Services">IT Services</SelectItem>
                     <SelectItem value="Consultancy">Consultancy</SelectItem>
@@ -134,12 +134,12 @@ export default function BrowseTenders() {
                   </SelectContent>
                 </Select>
                 
-                <Select value={filters.location} onValueChange={(value) => handleFilterChange("location", value)}>
+                <Select value={filters.location || "all"} onValueChange={(value) => handleFilterChange("location", value === "all" ? "" : value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
+                    <SelectItem value="all">All Locations</SelectItem>
                     <SelectItem value="Nairobi County">Nairobi County</SelectItem>
                     <SelectItem value="Mombasa County">Mombasa County</SelectItem>
                     <SelectItem value="Kiambu County">Kiambu County</SelectItem>

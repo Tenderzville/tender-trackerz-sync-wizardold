@@ -216,20 +216,23 @@ async function parseTendersFromContent(
             content: `Extract all tenders from this ${source} government website content. Return a JSON array of tenders.
 
 Each tender should have:
-- title (required): The tender title/description
-- organization (required): The procuring entity
+- title (required): The EXACT tender title/description as written on the page
+- organization (required): The EXACT procuring entity name as written
 - category: One of: Construction, ICT, Consultancy, Supply, Transport, Healthcare, Education, Agriculture, Environment, Other
 - location: County or region in Kenya (default: "Nairobi" if not specified)
 - deadline: Date in YYYY-MM-DD format (estimate 30 days from now if not specified)
 - budgetEstimate: Number in KES (estimate if not specified based on tender type)
-- tenderNumber: Official reference number if available
+- tenderNumber: Official reference/tender number if available
 - description: Brief description of what's being procured
+- sourceLink: The SPECIFIC URL or link path to this individual tender page if visible in the content (e.g., /tender/12345 or https://tenders.go.ke/tender/12345). Return null if no specific link found.
+
+IMPORTANT: Extract the EXACT title and organization name verbatim. Do NOT generate or paraphrase.
 
 CONTENT TO PARSE:
 ${markdown.substring(0, 8000)}
 
 Respond ONLY with a valid JSON array. Example:
-[{"title":"Supply of Office Equipment","organization":"Ministry of Finance","category":"Supply","location":"Nairobi","deadline":"2025-02-15","budgetEstimate":5000000}]
+[{"title":"Supply of Office Equipment","organization":"Ministry of Finance","category":"Supply","location":"Nairobi","deadline":"2025-02-15","budgetEstimate":5000000,"tenderNumber":"MOF/ONT/001/2025","sourceLink":"/tender/12345"}]
 
 If no tenders found, return empty array: []`
           }
@@ -257,19 +260,37 @@ If no tenders found, return empty array: []`
     const tenders = JSON.parse(jsonStr.trim());
     
     // Add source info and validate
-    return tenders.map((t: any) => ({
-      title: t.title || 'Untitled Tender',
-      description: t.description || `${t.title} - Procurement opportunity from ${t.organization}`,
-      organization: t.organization || 'Government of Kenya',
-      category: validateCategory(t.category),
-      location: t.location || 'Nairobi',
-      deadline: validateDate(t.deadline),
-      budgetEstimate: t.budgetEstimate || estimateBudget(t.category),
-      scrapedFrom: source,
-      sourceUrl: `https://${source === 'mygov' ? 'www.mygov.go.ke' : source === 'ppra' ? 'ppra.go.ke' : 'tenders.go.ke'}/`,
-      tenderNumber: t.tenderNumber,
-      requirements: t.requirements || [],
-    }));
+    const baseUrl = source === 'mygov' ? 'https://www.mygov.go.ke' 
+      : source === 'ppra' ? 'https://ppra.go.ke' 
+      : source === 'egpkenya' ? 'https://egpkenya.go.ke'
+      : 'https://tenders.go.ke';
+    
+    return tenders.map((t: any) => {
+      // Build specific source URL from extracted link or fall back to base
+      let specificUrl = baseUrl;
+      if (t.sourceLink && t.sourceLink.startsWith('http')) {
+        specificUrl = t.sourceLink;
+      } else if (t.sourceLink && t.sourceLink.startsWith('/')) {
+        specificUrl = `${baseUrl}${t.sourceLink}`;
+      } else if (t.tenderNumber) {
+        // Construct a search URL with the tender number for verification
+        specificUrl = `${baseUrl}/search?q=${encodeURIComponent(t.tenderNumber)}`;
+      }
+
+      return {
+        title: t.title || 'Untitled Tender',
+        description: t.description || `${t.title} - Procurement opportunity from ${t.organization}`,
+        organization: t.organization || 'Government of Kenya',
+        category: validateCategory(t.category),
+        location: t.location || 'Nairobi',
+        deadline: validateDate(t.deadline),
+        budgetEstimate: t.budgetEstimate || estimateBudget(t.category),
+        scrapedFrom: source,
+        sourceUrl: specificUrl,
+        tenderNumber: t.tenderNumber,
+        requirements: t.requirements || [],
+      };
+    });
   } catch (error) {
     console.error('AI parsing error:', error);
     return extractTendersWithPatterns(source, markdown, html);
@@ -279,36 +300,48 @@ If no tenders found, return empty array: []`
 function extractTendersWithPatterns(source: string, markdown: string, html: string): TenderData[] {
   const tenders: TenderData[] = [];
   
+  const baseUrl = source === 'mygov' ? 'https://www.mygov.go.ke' 
+    : source === 'ppra' ? 'https://ppra.go.ke' 
+    : source === 'egpkenya' ? 'https://egpkenya.go.ke'
+    : 'https://tenders.go.ke';
+
+  // Try to extract links from HTML for specific tender URLs
+  const linkPattern = /<a[^>]+href=["']([^"']*(?:tender|bid|procurement)[^"']*)["'][^>]*>([^<]+)<\/a>/gi;
+  const htmlLinks = new Map<string, string>();
+  let linkMatch;
+  while ((linkMatch = linkPattern.exec(html)) !== null) {
+    const href = linkMatch[1];
+    const text = linkMatch[2].trim();
+    if (text.length > 10) {
+      const fullUrl = href.startsWith('http') ? href : `${baseUrl}${href.startsWith('/') ? '' : '/'}${href}`;
+      htmlLinks.set(text.toLowerCase().substring(0, 50), fullUrl);
+    }
+  }
+
   // Pattern-based extraction for common tender formats
   const tenderPatterns = [
     /(?:tender|procurement|supply|provision|construction|consultancy)\s+(?:for|of)\s+([^|.\n]+)/gi,
     /(?:invitation\s+to\s+(?:tender|bid|quote))[:\s]+([^|.\n]+)/gi,
   ];
 
-  const organizations = [
-    'Ministry of Finance', 'Kenya Revenue Authority', 'Ministry of Health',
-    'Ministry of Education', 'Kenya Wildlife Service', 'Kenya Power',
-    'Kenya Airports Authority', 'Kenya Ports Authority', 'Nairobi City County',
-    'Mombasa County Government', 'Kisumu County Government'
-  ];
-
-  const categories = ['Construction', 'ICT', 'Consultancy', 'Supply', 'Transport', 'Healthcare', 'Education'];
-  const locations = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Nyeri', 'Machakos'];
-
   for (const pattern of tenderPatterns) {
     const matches = markdown.matchAll(pattern);
     for (const match of matches) {
       if (match[1] && match[1].length > 10) {
+        const title = match[1].trim().substring(0, 200);
+        // Try to find a matching link
+        const matchedLink = htmlLinks.get(title.toLowerCase().substring(0, 50));
+
         tenders.push({
-          title: match[1].trim().substring(0, 200),
-          description: `Procurement opportunity: ${match[1].trim()}`,
-          organization: organizations[Math.floor(Math.random() * organizations.length)],
-          category: categories[Math.floor(Math.random() * categories.length)],
-          location: locations[Math.floor(Math.random() * locations.length)],
-          deadline: getFutureDate(30 + Math.floor(Math.random() * 30)),
-          budgetEstimate: Math.floor(1000000 + Math.random() * 50000000),
+          title,
+          description: `Procurement opportunity: ${title}`,
+          organization: 'Government of Kenya',
+          category: 'Other',
+          location: 'Nairobi',
+          deadline: getFutureDate(30),
+          budgetEstimate: undefined,
           scrapedFrom: source,
-          sourceUrl: `https://${source === 'mygov' ? 'www.mygov.go.ke' : source === 'ppra' ? 'ppra.go.ke' : 'tenders.go.ke'}/`,
+          sourceUrl: matchedLink || baseUrl,
         });
       }
     }

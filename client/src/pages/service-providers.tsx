@@ -680,12 +680,12 @@ export default function ServiceProviders() {
               />
             </div>
             
-            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+            <Select value={selectedSpecialization || "all"} onValueChange={(value) => setSelectedSpecialization(value === "all" ? "" : value)}>
               <SelectTrigger className="w-full lg:w-[280px]">
                 <SelectValue placeholder="All Specializations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Specializations</SelectItem>
+                <SelectItem value="all">All Specializations</SelectItem>
                 {specializations.map((spec) => (
                   <SelectItem key={spec} value={spec}>{spec}</SelectItem>
                 ))}
