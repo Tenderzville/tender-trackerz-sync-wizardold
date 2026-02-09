@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +13,11 @@ import {
   Trophy, 
   Plus,
   Brain,
-  ArrowRight
+  ArrowRight,
+  RefreshCw,
+  Settings
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TenderData {
   id: number;
@@ -27,16 +31,56 @@ interface TenderData {
   status?: string | null;
   createdAt?: string | null;
   sourceUrl?: string | null;
+  tenderNumber?: string | null;
 }
 
-interface DashboardStats {
-  activeTenders: number;
-  savedTenders: number;
-  consortiums: number;
-  winRate: number;
+/** PWA update banner that checks for service worker updates */
+function PWAUpdateBanner() {
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg?.waiting) {
+        setUpdateAvailable(true);
+      }
+      reg?.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker?.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            setUpdateAvailable(true);
+          }
+        });
+      });
+    }).catch(() => {});
+  }, []);
+
+  if (!updateAvailable) return null;
+
+  return (
+    <Card className="mb-6 border-2 border-blue-500/30 bg-blue-50/50 dark:bg-blue-900/10">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="h-5 w-5 text-blue-600" />
+            <div>
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 text-sm">App Update Available</h3>
+              <p className="text-xs text-blue-700 dark:text-blue-300">A newer version of TenderAlert is ready.</p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => window.location.reload()}>
+            Update Now
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function Dashboard() {
+  const { user } = useAuth();
+
   const { data: tenders, isLoading: tendersLoading } = useQuery({
     queryKey: ["tenders"],
     queryFn: async () => {
@@ -60,6 +104,7 @@ export default function Dashboard() {
         status: t.status,
         createdAt: t.created_at,
         sourceUrl: t.source_url,
+        tenderNumber: t.tender_number,
       })) as TenderData[];
     },
   });
@@ -69,12 +114,7 @@ export default function Dashboard() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
-      
-      const { data, error } = await supabase
-        .from("saved_tenders")
-        .select("*")
-        .eq("user_id", user.id);
-      
+      const { data, error } = await supabase.from("saved_tenders").select("*").eq("user_id", user.id);
       if (error) throw error;
       return data || [];
     },
@@ -83,17 +123,34 @@ export default function Dashboard() {
   const { data: consortiums } = useQuery({
     queryKey: ["consortiums"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("consortiums")
-        .select("*")
-        .eq("status", "active");
-      
+      const { data, error } = await supabase.from("consortiums").select("*").eq("status", "active");
       if (error) throw error;
       return data || [];
     },
   });
 
-  const stats: DashboardStats = {
+  // Check if user has preferences configured
+  const { data: preferences } = useQuery({
+    queryKey: ['user-preferences-check', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('sectors, counties, keywords')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const hasPreferences = preferences && (
+    (preferences.sectors?.length > 0) || 
+    (preferences.counties?.length > 0) || 
+    (preferences.keywords?.length > 0)
+  );
+
+  const stats = {
     activeTenders: tenders?.length || 0,
     savedTenders: savedTenders?.length || 0,
     consortiums: consortiums?.length || 0,
@@ -105,6 +162,30 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
+
+        {/* Setup Preferences Banner */}
+        {!hasPreferences && (
+          <Card className="mb-6 border-2 border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Settings className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">Set Up Your Tender Preferences</h3>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                    Configure your sectors, counties, and keywords to unlock personalized Smart Matches and better tender recommendations.
+                  </p>
+                </div>
+                <Button size="sm" asChild className="flex-shrink-0">
+                  <Link href="/settings">Configure Now</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* PWA Update Banner */}
+        <PWAUpdateBanner />
+
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-slate-800 dark:to-slate-700 rounded-lg p-6 lg:p-8 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
@@ -113,9 +194,11 @@ export default function Dashboard() {
               <p className="text-muted-foreground">Discover new tender opportunities and grow your business</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Create Alert</span>
+              <Button className="flex items-center space-x-2" asChild>
+                <Link href="/smart-matches">
+                  <Plus className="h-4 w-4" />
+                  <span>Smart Matches</span>
+                </Link>
               </Button>
               <Button variant="outline" className="flex items-center space-x-2" asChild>
                 <Link href="/consortiums">
@@ -138,7 +221,6 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Active Tenders</p>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -149,7 +231,6 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Saved Tenders</p>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -160,7 +241,6 @@ export default function Dashboard() {
                 <p className="text-sm text-muted-foreground">Consortiums</p>
               </CardContent>
             </Card>
-            
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -185,7 +265,7 @@ export default function Dashboard() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">AI-Powered Tender Analysis</h3>
                   <p className="text-purple-700 dark:text-purple-300 mb-4">
-                    Based on historical data, you have a 78% chance of winning construction tenders between KSh 5M - 15M
+                    Get personalized win probability and bid strategy recommendations for any tender.
                   </p>
                   <Button variant="outline" size="sm" className="border-purple-200 text-purple-700 hover:bg-purple-50" asChild>
                     <Link href="/ai-analysis">

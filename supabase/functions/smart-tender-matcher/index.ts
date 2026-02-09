@@ -262,6 +262,7 @@ Deno.serve(async (req) => {
             level: m.matchLevel,
             reasons: m.matchReasons,
             source_url: m.tender.source_url,
+            tender_number: m.tender.tender_number,
           })),
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

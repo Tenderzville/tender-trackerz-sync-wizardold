@@ -27,6 +27,7 @@ interface Tender {
   status?: string | null;
   createdAt?: string | null;
   sourceUrl?: string | null;
+  tenderNumber?: string | null;
 }
 
 export default function BrowseTenders() {
@@ -69,6 +70,7 @@ export default function BrowseTenders() {
         status: t.status,
         createdAt: t.created_at,
         sourceUrl: t.source_url,
+        tenderNumber: t.tender_number,
       })) as Tender[];
     },
   });
