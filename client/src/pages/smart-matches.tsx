@@ -27,6 +27,7 @@ interface MatchedTender {
   level: 'High Chance' | 'Good Fit' | 'Moderate' | 'Low Fit';
   reasons: string[];
   source_url?: string;
+  tender_number?: string;
 }
 
 interface MatchResult {
@@ -346,16 +347,31 @@ export default function SmartMatchesPage() {
                           </div>
 
                           {/* Source link */}
-                          {match.source_url && match.source_url !== 'https://tenders.go.ke/' && (
-                            <div className="mt-2">
-                              <Button variant="link" size="sm" className="h-auto p-0 text-xs" asChild>
-                                <a href={match.source_url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  View on source portal
-                                </a>
-                              </Button>
-                            </div>
-                          )}
+                          {(() => {
+                            const genericPortals = ['https://tenders.go.ke/', 'https://tenders.go.ke', 'https://egpkenya.go.ke'];
+                            const hasSpecificUrl = match.source_url && !genericPortals.includes(match.source_url);
+                            const sourceUrl = hasSpecificUrl
+                              ? match.source_url
+                              : match.tender_number
+                                ? `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(match.tender_number)}`
+                                : null;
+                            
+                            return sourceUrl ? (
+                              <div className="mt-2 flex items-center gap-2">
+                                <Button variant="link" size="sm" className="h-auto p-0 text-xs" asChild>
+                                  <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                    View on source portal
+                                  </a>
+                                </Button>
+                                {match.tender_number && (
+                                  <span className="text-[10px] text-muted-foreground font-mono">
+                                    Ref: {match.tender_number}
+                                  </span>
+                                )}
+                              </div>
+                            ) : null;
+                          })()}
                         </div>
 
                         {/* Action Arrow */}

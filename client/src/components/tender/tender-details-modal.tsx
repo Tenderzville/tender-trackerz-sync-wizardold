@@ -502,7 +502,17 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                         Download Tender Documents
                       </Button>
                       <Button variant="outline" className="w-full" size="lg" asChild>
-                        <a href={tender.source_url || '#'} target="_blank" rel="noopener noreferrer">
+                        <a 
+                          href={
+                            tender.source_url && !['https://tenders.go.ke/', 'https://tenders.go.ke'].includes(tender.source_url)
+                              ? tender.source_url
+                              : tender.tender_number
+                                ? `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(tender.tender_number)}`
+                                : 'https://tenders.go.ke/'
+                          } 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                        >
                           <ExternalLink className="h-4 w-4 mr-2" />
                           View on Source Website
                         </a>

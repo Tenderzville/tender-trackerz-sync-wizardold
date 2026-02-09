@@ -2,7 +2,8 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
 import { useAuth } from '@/hooks/useAuth';
-import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/use-admin-role';
+import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown, CreditCard, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,17 +11,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 export function AppNavigation() {
   const [location] = useLocation();
   const { user, profile, logout, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAdmin = useIsAdmin();
+
+  // Secondary nav items - role-filtered (NO admin for non-admins)
+  const secondaryNavItems = useMemo(() => {
+    const items = [
+      { path: '/ai-analysis', icon: Brain, label: 'AI Analysis' },
+      { path: '/consortiums', icon: Users, label: 'Consortiums' },
+      { path: '/service-providers', icon: Package, label: 'Providers' },
+      { path: '/rfq-system', icon: FileText, label: 'RFQ System' },
+    ];
+    if (isAdmin) {
+      items.push({ path: '/admin/dashboard', icon: Shield, label: 'Admin' });
+    }
+    return items;
+  }, [isAdmin]);
 
   if (!isAuthenticated) {
     return (
@@ -46,21 +61,12 @@ export function AppNavigation() {
     );
   }
 
-  // Core nav items (always visible in desktop bar)
+  // Core nav items (always visible)
   const primaryNavItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/browse', icon: Search, label: 'Browse' },
     { path: '/smart-matches', icon: Target, label: 'Smart Matches' },
     { path: '/saved', icon: Bookmark, label: 'Saved' },
-  ];
-
-  // Secondary nav items (in "More" dropdown on desktop)
-  const secondaryNavItems = [
-    { path: '/ai-analysis', icon: Brain, label: 'AI Analysis' },
-    { path: '/consortiums', icon: Users, label: 'Consortiums' },
-    { path: '/service-providers', icon: Package, label: 'Providers' },
-    { path: '/rfq-system', icon: FileText, label: 'RFQ System' },
-    { path: '/admin/dashboard', icon: Shield, label: 'Admin' },
   ];
 
   const allNavItems = [...primaryNavItems, ...secondaryNavItems];
@@ -179,7 +185,7 @@ export function AppNavigation() {
                         "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                         isActive('/subscription') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
-                        <Settings className="h-4 w-4" />
+                        <CreditCard className="h-4 w-4" />
                         Subscription
                       </span>
                     </Link>
@@ -189,7 +195,7 @@ export function AppNavigation() {
                         isActive('/settings') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
                         <Settings className="h-4 w-4" />
-                        Settings
+                        Preferences
                       </span>
                     </Link>
                     <Link href="/profile" onClick={() => setMobileOpen(false)}>
@@ -197,7 +203,7 @@ export function AppNavigation() {
                         "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                         isActive('/profile') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
-                        <Settings className="h-4 w-4" />
+                        <User className="h-4 w-4" />
                         Profile
                       </span>
                     </Link>
@@ -236,14 +242,20 @@ export function AppNavigation() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/settings">Settings</Link>
+                  <Link href="/settings">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Preferences
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/subscription">
-                    <Settings className="h-4 w-4 mr-2" />
+                    <CreditCard className="h-4 w-4 mr-2" />
                     Subscription
                   </Link>
                 </DropdownMenuItem>
