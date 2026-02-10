@@ -34,7 +34,7 @@ const navigationItems = [
   { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
   { href: "/performance", icon: TrendingUp, label: "Performance" },
   { href: "/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/trigger-scraper", icon: RefreshCw, label: "Scraper" },
+  { href: "/trigger-scraper", icon: RefreshCw, label: "Refresh Tenders" },
   { href: "/profile", icon: UserCheck, label: "Profile" },
   { href: "/settings", icon: Settings, label: "Settings" },
   { href: "/subscription", icon: CreditCard, label: "Subscription" },
