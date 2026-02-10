@@ -150,10 +150,10 @@ export default function TriggerScraper() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <RefreshCw className="h-5 w-5" />
-              <span>Tender Scraper Control Panel</span>
+              <span>Refresh Tenders</span>
             </CardTitle>
             <CardDescription>
-              Scrape real tenders from official Kenyan government procurement portals
+              Fetch real tenders from official Kenyan government procurement portals
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
