@@ -50,7 +50,7 @@ function buildSourceUrl(tender: TenderData): string | null {
 
   // Construct a search URL using the tender number
   if (tender.tenderNumber) {
-    return `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(tender.tenderNumber)}`;
+    return `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(tender.tenderNumber)}`;
   }
 
   // Fall back to generic portal

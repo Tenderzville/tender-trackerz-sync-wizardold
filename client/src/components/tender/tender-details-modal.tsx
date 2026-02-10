@@ -321,7 +321,7 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                         <div className="text-center">
                           <p className="font-medium">Analyzing tender with AI...</p>
                           <p className="text-sm text-muted-foreground">
-                            Calculating win probability and market insights
+                            Calculating bid readiness and market insights
                           </p>
                         </div>
                       </div>
@@ -337,7 +337,7 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                             <div className={`text-4xl font-bold ${getProbabilityColor(aiAnalysis.winProbability)}`}>
                               {aiAnalysis.winProbability}%
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1">Win Probability</p>
+                            <p className="text-sm text-muted-foreground mt-1">Bid Readiness Score</p>
                             <p className="text-xs text-muted-foreground">
                               ±{aiAnalysis.marginOfError}% margin of error
                             </p>
@@ -507,7 +507,7 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                             tender.source_url && !['https://tenders.go.ke/', 'https://tenders.go.ke'].includes(tender.source_url)
                               ? tender.source_url
                               : tender.tender_number
-                                ? `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(tender.tender_number)}`
+                                ? `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(tender.tender_number)}`
                                 : 'https://tenders.go.ke/'
                           } 
                           target="_blank" 

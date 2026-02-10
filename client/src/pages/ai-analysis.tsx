@@ -153,7 +153,7 @@ export default function AiAnalysis() {
               <div>
                 <div className="flex items-center space-x-3 mb-2">
                   <Brain className="h-6 w-6 text-primary" />
-                  <h1 className="text-2xl lg:text-3xl font-bold">AI Win Probability</h1>
+                  <h1 className="text-2xl lg:text-3xl font-bold">AI Bid Readiness</h1>
                 </div>
                 <p className="text-muted-foreground">
                   Real estimates based on {historicalCount?.toLocaleString() || 0} historical Kenya contracts
@@ -190,7 +190,7 @@ export default function AiAnalysis() {
               <CardHeader>
                 <CardTitle>Select Tender for Analysis</CardTitle>
                 <CardDescription>
-                  Choose an active tender to calculate win probability based on historical data
+                  Choose an active tender to calculate bid readiness based on historical data
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex gap-4">
@@ -260,7 +260,7 @@ export default function AiAnalysis() {
                       <p className="text-3xl font-bold text-primary">
                         {analysis.winProbability}%
                       </p>
-                      <p className="text-sm text-muted-foreground">Win Probability</p>
+                      <p className="text-sm text-muted-foreground">Bid Readiness Score</p>
                       <Progress value={analysis.winProbability} className="mt-2 h-2" />
                     </CardContent>
                   </Card>
@@ -325,7 +325,7 @@ export default function AiAnalysis() {
                         Factor Analysis
                       </CardTitle>
                       <CardDescription>
-                        Breakdown of factors affecting win probability
+                        Breakdown of factors affecting bid readiness
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
