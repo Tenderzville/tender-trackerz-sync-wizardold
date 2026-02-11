@@ -353,7 +353,7 @@ export default function SmartMatchesPage() {
                             const sourceUrl = hasSpecificUrl
                               ? match.source_url
                               : match.tender_number
-                                ? `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(match.tender_number)}`
+                                ? `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(match.tender_number)}`
                                 : null;
                             
                             return sourceUrl ? (
