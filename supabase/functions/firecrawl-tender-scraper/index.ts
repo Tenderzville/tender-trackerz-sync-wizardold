@@ -273,7 +273,7 @@ If no tenders found, return empty array: []`
         specificUrl = `${baseUrl}${t.sourceLink}`;
       } else if (t.tenderNumber) {
         // Always construct a specific URL using the tender number
-        specificUrl = `https://tenders.go.ke/website/tender/search/item/detail/${encodeURIComponent(t.tenderNumber)}`;
+        specificUrl = `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(t.tenderNumber)}`;
       }
 
       return {
@@ -397,8 +397,8 @@ function estimateBudget(category: string): number {
     'Other': [1000000, 20000000],
   };
   
-  const range = budgetRanges[category] || budgetRanges['Other'];
-  return Math.floor(range[0] + Math.random() * (range[1] - range[0]));
+  // Do NOT fabricate budget estimates - return 0 if not available from source
+  return 0;
 }
 
 function getFutureDate(days: number): string {
