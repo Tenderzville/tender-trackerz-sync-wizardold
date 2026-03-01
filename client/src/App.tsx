@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { AppNavigation } from "@/components/common/app-navigation";
 import { ErrorBoundary } from "@/components/common/error-boundary";
+import { I18nProvider } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import NotFound from "@/pages/not-found";
@@ -18,6 +19,8 @@ import SavedTenders from "@/pages/saved-tenders";
 import Consortiums from "@/pages/consortiums";
 import AiAnalysis from "@/pages/ai-analysis";
 import ServiceProviders from "@/pages/service-providers";
+import Marketplace from "@/pages/marketplace";
+import LearningHub from "@/pages/learning-hub";
 import Analytics from "@/pages/analytics";
 import Subscription from "@/pages/subscription";
 import AutomationPage from "@/pages/admin/automation";
@@ -140,6 +143,8 @@ function Router() {
         <Route path="/consortiums" component={Consortiums} />
         <Route path="/ai-analysis" component={AiAnalysis} />
         <Route path="/service-providers" component={ServiceProviders} />
+        <Route path="/marketplace" component={Marketplace} />
+        <Route path="/learning" component={LearningHub} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/performance" component={PerformanceDashboard} />
         <Route path="/rfq-system" component={RfqSystem} />
@@ -163,12 +168,14 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

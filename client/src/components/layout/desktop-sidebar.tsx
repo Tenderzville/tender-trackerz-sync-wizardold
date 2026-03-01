@@ -2,6 +2,7 @@
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { LanguageToggle, useI18n } from "@/lib/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +11,6 @@ import {
   Search, 
   Heart, 
   Users, 
-  Bot, 
   UserCheck, 
   BarChart3, 
   CreditCard,
@@ -21,34 +21,37 @@ import {
   Briefcase,
   Brain,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  Megaphone,
+  GraduationCap
 } from "lucide-react";
 
 const navigationItems = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/browse", icon: Search, label: "Browse Tenders" },
-  { href: "/saved", icon: Heart, label: "Saved Tenders" },
-  { href: "/consortiums", icon: Users, label: "Consortiums" },
-  { href: "/service-providers", icon: Briefcase, label: "Service Providers" },
-  { href: "/rfq-system", icon: FileText, label: "RFQ System" },
-  { href: "/ai-analysis", icon: Brain, label: "AI Analysis" },
-  { href: "/performance", icon: TrendingUp, label: "Performance" },
-  { href: "/analytics", icon: BarChart3, label: "Analytics" },
-  { href: "/trigger-scraper", icon: RefreshCw, label: "Refresh Tenders" },
-  { href: "/profile", icon: UserCheck, label: "Profile" },
-  { href: "/settings", icon: Settings, label: "Settings" },
-  { href: "/subscription", icon: CreditCard, label: "Subscription" },
+  { href: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+  { href: "/browse", icon: Search, labelKey: "nav.browse" },
+  { href: "/saved", icon: Heart, labelKey: "nav.saved" },
+  { href: "/consortiums", icon: Users, labelKey: "nav.consortiums" },
+  { href: "/service-providers", icon: Briefcase, labelKey: "nav.providers" },
+  { href: "/marketplace", icon: Megaphone, labelKey: "nav.marketplace" },
+  { href: "/rfq-system", icon: FileText, labelKey: "nav.rfq" },
+  { href: "/ai-analysis", icon: Brain, labelKey: "nav.ai" },
+  { href: "/learning", icon: GraduationCap, labelKey: "nav.learning" },
+  { href: "/performance", icon: TrendingUp, labelKey: "nav.performance" },
+  { href: "/analytics", icon: BarChart3, labelKey: "nav.analytics" },
+  { href: "/trigger-scraper", icon: RefreshCw, labelKey: "nav.refresh" },
+  { href: "/profile", icon: UserCheck, labelKey: "nav.profile" },
+  { href: "/settings", icon: Settings, labelKey: "nav.settings" },
+  { href: "/subscription", icon: CreditCard, labelKey: "nav.subscription" },
 ];
 
 export function DesktopSidebar() {
+  const { t } = useI18n();
   const [location] = useLocation();
   const { user, logout } = useAuth();
 
   const getUserDisplayName = () => {
     if (user && typeof user === 'object' && 'firstName' in user && 'lastName' in user) {
       return `${user.firstName} ${user.lastName}`;
-    } else if (user && typeof user === 'object' && 'firstName' in user) {
-      return user.firstName as string;
     } else if (user && typeof user === 'object' && 'firstName' in user) {
       return user.firstName as string;
     } else if (user && typeof user === 'object' && 'email' in user) {
@@ -85,27 +88,27 @@ export function DesktopSidebar() {
       {/* Header */}
       <div className="flex items-center space-x-3 p-6 border-b border-slate-200 dark:border-slate-700">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-          <Bell className="h-5 w-5 text-white" />
+          <Bell className="h-5 w-5 text-primary-foreground" />
         </div>
         <span className="font-semibold text-lg">TenderAlert</span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navigationItems.map((item) => {
           const isActive = location === item.href;
           return (
             <a
               key={item.href}
               href={item.href}
-              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-sm ${
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  : "text-muted-foreground hover:bg-muted"
               }`}
             >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <item.icon className="h-4 w-4" />
+              <span>{t(item.labelKey)}</span>
             </a>
           );
         })}
@@ -123,7 +126,7 @@ export function DesktopSidebar() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{getUserDisplayName()}</p>
             {getCompany() && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {getCompany()}
               </p>
             )}
@@ -131,8 +134,11 @@ export function DesktopSidebar() {
         </div>
         
         <div className="flex items-center justify-between">
-          <ThemeToggle />
-          <div className="flex space-x-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <LanguageToggle />
+          </div>
+          <div className="flex space-x-1">
             <Button variant="ghost" size="sm">
               <Settings className="h-4 w-4" />
             </Button>

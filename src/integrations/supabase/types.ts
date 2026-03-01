@@ -590,6 +590,68 @@ export type Database = {
         }
         Relationships: []
       }
+      service_provider_ads: {
+        Row: {
+          ad_type: string
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          expires_at: string | null
+          id: number
+          is_active: boolean
+          payment_reference: string | null
+          payment_status: string
+          provider_id: number
+          starts_at: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_type?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: number
+          is_active?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          provider_id: number
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_type?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: number
+          is_active?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          provider_id?: number
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_provider_ads_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_providers: {
         Row: {
           availability: string | null
