@@ -139,8 +139,13 @@ export type Database = {
       }
       consortium_members: {
         Row: {
+          certificate_expiry_dates: string[] | null
+          certificate_names: string[] | null
+          company_name: string | null
           consortium_id: number
           contribution: string | null
+          contribution_details: string | null
+          document_urls: string[] | null
           expertise: string | null
           id: number
           joined_at: string | null
@@ -148,8 +153,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          certificate_expiry_dates?: string[] | null
+          certificate_names?: string[] | null
+          company_name?: string | null
           consortium_id: number
           contribution?: string | null
+          contribution_details?: string | null
+          document_urls?: string[] | null
           expertise?: string | null
           id?: number
           joined_at?: string | null
@@ -157,8 +167,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          certificate_expiry_dates?: string[] | null
+          certificate_names?: string[] | null
+          company_name?: string | null
           consortium_id?: number
           contribution?: string | null
+          contribution_details?: string | null
+          document_urls?: string[] | null
           expertise?: string | null
           id?: number
           joined_at?: string | null

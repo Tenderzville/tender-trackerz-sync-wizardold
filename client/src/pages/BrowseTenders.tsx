@@ -14,8 +14,8 @@ export default function BrowseTenders() {
 
   const filters = {
     search: searchTerm || undefined,
-    category: category || undefined,
-    location: location || undefined,
+    category: category && category !== 'all' ? category : undefined,
+    location: location && location !== 'all' ? location : undefined,
     limit: 20
   };
 
@@ -64,7 +64,7 @@ export default function BrowseTenders() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Construction">Construction</SelectItem>
                 <SelectItem value="IT Services">IT Services</SelectItem>
                 <SelectItem value="Consultancy">Consultancy</SelectItem>
@@ -79,7 +79,7 @@ export default function BrowseTenders() {
                 <SelectValue placeholder="All Locations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 <SelectItem value="Nairobi">Nairobi</SelectItem>
                 <SelectItem value="Mombasa">Mombasa</SelectItem>
                 <SelectItem value="Kisumu">Kisumu</SelectItem>

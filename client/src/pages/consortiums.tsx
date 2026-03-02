@@ -64,6 +64,11 @@ export default function Consortiums() {
   const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
   const [selectedConsortium, setSelectedConsortium] = useState<Consortium | null>(null);
   const [joinExpertise, setJoinExpertise] = useState("");
+  const [joinCompanyName, setJoinCompanyName] = useState("");
+  const [joinContribution, setJoinContribution] = useState("");
+  const [joinDocUrls, setJoinDocUrls] = useState("");
+  const [joinCertNames, setJoinCertNames] = useState("");
+  const [joinCertExpiry, setJoinCertExpiry] = useState("");
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -131,7 +136,7 @@ export default function Consortiums() {
       const { error } = await supabase.from("consortiums").insert({
         name: data.name,
         description: data.description || null,
-        tender_id: data.tenderId ? Number(data.tenderId) : null,
+        tender_id: data.tenderId && data.tenderId !== 'none' ? Number(data.tenderId) : null,
         created_by: user.id,
         status: "active",
         max_members: data.maxMembers,
@@ -166,7 +171,7 @@ export default function Consortiums() {
         .update({
           name: data.name,
           description: data.description || null,
-          tender_id: data.tenderId ? Number(data.tenderId) : null,
+          tender_id: data.tenderId && data.tenderId !== 'none' ? Number(data.tenderId) : null,
           max_members: data.maxMembers,
           required_skills: data.requiredSkills
             ? data.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean)
@@ -226,7 +231,12 @@ export default function Consortiums() {
         user_id: user.id,
         role: "member",
         expertise: joinExpertise || null,
-      });
+        company_name: joinCompanyName || null,
+        contribution_details: joinContribution || null,
+        document_urls: joinDocUrls ? joinDocUrls.split(",").map(s => s.trim()).filter(Boolean) : [],
+        certificate_names: joinCertNames ? joinCertNames.split(",").map(s => s.trim()).filter(Boolean) : [],
+        certificate_expiry_dates: joinCertExpiry ? joinCertExpiry.split(",").map(s => s.trim()).filter(Boolean) : [],
+      } as any);
 
       if (error) throw error;
     },
@@ -235,6 +245,11 @@ export default function Consortiums() {
       setJoinDialogOpen(false);
       setSelectedConsortium(null);
       setJoinExpertise("");
+      setJoinCompanyName("");
+      setJoinContribution("");
+      setJoinDocUrls("");
+      setJoinCertNames("");
+      setJoinCertExpiry("");
       toast({ title: "Successfully joined consortium!" });
     },
     onError: (error: any) => {
@@ -381,7 +396,7 @@ export default function Consortiums() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No specific tender</SelectItem>
+                          <SelectItem value="none">No specific tender</SelectItem>
                           {tenders?.map((tender) => (
                             <SelectItem key={tender.id} value={String(tender.id)}>
                               {tender.title}
@@ -465,20 +480,69 @@ export default function Consortiums() {
 
         {/* Join Dialog */}
         <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Join {selectedConsortium?.name}</DialogTitle>
-              <DialogDescription>Request to join this consortium.</DialogDescription>
+              <DialogDescription>Provide your details to request joining this consortium.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="expertise">Your Expertise</Label>
+                <Label htmlFor="company-name">Company Name</Label>
+                <Input
+                  id="company-name"
+                  value={joinCompanyName}
+                  onChange={(e) => setJoinCompanyName(e.target.value)}
+                  placeholder="e.g., Acme Construction Ltd"
+                />
+              </div>
+              <div>
+                <Label htmlFor="expertise">Your Expertise / Role</Label>
                 <Input
                   id="expertise"
                   value={joinExpertise}
                   onChange={(e) => setJoinExpertise(e.target.value)}
                   placeholder="e.g., Legal Consultant, Quantity Surveyor"
                 />
+              </div>
+              <div>
+                <Label htmlFor="contribution">What You'll Contribute</Label>
+                <Textarea
+                  id="contribution"
+                  value={joinContribution}
+                  onChange={(e) => setJoinContribution(e.target.value)}
+                  placeholder="Describe your value-add to this consortium..."
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label htmlFor="doc-urls">Document URLs (comma-separated)</Label>
+                <Input
+                  id="doc-urls"
+                  value={joinDocUrls}
+                  onChange={(e) => setJoinDocUrls(e.target.value)}
+                  placeholder="https://drive.google.com/..., https://..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">Links to registration certificates, insurance, etc.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="cert-names">Certificate Names</Label>
+                  <Input
+                    id="cert-names"
+                    value={joinCertNames}
+                    onChange={(e) => setJoinCertNames(e.target.value)}
+                    placeholder="NCA, AGPO, Tax Compliance"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="cert-expiry">Certificate Expiry Dates</Label>
+                  <Input
+                    id="cert-expiry"
+                    value={joinCertExpiry}
+                    onChange={(e) => setJoinCertExpiry(e.target.value)}
+                    placeholder="2026-12-31, 2027-06-30"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -704,7 +768,7 @@ export default function Consortiums() {
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="">No specific tender</SelectItem>
+                                  <SelectItem value="none">No specific tender</SelectItem>
                                   {tenders?.map((tender) => (
                                     <SelectItem key={tender.id} value={String(tender.id)}>
                                       {tender.title}

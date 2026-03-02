@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Megaphone, Star, CheckCircle, Clock, CreditCard, Store } from "lucide-react";
+import { Search, Megaphone, Star, CreditCard, Store, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
@@ -22,6 +22,7 @@ interface AdWithProvider {
   starts_at: string | null;
   expires_at: string | null;
   payment_status: string;
+  amount: number;
   provider: {
     id: number;
     name: string;
@@ -43,6 +44,7 @@ export default function Marketplace() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [adTitle, setAdTitle] = useState("");
   const [adDescription, setAdDescription] = useState("");
+  const [payingAdId, setPayingAdId] = useState<number | null>(null);
 
   // Fetch active ads with provider info
   const { data: ads, isLoading } = useQuery({
@@ -65,6 +67,7 @@ export default function Marketplace() {
         starts_at: ad.starts_at,
         expires_at: ad.expires_at,
         payment_status: ad.payment_status,
+        amount: ad.amount,
         provider: ad.service_providers,
       })) as AdWithProvider[];
     },
@@ -127,19 +130,52 @@ export default function Marketplace() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-ads"] });
-      queryClient.invalidateQueries({ queryKey: ["marketplace-ads"] });
       setCreateDialogOpen(false);
       setAdTitle("");
       setAdDescription("");
       toast({
         title: "Ad Created",
-        description: "Your advertisement has been created. Complete payment (KSh 1,000) to activate it.",
+        description: "Your ad has been created. Pay KSh 1,000 via Paystack, then an admin will activate it.",
       });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  // Pay for an ad via Paystack
+  const handlePayForAd = async (adId: number, amount: number) => {
+    if (!user?.email || !user?.id) {
+      toast({ title: "Error", description: "Please log in first", variant: "destructive" });
+      return;
+    }
+    setPayingAdId(adId);
+    try {
+      const { data, error } = await supabase.functions.invoke('paystack-payment', {
+        body: {
+          action: 'initialize_ad_payment',
+          email: user.email,
+          user_id: user.id,
+          ad_id: adId,
+          amount: amount * 100, // kobo
+          callback_url: `${window.location.origin}/marketplace`,
+        },
+      });
+
+      if (error) throw new Error(error.message || 'Payment initialization failed');
+      if (!data?.success) throw new Error(data?.error || 'Payment initialization failed');
+      if (!data?.data?.authorization_url) throw new Error('No payment redirect URL');
+
+      toast({ title: "Redirecting to Paystack...", description: "Complete your KSh 1,000 payment to proceed." });
+      await new Promise(r => setTimeout(r, 500));
+      window.location.href = data.data.authorization_url;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Payment failed';
+      toast({ title: "Payment Error", description: message, variant: "destructive" });
+    } finally {
+      setPayingAdId(null);
+    }
+  };
 
   const filteredAds = ads?.filter((ad) => {
     if (!searchTerm) return true;
@@ -181,15 +217,30 @@ export default function Marketplace() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium truncate">{ad.title}</h3>
-                      <Badge variant={ad.is_active ? "default" : ad.payment_status === "pending" ? "outline" : "destructive"}>
-                        {ad.is_active ? t('market.active') : ad.payment_status === "pending" ? t('market.pending') : t('market.expired')}
+                      <Badge variant={ad.is_active ? "default" : ad.payment_status === "paid" ? "secondary" : "outline"}>
+                        {ad.is_active ? t('market.active') : ad.payment_status === "paid" ? "Awaiting Approval" : t('market.pending')}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">KSh {ad.amount}/month</p>
                     {ad.payment_status === "pending" && (
-                      <Button size="sm" className="w-full mt-3" variant="outline">
-                        <CreditCard className="h-3 w-3 mr-1" /> Pay via Paystack
+                      <Button
+                        size="sm"
+                        className="w-full mt-3"
+                        variant="outline"
+                        disabled={payingAdId === ad.id}
+                        onClick={() => handlePayForAd(ad.id, ad.amount)}
+                      >
+                        {payingAdId === ad.id ? (
+                          <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Processing...</>
+                        ) : (
+                          <><CreditCard className="h-3 w-3 mr-1" /> Pay KSh 1,000 via Paystack</>
+                        )}
                       </Button>
+                    )}
+                    {ad.payment_status === "paid" && !ad.is_active && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        ✅ Payment received. Admin will review and activate your ad.
+                      </p>
                     )}
                   </CardContent>
                 </Card>
@@ -235,7 +286,7 @@ export default function Marketplace() {
                     <>
                       <p className="text-sm text-muted-foreground mt-1">{ad.provider.name}</p>
                       <Badge variant="secondary" className="mt-2">{ad.provider.specialization}</Badge>
-                      {ad.provider.rating && (
+                      {ad.provider.rating && ad.provider.rating > 0 && (
                         <div className="flex items-center gap-1 mt-2">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-sm">{ad.provider.rating}</span>
@@ -280,7 +331,7 @@ export default function Marketplace() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Advertisement</DialogTitle>
-              <DialogDescription>Advertise your services to tender seekers for KSh 1,000/month.</DialogDescription>
+              <DialogDescription>Advertise your services for KSh 1,000/month. After payment, an admin will review and activate your ad.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -297,7 +348,7 @@ export default function Marketplace() {
                     <span className="font-medium">Monthly Fee</span>
                     <span className="text-lg font-bold text-primary">KSh 1,000</span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Your ad will be shown to all tender seekers for 30 days after payment.</p>
+                  <p className="text-xs text-muted-foreground mt-1">After payment, admin reviews and activates your ad for 30 days.</p>
                 </CardContent>
               </Card>
             </div>
@@ -306,7 +357,7 @@ export default function Marketplace() {
                 {t('common.cancel')}
               </Button>
               <Button onClick={() => createAdMutation.mutate()} disabled={!adTitle || createAdMutation.isPending}>
-                {createAdMutation.isPending ? t('common.loading') : "Create & Pay"}
+                {createAdMutation.isPending ? t('common.loading') : "Create Ad"}
               </Button>
             </DialogFooter>
           </DialogContent>
