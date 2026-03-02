@@ -13,38 +13,13 @@ const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Subscription plans in KES (amount in kobo = KES * 100)
-const PLANS = {
-  pro: {
-    name: 'Pro',
-    amount: 50000, // KES 500 in kobo
-    interval: 'monthly',
-    tier_level: 1,
-    features: ['unlimited_alerts', 'ai_analysis', 'save_unlimited', 'consortium', 'rfq_3'],
-  },
-  business: {
-    name: 'Business',
-    amount: 150000, // KES 1,500 in kobo
-    interval: 'monthly',
-    tier_level: 2,
-    features: ['all_pro', 'unlimited_rfq', 'marketplace', 'api_access', 'white_label'],
-  },
-  pro_annual: {
-    name: 'Pro Annual',
-    amount: 480000, // KES 4,800 (20% off - 12 months for price of 10)
-    interval: 'annually',
-    tier_level: 1,
-    features: ['unlimited_alerts', 'ai_analysis', 'save_unlimited', 'consortium', 'rfq_3'],
-  },
-  business_annual: {
-    name: 'Business Annual',
-    amount: 1440000, // KES 14,400 (20% off)
-    interval: 'annually',
-    tier_level: 2,
-    features: ['all_pro', 'unlimited_rfq', 'marketplace', 'api_access', 'white_label'],
-  },
+const PLANS: Record<string, any> = {
+  pro: { name: 'Pro', amount: 50000, interval: 'monthly', tier_level: 1, features: ['unlimited_alerts', 'ai_analysis', 'save_unlimited', 'consortium', 'rfq_3'] },
+  business: { name: 'Business', amount: 150000, interval: 'monthly', tier_level: 2, features: ['all_pro', 'unlimited_rfq', 'marketplace', 'api_access', 'white_label'] },
+  pro_annual: { name: 'Pro Annual', amount: 480000, interval: 'annually', tier_level: 1, features: ['unlimited_alerts', 'ai_analysis', 'save_unlimited', 'consortium', 'rfq_3'] },
+  business_annual: { name: 'Business Annual', amount: 1440000, interval: 'annually', tier_level: 2, features: ['all_pro', 'unlimited_rfq', 'marketplace', 'api_access', 'white_label'] },
 };
 
-// Helper to get tier level for comparison
 function getPlanTierLevel(planType: string | null): number {
   if (!planType) return 0;
   if (planType === 'business') return 2;
@@ -65,119 +40,143 @@ serve(async (req) => {
     const { action, ...params } = await req.json();
 
     switch (action) {
+      // ========== AD PAYMENT ==========
+      case 'initialize_ad_payment': {
+        const { email, user_id, ad_id, amount, callback_url } = params;
+        if (!email || !user_id || !ad_id) throw new Error('email, user_id, and ad_id are required');
+
+        const response = await fetch('https://api.paystack.co/transaction/initialize', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${paystackSecretKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            amount: amount || 100000, // KSh 1,000 in kobo
+            currency: 'KES',
+            callback_url: callback_url || `${req.headers.get('origin')}/marketplace`,
+            metadata: { user_id, ad_id, payment_type: 'ad_payment', custom_fields: [{ display_name: 'Ad Payment', variable_name: 'ad_id', value: String(ad_id) }] },
+          }),
+        });
+        const data = await response.json();
+        if (!data.status) throw new Error(data.message || 'Failed to initialize payment');
+
+        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, reference: data.data.reference } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      case 'verify_ad_payment': {
+        const { reference } = params;
+        if (!reference) throw new Error('reference is required');
+
+        const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+          headers: { 'Authorization': `Bearer ${paystackSecretKey}` },
+        });
+        const data = await response.json();
+        if (!data.status) throw new Error(data.message || 'Verification failed');
+
+        if (data.data.status === 'success') {
+          const adId = data.data.metadata?.ad_id;
+          const userId = data.data.metadata?.user_id;
+          if (adId) {
+            // Mark payment as paid but NOT active — admin must approve
+            await supabase.from('service_provider_ads').update({
+              payment_status: 'paid',
+              payment_reference: reference,
+              // is_active remains false until admin approves
+            }).eq('id', Number(adId));
+
+            // Notify admin
+            const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+            for (const admin of admins || []) {
+              await supabase.from('user_alerts').insert({
+                user_id: admin.user_id,
+                type: 'ad_payment_received',
+                title: '💰 Ad Payment Received',
+                message: `A service provider has paid KSh 1,000 for ad #${adId}. Please review and activate it.`,
+                is_read: false,
+                data: { ad_id: adId, reference, paid_by: userId },
+              });
+            }
+
+            // Notify user
+            if (userId) {
+              await supabase.from('user_alerts').insert({
+                user_id: userId,
+                type: 'ad_payment_confirmed',
+                title: '✅ Ad Payment Confirmed',
+                message: `Your payment of KSh 1,000 for ad #${adId} was successful. An admin will review and activate your ad shortly.`,
+                is_read: false,
+                data: { ad_id: adId, reference },
+              });
+            }
+          }
+          return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Payment confirmed. Admin will activate your ad.' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
+      }
+
+      // ========== SUBSCRIPTION PAYMENT ==========
       case 'initialize': {
         const { email, plan, user_id, callback_url } = params;
-        
-        if (!email || !plan || !user_id) {
-          throw new Error('email, plan, and user_id are required');
-        }
+        if (!email || !plan || !user_id) throw new Error('email, plan, and user_id are required');
 
-        const planDetails = PLANS[plan as keyof typeof PLANS];
-        if (!planDetails) {
-          throw new Error('Invalid plan');
-        }
+        const planDetails = PLANS[plan];
+        if (!planDetails) throw new Error('Invalid plan');
 
-        // Check if user is locked (founding member free period)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_locked, lock_reason, subscription_type, is_founding_member, founding_member_expires_at')
-          .eq('id', user_id)
-          .single();
+        const { data: profile } = await supabase.from('profiles').select('subscription_locked, lock_reason, subscription_type, is_founding_member, founding_member_expires_at').eq('id', user_id).single();
 
         if (profile?.subscription_locked && profile?.lock_reason === 'founding_member_free_period') {
           const expiresAt = new Date(profile.founding_member_expires_at);
-          if (expiresAt > new Date()) {
-            throw new Error(`You're a Founding Member with free access until ${expiresAt.toLocaleDateString()}. No payment required during this period.`);
-          }
+          if (expiresAt > new Date()) throw new Error(`You're a Founding Member with free access until ${expiresAt.toLocaleDateString()}.`);
         }
 
-        // Prevent downgrade attempts
         const currentTier = getPlanTierLevel(profile?.subscription_type);
-        const newTier = planDetails.tier_level;
-        
-        if (currentTier > newTier && profile?.subscription_type !== 'free') {
-          throw new Error(`Downgrades are not allowed. You're currently on ${profile?.subscription_type}. Contact support if you need to change plans.`);
+        if (currentTier > planDetails.tier_level && profile?.subscription_type !== 'free') {
+          throw new Error(`Downgrades are not allowed. Contact support.`);
         }
 
         const response = await fetch('https://api.paystack.co/transaction/initialize', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${paystackSecretKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${paystackSecretKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             amount: planDetails.amount,
             currency: 'KES',
             callback_url: callback_url || `${req.headers.get('origin')}/subscription/callback`,
-            metadata: {
-              user_id,
-              plan,
-              plan_name: planDetails.name,
-              tier_level: planDetails.tier_level,
-              custom_fields: [
-                {
-                  display_name: 'Plan',
-                  variable_name: 'plan',
-                  value: planDetails.name,
-                },
-              ],
-            },
+            metadata: { user_id, plan, plan_name: planDetails.name, tier_level: planDetails.tier_level, custom_fields: [{ display_name: 'Plan', variable_name: 'plan', value: planDetails.name }] },
           }),
         });
 
         const data = await response.json();
-        
-        if (!data.status) {
-          throw new Error(data.message || 'Failed to initialize payment');
-        }
+        if (!data.status) throw new Error(data.message || 'Failed to initialize payment');
 
-        // Log payment attempt
-        await supabase.from('subscription_history').insert({
-          user_id,
-          action: 'payment_initialized',
-          from_plan: profile?.subscription_type || 'free',
-          to_plan: plan.includes('business') ? 'business' : 'pro',
-          amount: planDetails.amount / 100,
-          currency: 'KES',
-          payment_reference: data.data.reference,
-          metadata: { plan, access_code: data.data.access_code }
-        });
+        await supabase.from('subscription_history').insert({ user_id, action: 'payment_initialized', from_plan: profile?.subscription_type || 'free', to_plan: plan.includes('business') ? 'business' : 'pro', amount: planDetails.amount / 100, currency: 'KES', payment_reference: data.data.reference, metadata: { plan, access_code: data.data.access_code } });
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              authorization_url: data.data.authorization_url,
-              access_code: data.data.access_code,
-              reference: data.data.reference,
-            },
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, access_code: data.data.access_code, reference: data.data.reference } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       case 'verify': {
         const { reference } = params;
-        
-        if (!reference) {
-          throw new Error('reference is required');
-        }
+        if (!reference) throw new Error('reference is required');
 
         const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-          headers: {
-            'Authorization': `Bearer ${paystackSecretKey}`,
-          },
+          headers: { 'Authorization': `Bearer ${paystackSecretKey}` },
         });
-
         const data = await response.json();
-        
-        if (!data.status) {
-          throw new Error(data.message || 'Verification failed');
-        }
+        if (!data.status) throw new Error(data.message || 'Verification failed');
 
         if (data.data.status === 'success') {
           const metadata = data.data.metadata;
+
+          // Check if this is an ad payment
+          if (metadata?.payment_type === 'ad_payment') {
+            const adId = metadata?.ad_id;
+            if (adId) {
+              await supabase.from('service_provider_ads').update({ payment_status: 'paid', payment_reference: reference }).eq('id', Number(adId));
+            }
+            return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Ad payment confirmed. Admin will activate your ad.' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          // Subscription payment
           const plan = metadata?.plan || 'pro';
           const userId = metadata?.user_id;
 
@@ -187,243 +186,97 @@ serve(async (req) => {
             const endDate = new Date();
             endDate.setMonth(endDate.getMonth() + (plan.includes('annual') ? 12 : 1));
 
-            // Get current profile for history
-            const { data: currentProfile } = await supabase
-              .from('profiles')
-              .select('subscription_type, is_founding_member')
-              .eq('id', userId)
-              .single();
+            const { data: currentProfile } = await supabase.from('profiles').select('subscription_type, is_founding_member').eq('id', userId).single();
 
-            // Update subscription
-            await supabase
-              .from('profiles')
-              .update({
-                subscription_type: subscriptionType,
-                subscription_status: 'active',
-                subscription_start_date: now.toISOString(),
-                subscription_end_date: endDate.toISOString(),
-                subscription_locked: false, // Unlock after payment
-                lock_reason: null,
-                paystack_customer_code: data.data.customer?.customer_code,
-                // Remove founding member badge after they pay
-                is_founding_member: false,
-                founding_member_expires_at: null,
-              })
-              .eq('id', userId);
+            await supabase.from('profiles').update({
+              subscription_type: subscriptionType,
+              subscription_status: 'active',
+              subscription_start_date: now.toISOString(),
+              subscription_end_date: endDate.toISOString(),
+              subscription_locked: false,
+              lock_reason: null,
+              paystack_customer_code: data.data.customer?.customer_code,
+              is_founding_member: false,
+              founding_member_expires_at: null,
+            }).eq('id', userId);
 
-            // Log successful payment
-            await supabase.from('subscription_history').insert({
-              user_id: userId,
-              action: 'subscription_activated',
-              from_plan: currentProfile?.subscription_type || 'free',
-              to_plan: subscriptionType,
-              amount: data.data.amount / 100,
-              currency: data.data.currency,
-              payment_reference: reference,
-              metadata: {
-                plan,
-                paystack_reference: reference,
-                customer_code: data.data.customer?.customer_code,
-                was_founding_member: currentProfile?.is_founding_member
-              }
-            });
+            await supabase.from('subscription_history').insert({ user_id: userId, action: 'subscription_activated', from_plan: currentProfile?.subscription_type || 'free', to_plan: subscriptionType, amount: data.data.amount / 100, currency: data.data.currency, payment_reference: reference, metadata: { plan, paystack_reference: reference, customer_code: data.data.customer?.customer_code } });
 
-            // Create payment receipt notification
-            const amountPaid = data.data.amount / 100;
-            const currency = data.data.currency || 'KES';
             const receiptNumber = `TPA-${Date.now().toString(36).toUpperCase()}`;
-            
-            await supabase.from('user_alerts').insert({
-              user_id: userId,
-              type: 'payment_receipt',
-              title: '🧾 Payment Receipt',
-              message: `Receipt #${receiptNumber} - ${currency} ${amountPaid.toLocaleString()} paid for ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} plan. Valid until ${endDate.toLocaleDateString()}.`,
-              is_read: false,
-              data: {
-                receipt_number: receiptNumber,
-                amount: amountPaid,
-                currency,
-                plan: subscriptionType,
-                plan_name: metadata?.plan_name || plan,
-                payment_reference: reference,
-                payment_date: now.toISOString(),
-                subscription_start: now.toISOString(),
-                subscription_end: endDate.toISOString(),
-                payment_method: 'Paystack',
-                customer_email: data.data.customer?.email,
-              }
-            });
-
-            // Create subscription activated notification
-            await supabase.from('user_alerts').insert({
-              user_id: userId,
-              type: 'subscription_activated',
-              title: '🎉 Subscription Activated!',
-              message: `Your ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} subscription is now active until ${endDate.toLocaleDateString()}. Enjoy all premium features!`,
-              is_read: false,
-              data: { plan: subscriptionType, expires: endDate.toISOString() }
-            });
+            const amountPaid = data.data.amount / 100;
+            await supabase.from('user_alerts').insert({ user_id: userId, type: 'payment_receipt', title: '🧾 Payment Receipt', message: `Receipt #${receiptNumber} - ${data.data.currency || 'KES'} ${amountPaid.toLocaleString()} paid for ${subscriptionType} plan. Valid until ${endDate.toLocaleDateString()}.`, is_read: false, data: { receipt_number: receiptNumber, amount: amountPaid, plan: subscriptionType, payment_reference: reference, subscription_end: endDate.toISOString() } });
+            await supabase.from('user_alerts').insert({ user_id: userId, type: 'subscription_activated', title: '🎉 Subscription Activated!', message: `Your ${subscriptionType} subscription is now active until ${endDate.toLocaleDateString()}.`, is_read: false, data: { plan: subscriptionType, expires: endDate.toISOString() } });
           }
 
-          return new Response(
-            JSON.stringify({
-              success: true,
-              data: {
-                status: 'success',
-                plan: metadata?.plan,
-                amount: data.data.amount / 100,
-                currency: data.data.currency,
-                message: 'Subscription activated successfully!',
-              },
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ success: true, data: { status: 'success', plan: metadata?.plan, amount: data.data.amount / 100, currency: data.data.currency, message: 'Subscription activated successfully!' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: `Payment ${data.data.status}`,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
       }
 
       case 'webhook': {
         const event = params;
-        
         if (event.event === 'charge.success') {
           const metadata = event.data?.metadata;
+
+          // Handle ad payment webhook
+          if (metadata?.payment_type === 'ad_payment') {
+            const adId = metadata?.ad_id;
+            if (adId) {
+              await supabase.from('service_provider_ads').update({ payment_status: 'paid', payment_reference: event.data?.reference }).eq('id', Number(adId));
+            }
+            return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          // Handle subscription webhook
           const userId = metadata?.user_id;
           const plan = metadata?.plan;
-
           if (userId && plan) {
             const subscriptionType = plan.includes('business') ? 'business' : 'pro';
             const now = new Date();
             const endDate = new Date();
             endDate.setMonth(endDate.getMonth() + (plan.includes('annual') ? 12 : 1));
 
-            await supabase
-              .from('profiles')
-              .update({
-                subscription_type: subscriptionType,
-                subscription_status: 'active',
-                subscription_start_date: now.toISOString(),
-                subscription_end_date: endDate.toISOString(),
-                subscription_locked: false,
-                lock_reason: null,
-                is_founding_member: false,
-              })
-              .eq('id', userId);
-
-            // Create webhook payment receipt
-            const webhookReceiptNumber = `TPA-${Date.now().toString(36).toUpperCase()}`;
-            await supabase.from('user_alerts').insert({
-              user_id: userId,
-              type: 'payment_receipt',
-              title: '🧾 Payment Confirmed',
-              message: `Receipt #${webhookReceiptNumber} - Payment confirmed for ${subscriptionType.charAt(0).toUpperCase() + subscriptionType.slice(1)} plan. Your subscription is now active.`,
-              is_read: false,
-              data: {
-                receipt_number: webhookReceiptNumber,
-                plan: subscriptionType,
-                payment_date: now.toISOString(),
-                subscription_end: endDate.toISOString(),
-                source: 'webhook',
-              }
-            });
+            await supabase.from('profiles').update({ subscription_type: subscriptionType, subscription_status: 'active', subscription_start_date: now.toISOString(), subscription_end_date: endDate.toISOString(), subscription_locked: false, lock_reason: null, is_founding_member: false }).eq('id', userId);
           }
         }
 
-        return new Response(JSON.stringify({ received: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       case 'check_access': {
         const { user_id } = params;
-        
-        if (!user_id) {
-          throw new Error('user_id is required');
-        }
+        if (!user_id) throw new Error('user_id is required');
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('subscription_type, subscription_status, subscription_end_date, is_founding_member, founding_member_expires_at, subscription_locked')
-          .eq('id', user_id)
-          .single();
+        const { data: profile } = await supabase.from('profiles').select('subscription_type, subscription_status, subscription_end_date, is_founding_member, founding_member_expires_at, subscription_locked').eq('id', user_id).single();
 
         if (!profile) {
-          return new Response(
-            JSON.stringify({ success: true, data: { has_access: false, reason: 'no_profile' } }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+          return new Response(JSON.stringify({ success: true, data: { has_access: false, reason: 'no_profile' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
         const now = new Date();
         let hasAccess = false;
         let reason = 'no_subscription';
 
-        // Check founding member status
         if (profile.is_founding_member && profile.founding_member_expires_at) {
           const foundingExpires = new Date(profile.founding_member_expires_at);
-          if (foundingExpires > now) {
-            hasAccess = true;
-            reason = 'founding_member';
-          }
+          if (foundingExpires > now) { hasAccess = true; reason = 'founding_member'; }
         }
 
-        // Check regular subscription
-        if (!hasAccess && profile.subscription_status === 'active' &&
-            ['pro', 'business'].includes(profile.subscription_type || '')) {
-          if (!profile.subscription_end_date || new Date(profile.subscription_end_date) > now) {
-            hasAccess = true;
-            reason = 'active_subscription';
-          }
+        if (!hasAccess && profile.subscription_status === 'active' && ['pro', 'business'].includes(profile.subscription_type || '')) {
+          if (!profile.subscription_end_date || new Date(profile.subscription_end_date) > now) { hasAccess = true; reason = 'active_subscription'; }
         }
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            data: {
-              has_access: hasAccess,
-              reason,
-              subscription_type: profile.subscription_type,
-              subscription_status: profile.subscription_status,
-              expires: profile.subscription_end_date,
-              is_founding_member: profile.is_founding_member,
-              founding_member_expires: profile.founding_member_expires_at,
-              is_locked: profile.subscription_locked,
-            },
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: true, data: { has_access: hasAccess, reason, subscription_type: profile.subscription_type, subscription_status: profile.subscription_status, expires: profile.subscription_end_date, is_founding_member: profile.is_founding_member, is_locked: profile.subscription_locked } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       case 'request_downgrade': {
-        // Downgrades require support ticket - not self-service
         const { user_id, reason } = params;
-        
-        if (!user_id) {
-          throw new Error('user_id is required');
-        }
+        if (!user_id) throw new Error('user_id is required');
 
-        await supabase.from('user_alerts').insert({
-          user_id,
-          type: 'downgrade_request',
-          title: '📋 Downgrade Request Received',
-          message: 'Your downgrade request has been received. Our support team will contact you within 24 hours to process this request.',
-          is_read: false,
-          data: { reason, requested_at: new Date().toISOString() }
-        });
+        await supabase.from('user_alerts').insert({ user_id, type: 'downgrade_request', title: '📋 Downgrade Request Received', message: 'Our support team will contact you within 24 hours.', is_read: false, data: { reason, requested_at: new Date().toISOString() } });
 
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: 'Downgrade request submitted. Support will contact you within 24 hours.',
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: true, message: 'Downgrade request submitted.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       default:
@@ -431,16 +284,6 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Paystack error:', error);
-    
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    return new Response(JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
   }
 });
