@@ -15,9 +15,14 @@ import {
   Brain,
   ArrowRight,
   RefreshCw,
-  Settings
+  Settings,
+  ShoppingCart,
+  Briefcase,
+  Target,
+  Megaphone
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useI18n } from "@/lib/i18n";
 
 interface TenderData {
   id: number;
@@ -32,19 +37,17 @@ interface TenderData {
   createdAt?: string | null;
   sourceUrl?: string | null;
   tenderNumber?: string | null;
+  scrapedFrom?: string | null;
 }
 
-/** PWA update banner that checks for service worker updates */
+/** PWA update banner */
 function PWAUpdateBanner() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
-
     navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg?.waiting) {
-        setUpdateAvailable(true);
-      }
+      if (reg?.waiting) setUpdateAvailable(true);
       reg?.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker?.addEventListener('statechange', () => {
@@ -69,9 +72,7 @@ function PWAUpdateBanner() {
               <p className="text-xs text-blue-700 dark:text-blue-300">A newer version of TenderAlert is ready.</p>
             </div>
           </div>
-          <Button size="sm" onClick={() => window.location.reload()}>
-            Update Now
-          </Button>
+          <Button size="sm" onClick={() => window.location.reload()}>Update Now</Button>
         </div>
       </CardContent>
     </Card>
@@ -79,7 +80,9 @@ function PWAUpdateBanner() {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { t } = useI18n();
+  const businessType = profile?.business_type; // 'buyer' | 'supplier' | null
 
   const { data: tenders, isLoading: tendersLoading } = useQuery({
     queryKey: ["tenders"],
@@ -105,6 +108,7 @@ export default function Dashboard() {
         createdAt: t.created_at,
         sourceUrl: t.source_url,
         tenderNumber: t.tender_number,
+        scrapedFrom: t.scraped_from,
       })) as TenderData[];
     },
   });
@@ -129,7 +133,6 @@ export default function Dashboard() {
     },
   });
 
-  // Check if user has preferences configured
   const { data: preferences } = useQuery({
     queryKey: ['user-preferences-check', user?.id],
     queryFn: async () => {
@@ -159,6 +162,10 @@ export default function Dashboard() {
 
   const recentTenders = tenders?.slice(0, 3) || [];
 
+  // Role-aware CTAs
+  const isBuyer = businessType === 'buyer';
+  const isSupplier = businessType === 'supplier' || !businessType; // default to supplier
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
@@ -170,42 +177,67 @@ export default function Dashboard() {
               <div className="flex items-start gap-3">
                 <Settings className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">Set Up Your Tender Preferences</h3>
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200 text-sm">{t('dash.setupPreferences')}</h3>
                   <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                    Configure your sectors, counties, and keywords to unlock personalized Smart Matches and better tender recommendations.
+                    Configure your sectors, counties, and keywords to unlock personalized Smart Matches.
                   </p>
                 </div>
                 <Button size="sm" asChild className="flex-shrink-0">
-                  <Link href="/settings">Configure Now</Link>
+                  <Link href="/settings">{t('dash.configureNow')}</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* PWA Update Banner */}
         <PWAUpdateBanner />
 
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-slate-800 dark:to-slate-700 rounded-lg p-6 lg:p-8 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
             <div className="mb-6 lg:mb-0">
-              <h1 className="text-2xl lg:text-3xl font-bold mb-2">Welcome back!</h1>
-              <p className="text-muted-foreground">Discover new tender opportunities and grow your business</p>
+              <h1 className="text-2xl lg:text-3xl font-bold mb-2">{t('auth.welcome')}</h1>
+              <p className="text-muted-foreground">{t('auth.subtitle')}</p>
+              {businessType && (
+                <Badge variant="outline" className="mt-2 capitalize">
+                  {businessType === 'buyer' ? '🛒' : '📦'} {businessType}
+                </Badge>
+              )}
             </div>
+            
+            {/* Role-aware CTAs */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex items-center space-x-2" asChild>
-                <Link href="/smart-matches">
-                  <Plus className="h-4 w-4" />
-                  <span>Smart Matches</span>
-                </Link>
-              </Button>
-              <Button variant="outline" className="flex items-center space-x-2" asChild>
-                <Link href="/consortiums">
-                  <Users className="h-4 w-4" />
-                  <span>Join Consortium</span>
-                </Link>
-              </Button>
+              {isBuyer ? (
+                <>
+                  <Button className="flex items-center space-x-2" asChild>
+                    <Link href="/rfq-system">
+                      <ShoppingCart className="h-4 w-4" />
+                      <span>{t('dash.postRfq')}</span>
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="flex items-center space-x-2" asChild>
+                    <Link href="/service-providers">
+                      <Briefcase className="h-4 w-4" />
+                      <span>{t('dash.findSuppliers')}</span>
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="flex items-center space-x-2" asChild>
+                    <Link href="/smart-matches">
+                      <Target className="h-4 w-4" />
+                      <span>{t('dash.smartMatches')}</span>
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="flex items-center space-x-2" asChild>
+                    <Link href="/consortiums">
+                      <Users className="h-4 w-4" />
+                      <span>{t('dash.joinConsortium')}</span>
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -218,7 +250,7 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-xs">+12%</Badge>
                 </div>
                 <p className="text-2xl font-bold">{stats.activeTenders}</p>
-                <p className="text-sm text-muted-foreground">Active Tenders</p>
+                <p className="text-sm text-muted-foreground">{t('dash.activeTenders')}</p>
               </CardContent>
             </Card>
             <Card>
@@ -228,7 +260,7 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-xs">{stats.savedTenders}</Badge>
                 </div>
                 <p className="text-2xl font-bold">{stats.savedTenders}</p>
-                <p className="text-sm text-muted-foreground">Saved Tenders</p>
+                <p className="text-sm text-muted-foreground">{t('dash.savedTenders')}</p>
               </CardContent>
             </Card>
             <Card>
@@ -238,7 +270,7 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-xs">{stats.consortiums}</Badge>
                 </div>
                 <p className="text-2xl font-bold">{stats.consortiums}</p>
-                <p className="text-sm text-muted-foreground">Consortiums</p>
+                <p className="text-sm text-muted-foreground">{t('dash.consortiums')}</p>
               </CardContent>
             </Card>
             <Card>
@@ -248,43 +280,72 @@ export default function Dashboard() {
                   <Badge variant="secondary" className="text-xs">+5%</Badge>
                 </div>
                 <p className="text-2xl font-bold">{stats.winRate}%</p>
-                <p className="text-sm text-muted-foreground">Win Rate</p>
+                <p className="text-sm text-muted-foreground">{t('dash.winRate')}</p>
               </CardContent>
             </Card>
           </div>
         </section>
 
-        {/* AI Insights Banner */}
-        <section className="mb-8">
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-700">
-            <CardContent className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Brain className="h-6 w-6 text-white" />
+        {/* Role-aware quick actions */}
+        {isBuyer && (
+          <section className="mb-8">
+            <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200 dark:border-emerald-700">
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Megaphone className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2">Buyer Hub</h3>
+                    <p className="text-emerald-700 dark:text-emerald-300 mb-4">
+                      Post RFQs, find verified suppliers, and manage procurement effortlessly.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" asChild>
+                        <Link href="/rfq-system">{t('dash.postRfq')} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" asChild>
+                        <Link href="/marketplace">{t('dash.findSuppliers')} <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">AI-Powered Tender Analysis</h3>
-                  <p className="text-purple-700 dark:text-purple-300 mb-4">
-                    Get personalized win probability and bid strategy recommendations for any tender.
-                  </p>
-                  <Button variant="outline" size="sm" className="border-purple-200 text-purple-700 hover:bg-purple-50" asChild>
-                    <Link href="/ai-analysis">
-                      View Detailed Analysis <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+              </CardContent>
+            </Card>
+          </section>
+        )}
+
+        {/* AI Insights Banner - for suppliers */}
+        {isSupplier && (
+          <section className="mb-8">
+            <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-700">
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Brain className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">{t('dash.aiInsights')}</h3>
+                    <p className="text-purple-700 dark:text-purple-300 mb-4">{t('dash.aiDescription')}</p>
+                    <Button variant="outline" size="sm" className="border-purple-200 text-purple-700 hover:bg-purple-50" asChild>
+                      <Link href="/ai-analysis">
+                        View Analysis <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Recent Tenders */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Latest Tenders</h2>
+            <h2 className="text-xl font-semibold">{t('dash.latestTenders')}</h2>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/browse">
-                View All <ArrowRight className="ml-2 h-4 w-4" />
+                {t('dash.viewAll')} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -313,7 +374,7 @@ export default function Dashboard() {
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No tenders available yet.</p>
                 <Button className="mt-4" asChild>
-                  <Link href="/browse">Browse Tenders</Link>
+                  <Link href="/browse">{t('dash.browseTenders')}</Link>
                 </Button>
               </CardContent>
             </Card>

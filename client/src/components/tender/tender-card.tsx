@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AiEstimate } from "./ai-estimate";
 import { TenderDetailsModal } from "./tender-details-modal";
-import { Heart, Calendar, MapPin, Building, Users, ExternalLink } from "lucide-react";
+import { Heart, Calendar, MapPin, Building, Users, ExternalLink, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from 'wouter';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TenderData {
   id: number;
@@ -23,6 +25,7 @@ interface TenderData {
   createdAt?: string | null;
   sourceUrl?: string | null;
   tenderNumber?: string | null;
+  scrapedFrom?: string | null;
 }
 
 interface TenderCardProps {
@@ -32,29 +35,67 @@ interface TenderCardProps {
 
 /**
  * Build the best available source URL for a tender.
- * Priority: specific source_url > constructed URL from tender_number > generic portal
+ * tenders.go.ke is a JS SPA behind login - deep links don't work.
+ * We link to the portal homepage with instructions to search by tender number.
  */
-function buildSourceUrl(tender: TenderData): string | null {
-  const genericPortals = [
-    'https://tenders.go.ke/',
-    'https://tenders.go.ke',
-    'https://egpkenya.go.ke',
-    'https://www.mygov.go.ke',
-    'https://ppra.go.ke',
-  ];
+function buildSourceUrl(tender: TenderData): { url: string; label: string; needsManualSearch: boolean } | null {
+  const scrapedFrom = tender.scrapedFrom?.toLowerCase() || '';
 
-  // If we have a specific (non-generic) source URL, use it
-  if (tender.sourceUrl && !genericPortals.includes(tender.sourceUrl)) {
-    return tender.sourceUrl;
+  // If we have a source URL that is NOT a generic homepage, use it
+  if (tender.sourceUrl) {
+    const genericPortals = [
+      'https://tenders.go.ke/',
+      'https://tenders.go.ke',
+      'https://egpkenya.go.ke',
+      'https://www.mygov.go.ke',
+      'https://ppra.go.ke',
+    ];
+    
+    const isGeneric = genericPortals.includes(tender.sourceUrl);
+    const isSearchUrl = tender.sourceUrl.includes('/search?keyword=');
+    
+    // tenders.go.ke search URLs are broken (SPA behind login) - redirect to portal
+    if (isSearchUrl && tender.sourceUrl.includes('tenders.go.ke')) {
+      return {
+        url: 'https://supplier.tenders.go.ke/website/tenders',
+        label: 'tenders.go.ke',
+        needsManualSearch: true,
+      };
+    }
+    
+    if (!isGeneric) {
+      return { url: tender.sourceUrl, label: 'Source', needsManualSearch: false };
+    }
   }
 
-  // Construct a search URL using the tender number
+  // Construct best URL based on scraped_from
+  if (scrapedFrom.includes('mygov') || scrapedFrom.includes('my_gov')) {
+    const searchTerm = tender.tenderNumber || tender.title.split(' ').slice(0, 3).join('+');
+    return {
+      url: `https://www.mygov.go.ke/?s=${encodeURIComponent(searchTerm)}`,
+      label: 'MyGov',
+      needsManualSearch: false,
+    };
+  }
+
+  if (scrapedFrom.includes('ppra')) {
+    return {
+      url: 'https://ppra.go.ke/tender-notices/',
+      label: 'PPRA',
+      needsManualSearch: true,
+    };
+  }
+
+  // Default: tenders.go.ke portal
   if (tender.tenderNumber) {
-    return `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(tender.tenderNumber)}`;
+    return {
+      url: 'https://supplier.tenders.go.ke/website/tenders',
+      label: 'tenders.go.ke',
+      needsManualSearch: true,
+    };
   }
 
-  // Fall back to generic portal
-  return tender.sourceUrl || null;
+  return null;
 }
 
 export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
@@ -158,7 +199,7 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
 
   const daysLeft = getDaysLeft(tender.deadline);
   const isExpired = daysLeft < 0;
-  const sourceUrl = buildSourceUrl(tender);
+  const sourceInfo = buildSourceUrl(tender);
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -213,12 +254,12 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
           
           <div className="flex flex-col lg:items-end space-y-3">
             <div className="text-right">
-              {tender.budgetEstimate && (
+              {tender.budgetEstimate ? (
                 <>
                   <p className="text-2xl font-bold text-primary">{formatCurrency(tender.budgetEstimate)}</p>
                   <p className="text-sm text-muted-foreground">Budget Estimate</p>
                 </>
-              )}
+              ) : null}
             </div>
             
             <div className="text-right text-sm">
@@ -235,14 +276,26 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
                 <span>View Details</span>
               </Button>
 
-              {sourceUrl && (
-                <Button asChild variant="outline" size="sm" className="flex items-center space-x-1">
-                  <a href={sourceUrl} target="_blank" rel="noopener noreferrer nofollow"
-                    aria-label={`View tender ${tender.tenderNumber || tender.title} on source portal`}>
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Source</span>
-                  </a>
-                </Button>
+              {sourceInfo && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button asChild variant="outline" size="sm" className="flex items-center space-x-1">
+                      <a href={sourceInfo.url} target="_blank" rel="noopener noreferrer nofollow"
+                        aria-label={`View tender on ${sourceInfo.label}`}>
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{sourceInfo.label}</span>
+                        {sourceInfo.needsManualSearch && (
+                          <AlertTriangle className="h-3 w-3 text-amber-500" />
+                        )}
+                      </a>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {sourceInfo.needsManualSearch && tender.tenderNumber
+                      ? `Opens portal — search for "${tender.tenderNumber}"`
+                      : `View on ${sourceInfo.label}`}
+                  </TooltipContent>
+                </Tooltip>
               )}
 
               <Button variant="outline" size="sm" className="flex items-center space-x-1" asChild>
@@ -260,6 +313,3 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
     </Card>
   );
 }
-
-// Need Link import for consortium button
-import { Link } from 'wouter';

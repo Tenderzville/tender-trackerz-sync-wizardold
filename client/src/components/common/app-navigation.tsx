@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './theme-toggle';
+import { LanguageToggle, useI18n } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/use-admin-role';
-import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown, CreditCard, User } from 'lucide-react';
+import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown, CreditCard, User, Megaphone, GraduationCap, BarChart3, TrendingUp } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,23 +20,38 @@ import { cn } from '@/lib/utils';
 
 export function AppNavigation() {
   const [location] = useLocation();
+  const { t } = useI18n();
   const { user, profile, logout, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isAdmin = useIsAdmin();
 
-  // Secondary nav items - role-filtered (NO admin for non-admins)
+  const businessType = profile?.business_type; // 'buyer' | 'supplier' | null
+
+  // Primary nav - always visible
+  const primaryNavItems = useMemo(() => {
+    const items = [
+      { path: '/dashboard', icon: Home, label: t('nav.dashboard') },
+      { path: '/browse', icon: Search, label: t('nav.browse') },
+      { path: '/smart-matches', icon: Target, label: t('nav.smartMatches') },
+      { path: '/saved', icon: Bookmark, label: t('nav.saved') },
+    ];
+    return items;
+  }, [t]);
+
+  // Secondary nav items - role-filtered
   const secondaryNavItems = useMemo(() => {
     const items = [
-      { path: '/ai-analysis', icon: Brain, label: 'AI Analysis' },
-      { path: '/consortiums', icon: Users, label: 'Consortiums' },
-      { path: '/service-providers', icon: Package, label: 'Providers' },
-      { path: '/rfq-system', icon: FileText, label: 'RFQ System' },
+      { path: '/ai-analysis', icon: Brain, label: t('nav.ai') },
+      { path: '/consortiums', icon: Users, label: t('nav.consortiums') },
+      { path: '/service-providers', icon: Package, label: t('nav.providers') },
+      { path: '/marketplace', icon: Megaphone, label: t('nav.marketplace') },
+      { path: '/rfq-system', icon: FileText, label: t('nav.rfq') },
+      { path: '/learning', icon: GraduationCap, label: t('nav.learning') },
+      { path: '/performance', icon: TrendingUp, label: t('nav.performance') },
+      { path: '/analytics', icon: BarChart3, label: t('nav.analytics') },
     ];
-    if (isAdmin) {
-      items.push({ path: '/admin/dashboard', icon: Shield, label: 'Admin' });
-    }
     return items;
-  }, [isAdmin]);
+  }, [t]);
 
   if (!isAuthenticated) {
     return (
@@ -51,23 +67,16 @@ export function AppNavigation() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
             <Button asChild>
-              <Link href="/auth">Sign In</Link>
+              <Link href="/auth">{t('common.signIn')}</Link>
             </Button>
           </div>
         </div>
       </header>
     );
   }
-
-  // Core nav items (always visible)
-  const primaryNavItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard' },
-    { path: '/browse', icon: Search, label: 'Browse' },
-    { path: '/smart-matches', icon: Target, label: 'Smart Matches' },
-    { path: '/saved', icon: Bookmark, label: 'Saved' },
-  ];
 
   const allNavItems = [...primaryNavItems, ...secondaryNavItems];
 
@@ -117,7 +126,7 @@ export function AppNavigation() {
                   size="sm"
                   className="h-9 gap-1"
                 >
-                  More
+                  {t('nav.more')}
                   <ChevronDown className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
@@ -132,10 +141,26 @@ export function AppNavigation() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Admin button - SEPARATE from More dropdown, only visible to admins */}
+            {isAdmin && (
+              <Button
+                variant={isActive('/admin/dashboard') ? 'default' : 'outline'}
+                size="sm"
+                asChild
+                className="h-9 gap-1 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Link href="/admin/dashboard">
+                  <Shield className="h-4 w-4 mr-1" />
+                  {t('nav.admin')}
+                </Link>
+              </Button>
+            )}
           </nav>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1">
+            <LanguageToggle />
             <ThemeToggle />
             
             {/* Mobile Menu */}
@@ -162,6 +187,9 @@ export function AppNavigation() {
                             : 'User'}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        {businessType && (
+                          <p className="text-xs text-primary capitalize">{businessType}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -186,7 +214,7 @@ export function AppNavigation() {
                         isActive('/subscription') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
                         <CreditCard className="h-4 w-4" />
-                        Subscription
+                        {t('nav.subscription')}
                       </span>
                     </Link>
                     <Link href="/settings" onClick={() => setMobileOpen(false)}>
@@ -195,7 +223,7 @@ export function AppNavigation() {
                         isActive('/settings') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
                         <Settings className="h-4 w-4" />
-                        Preferences
+                        {t('nav.settings')}
                       </span>
                     </Link>
                     <Link href="/profile" onClick={() => setMobileOpen(false)}>
@@ -204,13 +232,31 @@ export function AppNavigation() {
                         isActive('/profile') ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-accent"
                       )}>
                         <User className="h-4 w-4" />
-                        Profile
+                        {t('nav.profile')}
                       </span>
                     </Link>
+                    
+                    {/* Admin link - only for admins, visually distinct */}
+                    {isAdmin && (
+                      <>
+                        <div className="my-2 border-t border-destructive/20" />
+                        <Link href="/admin/dashboard" onClick={() => setMobileOpen(false)}>
+                          <span className={cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                            isActive('/admin/dashboard')
+                              ? "bg-destructive text-destructive-foreground"
+                              : "text-destructive hover:bg-destructive/10"
+                          )}>
+                            <Shield className="h-4 w-4" />
+                            {t('nav.admin')}
+                          </span>
+                        </Link>
+                      </>
+                    )}
                   </nav>
                   <div className="p-4 border-t">
                     <Button variant="destructive" className="w-full" size="sm" onClick={() => { logout(); setMobileOpen(false); }}>
-                      Sign Out
+                      {t('nav.logout')}
                     </Button>
                   </div>
                 </div>
@@ -238,36 +284,39 @@ export function AppNavigation() {
                         : 'User'}
                     </p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
+                    {businessType && (
+                      <p className="text-xs text-primary capitalize">{businessType}</p>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/profile">
                     <User className="h-4 w-4 mr-2" />
-                    Profile
+                    {t('nav.profile')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings">
                     <Settings className="h-4 w-4 mr-2" />
-                    Preferences
+                    {t('nav.settings')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/subscription">
                     <CreditCard className="h-4 w-4 mr-2" />
-                    Subscription
+                    {t('nav.subscription')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/transactions">
                     <Receipt className="h-4 w-4 mr-2" />
-                    Transactions
+                    {t('nav.transactions')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()} className="text-destructive">
-                  Sign Out
+                  {t('nav.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
