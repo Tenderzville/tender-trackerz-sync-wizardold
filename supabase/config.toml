@@ -82,3 +82,6 @@ verify_jwt = false
 
 [functions.historical-awards-scraper]
 verify_jwt = false
+
+[functions.telegram-tender-notify]
+verify_jwt = false
