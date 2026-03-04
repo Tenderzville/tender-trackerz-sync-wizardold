@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileText } from "lucide-react";
+import { Search, FileText, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface FilterState {
   search: string;
@@ -31,6 +32,7 @@ interface Tender {
 }
 
 export default function BrowseTenders() {
+  const { toast } = useToast();
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     category: "",
@@ -77,6 +79,34 @@ export default function BrowseTenders() {
 
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleExportCSV = () => {
+    if (!sortedTenders.length) {
+      toast({ title: "No data", description: "No tenders to export.", variant: "destructive" });
+      return;
+    }
+    const headers = ["Title", "Organization", "Category", "Location", "Deadline", "Budget (KES)", "Tender Number", "Source URL", "Status"];
+    const rows = sortedTenders.map(t => [
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      `"${(t.organization || '').replace(/"/g, '""')}"`,
+      t.category,
+      t.location,
+      t.deadline,
+      t.budgetEstimate || '',
+      t.tenderNumber || '',
+      t.sourceUrl || '',
+      t.status || 'active',
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tenders-export-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported!", description: `${sortedTenders.length} tenders exported to CSV. Open in Google Sheets to manage.` });
   };
 
   const sortedTenders = tenders ? [...tenders].sort((a, b) => {
@@ -176,11 +206,10 @@ export default function BrowseTenders() {
                 </span>
               </div>
               
-              <div className="hidden lg:flex items-center space-x-3">
-                <span className="text-sm text-slate-500 dark:text-slate-400">
-                  {sortedTenders.length} results
-                </span>
-              </div>
+              <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={!sortedTenders.length}>
+                <Download className="h-4 w-4 mr-1.5" />
+                Export CSV
+              </Button>
             </div>
 
             {isLoading ? (
