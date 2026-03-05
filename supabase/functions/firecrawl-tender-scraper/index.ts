@@ -262,18 +262,17 @@ If no tenders found, return empty array: []`
     // Add source info and validate
     const baseUrl = source === 'mygov' ? 'https://www.mygov.go.ke' 
       : source === 'ppra' ? 'https://ppra.go.ke' 
-      : 'https://tenders.go.ke';
+      : source === 'egpkenya' ? 'https://egpkenya.go.ke'
+      : 'https://egpkenya.go.ke';
     
     return tenders.map((t: any) => {
-      // Build specific source URL - priority: explicit link > tender number search > base
       let specificUrl = baseUrl;
-      if (t.sourceLink && t.sourceLink.startsWith('http')) {
+      if (t.sourceLink && t.sourceLink.startsWith('http') && !t.sourceLink.includes('supplier.tenders.go.ke') && !t.sourceLink.includes('tenders.go.ke/website')) {
         specificUrl = t.sourceLink;
       } else if (t.sourceLink && t.sourceLink.startsWith('/')) {
         specificUrl = `${baseUrl}${t.sourceLink}`;
       } else if (t.tenderNumber) {
-        // Always construct a specific URL using the tender number
-        specificUrl = `https://tenders.go.ke/website/tender/search?keyword=${encodeURIComponent(t.tenderNumber)}`;
+        specificUrl = `https://egpkenya.go.ke/tender?search=${encodeURIComponent(t.tenderNumber)}`;
       }
 
       return {
