@@ -35,57 +35,60 @@ interface TenderCardProps {
 
 /**
  * Build the best available source URL for a tender.
- * tenders.go.ke is a JS SPA behind login - deep links don't work.
- * We link to the portal homepage with instructions to search by tender number.
+ * 
+ * VERIFIED URL formats:
+ * - tenders.go.ke: https://tenders.go.ke/tenders/{id}  (CONFIRMED WORKING - public, no login)
+ * - egpkenya.go.ke: SPA, search-based only
+ * - mygov.go.ke: https://www.mygov.go.ke/?s={query}
+ * - ppra.go.ke: https://ppra.go.ke/tender-notices/
  */
 function buildSourceUrl(tender: TenderData): { url: string; label: string; needsManualSearch: boolean } | null {
-  const scrapedFrom = tender.scrapedFrom?.toLowerCase() || '';
+  // If we have a verified tenders.go.ke deep link, use it directly
+  if (tender.sourceUrl?.match(/^https:\/\/tenders\.go\.ke\/tenders\/\d+$/)) {
+    return { url: tender.sourceUrl, label: 'Tenders Portal', needsManualSearch: false };
+  }
 
-  // If we have a source URL, evaluate it
-  if (tender.sourceUrl) {
-    // Dead domains to never link to
-    const deadDomains = ['supplier.tenders.go.ke'];
-    const isDead = deadDomains.some(d => tender.sourceUrl!.includes(d));
-    
-    if (isDead) {
-      // Redirect to eGP Kenya which is the working portal
-      if (tender.tenderNumber) {
-        return {
-          url: `https://egpkenya.go.ke/tender?search=${encodeURIComponent(tender.tenderNumber)}`,
-          label: 'EGP Kenya',
-          needsManualSearch: true,
-        };
-      }
-      return {
-        url: 'https://egpkenya.go.ke/tender',
-        label: 'EGP Kenya',
-        needsManualSearch: true,
-      };
-    }
+  // Dead domains and broken URL patterns - never link to these
+  const brokenPatterns = [
+    'supplier.tenders.go.ke',
+    'tenders.go.ke/website/tender/search',
+    'tenders.go.ke/tender/',  // Note: /tender/ (singular) is 404, /tenders/ (plural) works
+  ];
+  
+  const isBroken = tender.sourceUrl && brokenPatterns.some(p => tender.sourceUrl!.includes(p));
 
-    // Generic portal homepages - try to make them specific
+  // If the URL is NOT broken and looks like a real specific link (not a homepage), use it
+  if (tender.sourceUrl && !isBroken) {
     const genericPortals = [
       'https://tenders.go.ke/', 'https://tenders.go.ke',
-      'https://egpkenya.go.ke', 'https://www.mygov.go.ke', 'https://ppra.go.ke',
+      'https://egpkenya.go.ke', 'https://egpkenya.go.ke/tender',
+      'https://www.mygov.go.ke', 'https://ppra.go.ke',
     ];
     const isGeneric = genericPortals.includes(tender.sourceUrl);
     
-    // tenders.go.ke search URLs are broken (SPA behind login)
-    if (tender.sourceUrl.includes('tenders.go.ke')) {
-      return {
-        url: `https://egpkenya.go.ke/tender${tender.tenderNumber ? `?search=${encodeURIComponent(tender.tenderNumber)}` : ''}`,
-        label: 'EGP Kenya',
-        needsManualSearch: true,
-      };
-    }
-    
     if (!isGeneric) {
-      return { url: tender.sourceUrl, label: 'Source', needsManualSearch: false };
+      const label = tender.sourceUrl.includes('mygov') ? 'MyGov'
+        : tender.sourceUrl.includes('ppra') ? 'PPRA'
+        : tender.sourceUrl.includes('egp') ? 'EGP Kenya'
+        : 'Source';
+      return { url: tender.sourceUrl, label, needsManualSearch: false };
     }
   }
 
-  // Construct best URL based on scraped_from
-  if (scrapedFrom.includes('mygov') || scrapedFrom.includes('my_gov')) {
+  // Construct best fallback URL based on scraped source
+  const scrapedFrom = tender.scrapedFrom?.toLowerCase() || '';
+
+  if (scrapedFrom.includes('tenders.go.ke')) {
+    // tenders.go.ke tenders should have had a proper deep link saved
+    // If not, link to the main tenders page (search requires login)
+    return {
+      url: 'https://tenders.go.ke/tenders',
+      label: 'Tenders Portal',
+      needsManualSearch: true,
+    };
+  }
+
+  if (scrapedFrom.includes('mygov')) {
     const searchTerm = tender.tenderNumber || tender.title.split(' ').slice(0, 3).join('+');
     return {
       url: `https://www.mygov.go.ke/?s=${encodeURIComponent(searchTerm)}`,
@@ -102,24 +105,20 @@ function buildSourceUrl(tender: TenderData): { url: string; label: string; needs
     };
   }
 
-  if (scrapedFrom.includes('egp') || scrapedFrom.includes('tenders.go.ke')) {
+  if (scrapedFrom.includes('egp')) {
     return {
-      url: `https://egpkenya.go.ke/tender${tender.tenderNumber ? `?search=${encodeURIComponent(tender.tenderNumber)}` : ''}`,
+      url: 'https://egpkenya.go.ke/tender',
       label: 'EGP Kenya',
       needsManualSearch: true,
     };
   }
 
-  // Default fallback - eGP Kenya is the working portal
-  if (tender.tenderNumber) {
-    return {
-      url: `https://egpkenya.go.ke/tender?search=${encodeURIComponent(tender.tenderNumber)}`,
-      label: 'EGP Kenya',
-      needsManualSearch: true,
-    };
-  }
-
-  return null;
+  // Default: link to tenders.go.ke main listing (public, no login needed)
+  return {
+    url: 'https://tenders.go.ke/tenders',
+    label: 'Tenders Portal',
+    needsManualSearch: true,
+  };
 }
 
 export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
