@@ -48,7 +48,7 @@ export default function TriggerScraper() {
     },
   });
 
-  // Firecrawl scraper - uses AI + real web scraping
+  // Firecrawl sync - uses AI + real web data collection
   const firecrawlMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('firecrawl-tender-scraper', {
@@ -60,7 +60,7 @@ export default function TriggerScraper() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Firecrawl Scraper Complete! 🔥",
+        title: "Tender Sync Complete! 🔥",
         description: data.message || `Processed ${data.stats?.totalProcessed || 0} tenders, saved ${data.stats?.totalSaved || 0} new ones.`,
       });
     },
