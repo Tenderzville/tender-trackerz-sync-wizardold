@@ -37,7 +37,7 @@ export default function TriggerScraper() {
   const { toast } = useToast();
   const [selectedSource, setSelectedSource] = useState<string>('all');
   
-  // Fetch recent scrape stats
+  // Fetch recent sync stats
   const { data: recentTenders } = useQuery({
     queryKey: ['recent-tenders-count'],
     queryFn: async () => {
@@ -48,7 +48,7 @@ export default function TriggerScraper() {
     },
   });
 
-  // Firecrawl scraper - uses AI + real web scraping
+  // Firecrawl sync - uses AI + real web data collection
   const firecrawlMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('firecrawl-tender-scraper', {
@@ -60,7 +60,7 @@ export default function TriggerScraper() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Firecrawl Scraper Complete! 🔥",
+        title: "Tender Sync Complete! 🔥",
         description: data.message || `Processed ${data.stats?.totalProcessed || 0} tenders, saved ${data.stats?.totalSaved || 0} new ones.`,
       });
     },
@@ -73,7 +73,7 @@ export default function TriggerScraper() {
     },
   });
 
-  // Basic scraper - uses backup/synthetic data
+  // Basic sync - uses backup/sample data
   const basicScraperMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('manual-scraper-trigger', {});
@@ -82,13 +82,13 @@ export default function TriggerScraper() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Basic Scraper Complete",
+        title: "Basic Sync Complete",
         description: `Processed ${data.result?.processed || 0} tenders, saved ${data.result?.saved || 0} new ones.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error triggering scraper",
+        title: "Error running sync",
         description: error.message || "Unknown error occurred",
         variant: "destructive",
       });
@@ -98,7 +98,7 @@ export default function TriggerScraper() {
   const isLoading = firecrawlMutation.isPending || basicScraperMutation.isPending;
 
   const sources = [
-    { id: 'all', name: 'All Sources', description: 'Scrape all available government portals' },
+    { id: 'all', name: 'All Sources', description: 'Sync from all available government portals' },
     { id: 'mygov', name: 'MyGov Kenya', description: 'www.mygov.go.ke/all-tenders' },
     { id: 'tenders.go.ke', name: 'PPIP Portal', description: 'tenders.go.ke - Official procurement portal' },
     { id: 'egpkenya', name: 'e-GP Kenya', description: 'egpkenya.go.ke/tender - Electronic procurement' },
@@ -145,7 +145,7 @@ export default function TriggerScraper() {
           </Card>
         </div>
 
-        {/* Main Scraper Card */}
+        {/* Tender Sync Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -165,7 +165,7 @@ export default function TriggerScraper() {
                 </TabsTrigger>
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <Database className="h-4 w-4" />
-                  Basic Scraper
+                  Basic Sync
                 </TabsTrigger>
               </TabsList>
 
@@ -173,7 +173,7 @@ export default function TriggerScraper() {
                 <Alert>
                   <Zap className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Firecrawl + AI:</strong> This scraper uses Firecrawl to fetch real data from government websites, 
+                    <strong>Firecrawl + AI:</strong> This tool uses Firecrawl to collect real data from government websites, 
                     then uses AI to extract and structure tender information. Results are verified and deduplicated.
                   </AlertDescription>
                 </Alert>
@@ -208,12 +208,12 @@ export default function TriggerScraper() {
                   {firecrawlMutation.isPending ? (
                     <>
                       <Loader className="h-4 w-4 mr-2 animate-spin" />
-                      Scraping with Firecrawl + AI...
+                      Syncing with Firecrawl + AI...
                     </>
                   ) : (
                     <>
                       <Zap className="h-4 w-4 mr-2" />
-                      Scrape Real Tenders from {sources.find(s => s.id === selectedSource)?.name}
+                      Sync Tenders from {sources.find(s => s.id === selectedSource)?.name}
                     </>
                   )}
                 </Button>
@@ -252,7 +252,7 @@ export default function TriggerScraper() {
                 <Alert>
                   <Database className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Basic Scraper:</strong> Falls back to synthetic/sample data if live sources are unavailable. 
+                    <strong>Basic Sync:</strong> Falls back to sample data if live sources are unavailable. 
                     Good for testing and development.
                   </AlertDescription>
                 </Alert>
@@ -267,12 +267,12 @@ export default function TriggerScraper() {
                   {basicScraperMutation.isPending ? (
                     <>
                       <Loader className="h-4 w-4 mr-2 animate-spin" />
-                      Running Basic Scraper...
+                      Running Basic Sync...
                     </>
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Run Basic Scraper
+                      Run Basic Sync
                     </>
                   )}
                 </Button>
@@ -281,7 +281,7 @@ export default function TriggerScraper() {
                   <Alert className="border-green-500 bg-green-50 dark:bg-green-900/20">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800 dark:text-green-200">
-                      Basic scraper completed successfully! Check the Browse Tenders page.
+                      Basic sync completed successfully! Check the Browse Tenders page.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -292,7 +292,7 @@ export default function TriggerScraper() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Error occurred while scraping. Please check the logs and try again.
+                  Error occurred while syncing. Please check the logs and try again.
                 </AlertDescription>
               </Alert>
             )}
@@ -302,15 +302,15 @@ export default function TriggerScraper() {
         {/* Info Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">About the Scraper</CardTitle>
+            <CardTitle className="text-base">About Tender Sync</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
               <strong>Data Sources:</strong> MyGov Kenya, Tenders.go.ke (PPIP), PPRA Kenya, and more county portals.
             </p>
             <p>
-              <strong>Scraping Method:</strong> Uses Firecrawl for reliable web scraping with JavaScript rendering, 
-              combined with Lovable AI for intelligent data extraction and structuring.
+              <strong>Collection Method:</strong> Uses Firecrawl for reliable web data collection with JavaScript rendering, 
+              combined with AI for intelligent data extraction and structuring.
             </p>
             <p>
               <strong>Deduplication:</strong> Tenders are automatically checked for duplicates before saving.

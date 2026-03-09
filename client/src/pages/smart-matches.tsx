@@ -390,9 +390,22 @@ export default function SmartMatchesPage() {
         </Tabs>
 
         {/* Disclaimer */}
-        <div className="mt-6 p-3 bg-muted rounded-lg text-xs text-muted-foreground">
-          <strong>ℹ️ Note:</strong> Match scores are an <em>Opportunity Alignment Index</em> based on how well a tender matches your configured preferences (sectors, locations, keywords, budget range). 
-          They do not predict the outcome of any procurement process. Always verify tender details with the procuring entity.
+        <div className="mt-6 p-4 bg-muted rounded-lg text-xs text-muted-foreground space-y-2">
+          <p>
+            <strong>⚠️ AI-Generated Insights Disclaimer:</strong> Smart Match scores are generated using artificial intelligence 
+            and represent an <em>Opportunity Alignment Index</em> — not a prediction of tender outcomes. Like all AI systems, 
+            Smart Matches <strong>can make mistakes</strong> and may produce inaccurate or incomplete results.
+          </p>
+          <p>
+            <strong>📋 How it works:</strong> Scores are calculated based on your configured preferences in{' '}
+            <strong>Settings</strong> (sectors, counties, keywords, budget range). If you haven't set up your preferences, 
+            all tenders will show a baseline score. <em>Configure your preferences for more accurate, personalised results.</em>
+          </p>
+          <p>
+            <strong>🚫 No guarantees:</strong> TenderAlert Pro does not guarantee the accuracy, completeness, or timeliness 
+            of any information displayed. Always independently verify tender details with the procuring entity before making 
+            any business decisions. Use of this feature is subject to our Terms &amp; Conditions.
+          </p>
         </div>
       </div>
     </div>

@@ -135,7 +135,7 @@ const translations: Record<string, Record<Language, string>> = {
   'admin.approve': { en: 'Approve', sw: 'Idhinisha' },
   'admin.reject': { en: 'Reject', sw: 'Kataa' },
   'admin.pending': { en: 'Pending', sw: 'Inasubiri' },
-  'admin.runScraper': { en: 'Run Scraper', sw: 'Endesha Kikokotoo' },
+  'admin.runScraper': { en: 'Sync Tenders', sw: 'Sawazisha Zabuni' },
   'admin.importHistorical': { en: 'Import Historical', sw: 'Ingiza Kumbukumbu' },
 
   // Common

@@ -41,14 +41,14 @@ export function AutomationStatus() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Tender Scraping Automation
+            Tender Sync Automation
             <Button
               onClick={() => triggerScraper('tenders.go.ke')}
               disabled={isTriggering}
               size="sm"
             >
               <Play className="h-4 w-4 mr-2" />
-              {isTriggering ? 'Starting...' : 'Run Scraper'}
+              {isTriggering ? 'Starting...' : 'Run Sync'}
             </Button>
           </CardTitle>
           <CardDescription>
@@ -83,7 +83,7 @@ export function AutomationStatus() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest scraper execution logs</CardDescription>
+          <CardDescription>Latest sync execution logs</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -116,7 +116,7 @@ export function AutomationStatus() {
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No automation logs found. Run the scraper to see activity.
+              No automation logs found. Run a sync to see activity.
             </div>
           )}
         </CardContent>

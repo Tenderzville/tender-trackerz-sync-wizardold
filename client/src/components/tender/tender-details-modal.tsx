@@ -180,7 +180,7 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                     </Badge>
                     {tender.scraped_from !== 'synthetic-kenya-gov' && (
                       <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        Live Data
+                        Verified Source
                       </Badge>
                     )}
                   </div>
