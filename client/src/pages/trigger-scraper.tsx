@@ -252,7 +252,7 @@ export default function TriggerScraper() {
                 <Alert>
                   <Database className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Basic Scraper:</strong> Falls back to synthetic/sample data if live sources are unavailable. 
+                    <strong>Basic Sync:</strong> Falls back to sample data if live sources are unavailable. 
                     Good for testing and development.
                   </AlertDescription>
                 </Alert>
