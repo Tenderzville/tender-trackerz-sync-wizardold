@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-version, x-paystack-signature',
+  'Access-Control-Expose-Headers': 'x-ratelimit-limit, x-ratelimit-remaining, x-ratelimit-reset, x-api-version',
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -11,6 +12,70 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// ===== RATE LIMITING (in-memory for edge function performance) =====
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT = 30; // 30 requests per minute
+const RATE_WINDOW_MS = 60_000;
+
+function checkRateLimit(identifier: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(identifier);
+
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    rateLimitMap.set(identifier, { count: 1, windowStart: now });
+    return { allowed: true, remaining: RATE_LIMIT - 1 };
+  }
+
+  entry.count++;
+  if (entry.count > RATE_LIMIT) {
+    return { allowed: false, remaining: 0 };
+  }
+  return { allowed: true, remaining: RATE_LIMIT - entry.count };
+}
+
+// ===== WEBHOOK SIGNATURE VERIFICATION (HMAC SHA-512) =====
+async function verifyPaystackSignature(body: string, signature: string | null): Promise<boolean> {
+  if (!signature || !paystackSecretKey) return false;
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(paystackSecretKey),
+      { name: 'HMAC', hash: 'SHA-512' },
+      false,
+      ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+    const hex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return hex === signature;
+  } catch (err) {
+    console.error('Signature verification error:', err);
+    return false;
+  }
+}
+
+// ===== STRUCTURED ERROR LOGGING =====
+async function logError(functionName: string, error: any, req?: Request, userId?: string) {
+  try {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : null;
+    const ipAddress = req?.headers.get('x-forwarded-for') || null;
+
+    await supabase.from('error_logs').insert({
+      function_name: functionName,
+      error_message: errorMessage,
+      error_stack: errorStack,
+      request_metadata: { url: req?.url, method: req?.method },
+      severity: 'error',
+      user_id: userId,
+      ip_address: ipAddress,
+    });
+  } catch (logEx) {
+    console.error('Failed to log error:', logEx);
+  }
+}
 
 // Subscription plans in KES (amount in kobo = KES * 100)
 const PLANS: Record<string, any> = {
@@ -27,17 +92,53 @@ function getPlanTierLevel(planType: string | null): number {
   return 0;
 }
 
+const API_VERSION = 'v1';
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const ipAddress = req.headers.get('x-forwarded-for') || 'unknown';
 
   try {
     if (!paystackSecretKey) {
       throw new Error('PAYSTACK_SECRET_KEY not configured');
     }
 
-    const { action, ...params } = await req.json();
+    // Clone body for signature verification (webhook needs raw body)
+    const rawBody = await req.text();
+    let parsedBody: any;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid JSON body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-API-Version': API_VERSION },
+      });
+    }
+
+    const { action, ...params } = parsedBody;
+
+    // ===== RATE LIMITING (skip for webhooks — Paystack retries) =====
+    if (action !== 'webhook') {
+      const rl = checkRateLimit(ipAddress);
+      if (!rl.allowed) {
+        return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again later.' }), {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': RATE_LIMIT.toString(),
+            'X-RateLimit-Remaining': '0',
+            'Retry-After': '60',
+            'X-API-Version': API_VERSION,
+          },
+        });
+      }
+    }
+
+    const responseHeaders = { ...corsHeaders, 'Content-Type': 'application/json', 'X-API-Version': API_VERSION };
 
     switch (action) {
       // ========== AD PAYMENT ==========
@@ -50,7 +151,7 @@ serve(async (req) => {
           headers: { 'Authorization': `Bearer ${paystackSecretKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
-            amount: amount || 100000, // KSh 1,000 in kobo
+            amount: amount || 100000,
             currency: 'KES',
             callback_url: callback_url || `${req.headers.get('origin')}/marketplace`,
             metadata: { user_id, ad_id, payment_type: 'ad_payment', custom_fields: [{ display_name: 'Ad Payment', variable_name: 'ad_id', value: String(ad_id) }] },
@@ -59,7 +160,7 @@ serve(async (req) => {
         const data = await response.json();
         if (!data.status) throw new Error(data.message || 'Failed to initialize payment');
 
-        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, reference: data.data.reference } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, reference: data.data.reference } }), { headers: responseHeaders });
       }
 
       case 'verify_ad_payment': {
@@ -76,14 +177,11 @@ serve(async (req) => {
           const adId = data.data.metadata?.ad_id;
           const userId = data.data.metadata?.user_id;
           if (adId) {
-            // Mark payment as paid but NOT active — admin must approve
             await supabase.from('service_provider_ads').update({
               payment_status: 'paid',
               payment_reference: reference,
-              // is_active remains false until admin approves
             }).eq('id', Number(adId));
 
-            // Notify admin
             const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
             for (const admin of admins || []) {
               await supabase.from('user_alerts').insert({
@@ -96,7 +194,6 @@ serve(async (req) => {
               });
             }
 
-            // Notify user
             if (userId) {
               await supabase.from('user_alerts').insert({
                 user_id: userId,
@@ -108,10 +205,10 @@ serve(async (req) => {
               });
             }
           }
-          return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Payment confirmed. Admin will activate your ad.' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Payment confirmed. Admin will activate your ad.' } }), { headers: responseHeaders });
         }
 
-        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
+        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: responseHeaders, status: 400 });
       }
 
       // ========== SUBSCRIPTION PAYMENT ==========
@@ -151,7 +248,7 @@ serve(async (req) => {
 
         await supabase.from('subscription_history').insert({ user_id, action: 'payment_initialized', from_plan: profile?.subscription_type || 'free', to_plan: plan.includes('business') ? 'business' : 'pro', amount: planDetails.amount / 100, currency: 'KES', payment_reference: data.data.reference, metadata: { plan, access_code: data.data.access_code } });
 
-        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, access_code: data.data.access_code, reference: data.data.reference } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ success: true, data: { authorization_url: data.data.authorization_url, access_code: data.data.access_code, reference: data.data.reference } }), { headers: responseHeaders });
       }
 
       case 'verify': {
@@ -167,16 +264,14 @@ serve(async (req) => {
         if (data.data.status === 'success') {
           const metadata = data.data.metadata;
 
-          // Check if this is an ad payment
           if (metadata?.payment_type === 'ad_payment') {
             const adId = metadata?.ad_id;
             if (adId) {
               await supabase.from('service_provider_ads').update({ payment_status: 'paid', payment_reference: reference }).eq('id', Number(adId));
             }
-            return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Ad payment confirmed. Admin will activate your ad.' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ success: true, data: { status: 'success', message: 'Ad payment confirmed. Admin will activate your ad.' } }), { headers: responseHeaders });
           }
 
-          // Subscription payment
           const plan = metadata?.plan || 'pro';
           const userId = metadata?.user_id;
 
@@ -208,27 +303,36 @@ serve(async (req) => {
             await supabase.from('user_alerts').insert({ user_id: userId, type: 'subscription_activated', title: '🎉 Subscription Activated!', message: `Your ${subscriptionType} subscription is now active until ${endDate.toLocaleDateString()}.`, is_read: false, data: { plan: subscriptionType, expires: endDate.toISOString() } });
           }
 
-          return new Response(JSON.stringify({ success: true, data: { status: 'success', plan: metadata?.plan, amount: data.data.amount / 100, currency: data.data.currency, message: 'Subscription activated successfully!' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: true, data: { status: 'success', plan: metadata?.plan, amount: data.data.amount / 100, currency: data.data.currency, message: 'Subscription activated successfully!' } }), { headers: responseHeaders });
         }
 
-        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 });
+        return new Response(JSON.stringify({ success: false, error: `Payment ${data.data.status}` }), { headers: responseHeaders, status: 400 });
       }
 
+      // ========== WEBHOOK (with HMAC SHA-512 signature verification) ==========
       case 'webhook': {
+        // Verify Paystack webhook signature
+        const signature = req.headers.get('x-paystack-signature');
+        const isValid = await verifyPaystackSignature(rawBody, signature);
+
+        if (!isValid) {
+          console.error('Invalid Paystack webhook signature');
+          await logError('paystack-payment', 'Invalid webhook signature — possible attack', req);
+          return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 401, headers: responseHeaders });
+        }
+
         const event = params;
         if (event.event === 'charge.success') {
           const metadata = event.data?.metadata;
 
-          // Handle ad payment webhook
           if (metadata?.payment_type === 'ad_payment') {
             const adId = metadata?.ad_id;
             if (adId) {
               await supabase.from('service_provider_ads').update({ payment_status: 'paid', payment_reference: event.data?.reference }).eq('id', Number(adId));
             }
-            return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+            return new Response(JSON.stringify({ received: true }), { headers: responseHeaders });
           }
 
-          // Handle subscription webhook
           const userId = metadata?.user_id;
           const plan = metadata?.plan;
           if (userId && plan) {
@@ -241,7 +345,7 @@ serve(async (req) => {
           }
         }
 
-        return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ received: true }), { headers: responseHeaders });
       }
 
       case 'check_access': {
@@ -251,7 +355,7 @@ serve(async (req) => {
         const { data: profile } = await supabase.from('profiles').select('subscription_type, subscription_status, subscription_end_date, is_founding_member, founding_member_expires_at, subscription_locked').eq('id', user_id).single();
 
         if (!profile) {
-          return new Response(JSON.stringify({ success: true, data: { has_access: false, reason: 'no_profile' } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({ success: true, data: { has_access: false, reason: 'no_profile' } }), { headers: responseHeaders });
         }
 
         const now = new Date();
@@ -267,7 +371,7 @@ serve(async (req) => {
           if (!profile.subscription_end_date || new Date(profile.subscription_end_date) > now) { hasAccess = true; reason = 'active_subscription'; }
         }
 
-        return new Response(JSON.stringify({ success: true, data: { has_access: hasAccess, reason, subscription_type: profile.subscription_type, subscription_status: profile.subscription_status, expires: profile.subscription_end_date, is_founding_member: profile.is_founding_member, is_locked: profile.subscription_locked } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ success: true, data: { has_access: hasAccess, reason, subscription_type: profile.subscription_type, subscription_status: profile.subscription_status, expires: profile.subscription_end_date, is_founding_member: profile.is_founding_member, is_locked: profile.subscription_locked } }), { headers: responseHeaders });
       }
 
       case 'request_downgrade': {
@@ -276,7 +380,7 @@ serve(async (req) => {
 
         await supabase.from('user_alerts').insert({ user_id, type: 'downgrade_request', title: '📋 Downgrade Request Received', message: 'Our support team will contact you within 24 hours.', is_read: false, data: { reason, requested_at: new Date().toISOString() } });
 
-        return new Response(JSON.stringify({ success: true, message: 'Downgrade request submitted.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        return new Response(JSON.stringify({ success: true, message: 'Downgrade request submitted.' }), { headers: responseHeaders });
       }
 
       default:
@@ -284,6 +388,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('Paystack error:', error);
-    return new Response(JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 });
+    await logError('paystack-payment', error, req);
+    return new Response(JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Unknown error' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-API-Version': API_VERSION }, status: 500 });
   }
 });

@@ -237,6 +237,42 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string
+          error_message: string
+          error_stack: string | null
+          function_name: string
+          id: number
+          ip_address: string | null
+          request_metadata: Json | null
+          severity: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message: string
+          error_stack?: string | null
+          function_name: string
+          id?: never
+          ip_address?: string | null
+          request_metadata?: Json | null
+          severity?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string
+          error_stack?: string | null
+          function_name?: string
+          id?: never
+          ip_address?: string | null
+          request_metadata?: Json | null
+          severity?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       historical_tender_awards: {
         Row: {
           award_date: string | null
@@ -603,6 +639,33 @@ export type Database = {
           twitter_followed?: boolean | null
           updated_at?: string | null
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      rate_limit_entries: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: number
+          identifier: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: never
+          identifier: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: never
+          identifier?: string
+          request_count?: number
+          window_start?: string
         }
         Relationships: []
       }
@@ -1304,6 +1367,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_rate_limit_entries: { Args: never; Returns: undefined }
       get_founding_members_count: { Args: never; Returns: number }
       has_role: {
         Args: {
