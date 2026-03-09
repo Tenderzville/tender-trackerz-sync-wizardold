@@ -2,9 +2,9 @@
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/common/theme-provider";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
+import { ThemeProvider } from "./components/common/theme-provider";
 import { AppNavigation } from "@/components/common/app-navigation";
 import { ErrorBoundary } from "@/components/common/error-boundary";
 import { I18nProvider } from "@/lib/i18n";
