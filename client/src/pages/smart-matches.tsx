@@ -396,5 +396,6 @@ export default function SmartMatchesPage() {
         </div>
       </div>
     </div>
+    </PaywallGate>
   );
 }
