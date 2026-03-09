@@ -87,12 +87,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Trigger manual scraper
+  // Trigger manual tender sync
   const handleTriggerScraper = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('tender-scraper');
       if (error) throw error;
-      alert(`Scraper triggered! Found ${data?.tenders_found || 0} tenders.`);
+      alert(`Sync complete! Found ${data?.tenders_found || 0} tenders.`);
     } catch (err: any) {
       alert(`Error: ${err.message}`);
     }
