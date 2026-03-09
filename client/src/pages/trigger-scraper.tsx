@@ -208,12 +208,12 @@ export default function TriggerScraper() {
                   {firecrawlMutation.isPending ? (
                     <>
                       <Loader className="h-4 w-4 mr-2 animate-spin" />
-                      Scraping with Firecrawl + AI...
+                      Syncing with Firecrawl + AI...
                     </>
                   ) : (
                     <>
                       <Zap className="h-4 w-4 mr-2" />
-                      Scrape Real Tenders from {sources.find(s => s.id === selectedSource)?.name}
+                      Sync Tenders from {sources.find(s => s.id === selectedSource)?.name}
                     </>
                   )}
                 </Button>
