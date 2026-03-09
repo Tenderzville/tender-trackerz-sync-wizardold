@@ -14,6 +14,7 @@ import {
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { PaywallGate } from '@/components/payment/PaywallGate';
 
 interface MatchedTender {
   id: number;
