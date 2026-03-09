@@ -20,6 +20,7 @@ import {
   XCircle
 } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { PaywallGate } from "@/components/payment/PaywallGate";
 
 export default function PerformanceDashboard() {
   // Fetch tenders data
