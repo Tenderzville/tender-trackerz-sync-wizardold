@@ -219,17 +219,17 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5" />
-              Trigger Tender Scraper
+              Sync Tenders
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Manually trigger the tender scraper to fetch new tenders from 
+              Manually sync the latest tenders from official 
               government portals and save them to the database.
             </p>
             <Button onClick={handleTriggerScraper} variant="outline" className="w-full">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Run Scraper Now
+              Run Sync Now
             </Button>
           </CardContent>
         </Card>

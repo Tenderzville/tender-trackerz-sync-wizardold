@@ -245,7 +245,7 @@ export default function BrowseTenders() {
                   <p className="text-slate-500 dark:text-slate-400 mb-6">
                     {filters.search || filters.category || filters.location
                       ? "Try adjusting your search criteria or filters"
-                      : "No tenders available at the moment. If you are an admin, run the scraper from the Admin Dashboard to pull live tenders from Supabase."}
+                      : "No tenders available at the moment. New tenders are synced regularly from official government portals."}
                   </p>
                 </CardContent>
               </Card>

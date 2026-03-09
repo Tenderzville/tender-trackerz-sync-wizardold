@@ -318,14 +318,14 @@ export default function AdminDashboard() {
 
   const triggerScraper = async () => {
     try {
-      toast({ title: 'Starting Firecrawl Scraper', description: 'Fetching real tenders from government portals...' });
+      toast({ title: 'Starting Tender Sync', description: 'Fetching latest tenders from government portals...' });
       const { data, error } = await supabase.functions.invoke('firecrawl-tender-scraper', { body: { source: 'all' } });
       if (error) throw error;
-      toast({ title: 'Scraper Complete', description: data.message || 'Tender scraping finished' });
+      toast({ title: 'Sync Complete', description: data.message || 'Tender sync finished' });
       setTimeout(loadDashboardData, 2000);
     } catch (error) {
-      console.error('Scraper trigger error:', error);
-      toast({ title: 'Error', description: 'Failed to trigger scraper', variant: 'destructive' });
+      console.error('Tender sync error:', error);
+      toast({ title: 'Error', description: 'Failed to sync tenders', variant: 'destructive' });
     }
   };
 

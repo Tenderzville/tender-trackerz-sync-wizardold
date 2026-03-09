@@ -116,7 +116,7 @@ export function AutomationStatus() {
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No automation logs found. Run the scraper to see activity.
+              No automation logs found. Run a sync to see activity.
             </div>
           )}
         </CardContent>
