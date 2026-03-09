@@ -292,7 +292,7 @@ export default function TriggerScraper() {
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Error occurred while scraping. Please check the logs and try again.
+                  Error occurred while syncing. Please check the logs and try again.
                 </AlertDescription>
               </Alert>
             )}
