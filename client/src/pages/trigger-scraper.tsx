@@ -145,7 +145,7 @@ export default function TriggerScraper() {
           </Card>
         </div>
 
-        {/* Main Scraper Card */}
+        {/* Tender Sync Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
