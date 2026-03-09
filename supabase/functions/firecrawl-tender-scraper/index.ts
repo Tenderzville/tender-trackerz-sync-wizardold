@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     // ============================================================
     if (source === 'all' || source === 'ppra') {
       const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY) {
+      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
         console.log('Scraping ppra.go.ke via Firecrawl...');
         try {
           const ppraTenders = await scrapeWithFirecrawl('ppra', 'https://ppra.go.ke/contract-awards/', FIRECRAWL_API_KEY);
