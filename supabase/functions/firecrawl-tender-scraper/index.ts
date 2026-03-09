@@ -135,6 +135,7 @@ Deno.serve(async (req) => {
         console.log('Scraping ppra.go.ke via Firecrawl...');
         try {
           const ppraTenders = await scrapeWithFirecrawl('ppra', 'https://ppra.go.ke/contract-awards/', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'ppra', tenders: ppraTenders });
 
           for (const tender of ppraTenders) {
