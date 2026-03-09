@@ -135,6 +135,7 @@ export default function SmartMatchesPage() {
   };
 
   return (
+    <PaywallGate requiredPlan="pro" featureName="Smart Matches">
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
