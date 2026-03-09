@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const FOUNDING_MEMBER_LIMIT = 100;
-const FREE_PERIOD_DAYS = 30; // 1 month free
+const FREE_PERIOD_DAYS = 365; // 1 year free for first 100 users
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
