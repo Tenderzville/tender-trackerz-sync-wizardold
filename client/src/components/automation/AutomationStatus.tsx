@@ -41,14 +41,14 @@ export function AutomationStatus() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Tender Scraping Automation
+            Tender Sync Automation
             <Button
               onClick={() => triggerScraper('tenders.go.ke')}
               disabled={isTriggering}
               size="sm"
             >
               <Play className="h-4 w-4 mr-2" />
-              {isTriggering ? 'Starting...' : 'Run Scraper'}
+              {isTriggering ? 'Starting...' : 'Run Sync'}
             </Button>
           </CardTitle>
           <CardDescription>
