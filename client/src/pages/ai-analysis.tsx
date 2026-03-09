@@ -141,6 +141,7 @@ export default function AiAnalysis() {
   };
 
   return (
+    <PaywallGate requiredPlan="pro" featureName="AI Tender Analysis">
     <div className="flex h-screen bg-background">
       <DesktopSidebar />
       
