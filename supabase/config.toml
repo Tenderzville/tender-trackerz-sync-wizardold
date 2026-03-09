@@ -85,3 +85,6 @@ verify_jwt = false
 
 [functions.telegram-tender-notify]
 verify_jwt = false
+
+[functions.health-check]
+verify_jwt = false
