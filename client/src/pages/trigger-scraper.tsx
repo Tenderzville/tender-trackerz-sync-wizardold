@@ -281,7 +281,7 @@ export default function TriggerScraper() {
                   <Alert className="border-green-500 bg-green-50 dark:bg-green-900/20">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800 dark:text-green-200">
-                      Basic scraper completed successfully! Check the Browse Tenders page.
+                      Basic sync completed successfully! Check the Browse Tenders page.
                     </AlertDescription>
                   </Alert>
                 )}
