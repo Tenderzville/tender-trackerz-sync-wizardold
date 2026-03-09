@@ -302,15 +302,15 @@ export default function TriggerScraper() {
         {/* Info Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">About the Scraper</CardTitle>
+            <CardTitle className="text-base">About Tender Sync</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
               <strong>Data Sources:</strong> MyGov Kenya, Tenders.go.ke (PPIP), PPRA Kenya, and more county portals.
             </p>
             <p>
-              <strong>Scraping Method:</strong> Uses Firecrawl for reliable web scraping with JavaScript rendering, 
-              combined with Lovable AI for intelligent data extraction and structuring.
+              <strong>Collection Method:</strong> Uses Firecrawl for reliable web data collection with JavaScript rendering, 
+              combined with AI for intelligent data extraction and structuring.
             </p>
             <p>
               <strong>Deduplication:</strong> Tenders are automatically checked for duplicates before saving.
