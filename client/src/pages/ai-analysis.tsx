@@ -16,6 +16,7 @@ import {
   RefreshCw, DollarSign, Users, History, AlertTriangle, Database
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PaywallGate } from "@/components/payment/PaywallGate";
 
 interface WinProbabilityResult {
   tenderId: number;
