@@ -55,6 +55,8 @@ Deno.serve(async (req) => {
     const results: ScrapeResult[] = [];
     let totalProcessed = 0;
     let totalSaved = 0;
+    let firecrawlCallsUsed = 0;
+    const FIRECRAWL_MAX_CALLS_PER_RUN = 3; // Stay within free tier: 500 credits/mo ÷ 60 runs/mo ≈ 8 calls/run, cap at 3 for safety
 
     // ============================================================
     // SOURCE 1: tenders.go.ke - DIRECT PUBLIC API (no Firecrawl needed!)
@@ -81,10 +83,11 @@ Deno.serve(async (req) => {
     // ============================================================
     if (source === 'all' || source === 'egpkenya') {
       const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY) {
+      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
         console.log('Scraping egpkenya.go.ke via Firecrawl...');
         try {
           const egpTenders = await scrapeWithFirecrawl('egpkenya', 'https://egpkenya.go.ke/tender', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'egpkenya', tenders: egpTenders });
 
           for (const tender of egpTenders) {
@@ -104,10 +107,11 @@ Deno.serve(async (req) => {
     // ============================================================
     if (source === 'all' || source === 'mygov') {
       const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY) {
+      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
         console.log('Scraping mygov.go.ke via Firecrawl...');
         try {
           const mygovTenders = await scrapeWithFirecrawl('mygov', 'https://www.mygov.go.ke/all-tenders', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'mygov', tenders: mygovTenders });
 
           for (const tender of mygovTenders) {
@@ -127,10 +131,11 @@ Deno.serve(async (req) => {
     // ============================================================
     if (source === 'all' || source === 'ppra') {
       const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY) {
+      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
         console.log('Scraping ppra.go.ke via Firecrawl...');
         try {
           const ppraTenders = await scrapeWithFirecrawl('ppra', 'https://ppra.go.ke/contract-awards/', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'ppra', tenders: ppraTenders });
 
           for (const tender of ppraTenders) {
@@ -150,7 +155,7 @@ Deno.serve(async (req) => {
         success: true,
         message: `Scraped ${results.length} sources. Processed ${totalProcessed} tenders, saved ${totalSaved} new tenders.`,
         results,
-        stats: { totalProcessed, totalSaved },
+        stats: { totalProcessed, totalSaved, firecrawlCallsUsed },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

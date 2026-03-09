@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift, Loader2 } from 'lucide-react';
+import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift, Loader2, Send } from 'lucide-react';
 
 const PLANS = [
   {
@@ -39,8 +39,9 @@ const PLANS = [
       'AI-powered analysis',
       'Smart matching',
       'Consortium creation',
-      'Priority email support',
       'Real-time notifications',
+      'Social media integration',
+      'Service provider marketplace',
     ],
     popular: true,
   },
@@ -186,6 +187,29 @@ export default function SubscriptionPage() {
         </Card>
       )}
 
+      {/* Telegram Channel CTA */}
+      <Card className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <Send className="w-6 h-6 text-blue-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">Join Our Telegram Channel 🔔</h3>
+              <p className="text-sm text-muted-foreground">
+                Get <span className="font-medium text-foreground">FREE daily tender alerts</span> delivered straight to your phone. New tenders posted every morning & evening!
+              </p>
+            </div>
+            <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" asChild>
+              <a href="https://t.me/tenderzville" target="_blank" rel="noopener noreferrer">
+                <Send className="w-4 h-4 mr-1" />
+                Join Free
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Founding Member Banner */}
       {!profile?.is_founding_member && (
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
@@ -197,7 +221,7 @@ export default function SubscriptionPage() {
               <div className="flex-1">
                 <h3 className="font-semibold">Become a Founding Member</h3>
                 <p className="text-sm text-muted-foreground">
-                  Get lifetime premium features by completing simple tasks
+                  First 100 users get <span className="font-medium text-foreground">Year 1 FREE</span> Pro access! Complete your profile to qualify.
                 </p>
               </div>
               <div className="flex gap-2">
