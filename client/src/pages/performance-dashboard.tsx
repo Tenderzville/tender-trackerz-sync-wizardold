@@ -464,5 +464,6 @@ export default function PerformanceDashboard() {
         </Card>
       </div>
     </div>
+    </PaywallGate>
   );
 }

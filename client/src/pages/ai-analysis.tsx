@@ -473,5 +473,6 @@ export default function AiAnalysis() {
         <MobileBottomNav />
       </div>
     </div>
+    </PaywallGate>
   );
 }

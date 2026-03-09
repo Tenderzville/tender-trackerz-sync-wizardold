@@ -223,5 +223,6 @@ export default function Analytics() {
         </section>
       </div>
     </div>
+    </PaywallGate>
   );
 }
