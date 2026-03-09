@@ -267,12 +267,12 @@ export default function TriggerScraper() {
                   {basicScraperMutation.isPending ? (
                     <>
                       <Loader className="h-4 w-4 mr-2 animate-spin" />
-                      Running Basic Scraper...
+                      Running Basic Sync...
                     </>
                   ) : (
                     <>
                       <Play className="h-4 w-4 mr-2" />
-                      Run Basic Scraper
+                      Run Basic Sync
                     </>
                   )}
                 </Button>
