@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift, Loader2 } from 'lucide-react';
+import { Crown, Check, Star, Zap, Shield, Copy, Twitter, Users, Gift, Loader2, Send } from 'lucide-react';
 
 const PLANS = [
   {
