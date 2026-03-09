@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /trigger-scraper
+Disallow: /subscription/callback
+
+Sitemap: https://tenderproapp.tenderzville-portal.co.ke/sitemap.xml
