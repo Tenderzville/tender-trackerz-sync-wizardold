@@ -83,7 +83,7 @@ export function AutomationStatus() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Latest scraper execution logs</CardDescription>
+          <CardDescription>Latest sync execution logs</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
