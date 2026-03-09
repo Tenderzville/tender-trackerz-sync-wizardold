@@ -306,6 +306,204 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_courses: {
+        Row: {
+          amount: number
+          course_url: string | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          description_sw: string | null
+          duration: string | null
+          duration_sw: string | null
+          enrollment_count: number | null
+          id: number
+          is_approved: boolean
+          is_published: boolean
+          level: string
+          modules: number
+          payment_reference: string | null
+          payment_status: string
+          title: string
+          title_sw: string | null
+          topics: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          course_url?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          description_sw?: string | null
+          duration?: string | null
+          duration_sw?: string | null
+          enrollment_count?: number | null
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          level?: string
+          modules?: number
+          payment_reference?: string | null
+          payment_status?: string
+          title: string
+          title_sw?: string | null
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          course_url?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          description_sw?: string | null
+          duration?: string | null
+          duration_sw?: string | null
+          enrollment_count?: number | null
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          level?: string
+          modules?: number
+          payment_reference?: string | null
+          payment_status?: string
+          title?: string
+          title_sw?: string | null
+          topics?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      learning_guides: {
+        Row: {
+          amount: number
+          category: string
+          content: string
+          content_sw: string | null
+          created_at: string | null
+          currency: string
+          description: string
+          description_sw: string | null
+          id: number
+          is_approved: boolean
+          is_published: boolean
+          payment_reference: string | null
+          payment_status: string
+          read_time: string | null
+          title: string
+          title_sw: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          content: string
+          content_sw?: string | null
+          created_at?: string | null
+          currency?: string
+          description: string
+          description_sw?: string | null
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          read_time?: string | null
+          title: string
+          title_sw?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          content?: string
+          content_sw?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string
+          description_sw?: string | null
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          read_time?: string | null
+          title?: string
+          title_sw?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      learning_templates: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          currency: string
+          description: string | null
+          description_sw: string | null
+          download_count: number | null
+          file_url: string
+          format: string
+          id: number
+          is_approved: boolean
+          is_published: boolean
+          payment_reference: string | null
+          payment_status: string
+          title: string
+          title_sw: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          description_sw?: string | null
+          download_count?: number | null
+          file_url: string
+          format?: string
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          title: string
+          title_sw?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          description_sw?: string | null
+          download_count?: number | null
+          file_url?: string
+          format?: string
+          id?: number
+          is_approved?: boolean
+          is_published?: boolean
+          payment_reference?: string | null
+          payment_status?: string
+          title?: string
+          title_sw?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_type: string | null
