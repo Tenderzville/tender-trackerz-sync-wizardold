@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     // ============================================================
     if (source === 'all' || source === 'mygov') {
       const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY) {
+      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
         console.log('Scraping mygov.go.ke via Firecrawl...');
         try {
           const mygovTenders = await scrapeWithFirecrawl('mygov', 'https://www.mygov.go.ke/all-tenders', FIRECRAWL_API_KEY);
