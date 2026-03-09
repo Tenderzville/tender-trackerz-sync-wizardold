@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
         success: true,
         message: `Scraped ${results.length} sources. Processed ${totalProcessed} tenders, saved ${totalSaved} new tenders.`,
         results,
-        stats: { totalProcessed, totalSaved },
+        stats: { totalProcessed, totalSaved, firecrawlCallsUsed },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

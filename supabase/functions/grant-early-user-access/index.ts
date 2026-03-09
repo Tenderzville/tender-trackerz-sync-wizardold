@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       user_id,
       type: 'founding_member_welcome',
       title: '🏆 Welcome, Founding Member!',
-      message: `Congratulations! You're Founding Member #${currentCount + 1} of ${FOUNDING_MEMBER_LIMIT}! You've received 1 month FREE Pro access. After ${FREE_PERIOD_DAYS} days, you'll be prompted to subscribe to continue enjoying premium features.`,
+      message: `Congratulations! You're Founding Member #${currentCount + 1} of ${FOUNDING_MEMBER_LIMIT}! You've received 1 YEAR FREE Pro access. After your free year, you'll be prompted to subscribe to continue enjoying premium features.`,
       is_read: false,
       data: {
         founding_member_number: currentCount + 1,
