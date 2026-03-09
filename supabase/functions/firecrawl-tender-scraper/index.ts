@@ -87,6 +87,7 @@ Deno.serve(async (req) => {
         console.log('Scraping egpkenya.go.ke via Firecrawl...');
         try {
           const egpTenders = await scrapeWithFirecrawl('egpkenya', 'https://egpkenya.go.ke/tender', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'egpkenya', tenders: egpTenders });
 
           for (const tender of egpTenders) {
