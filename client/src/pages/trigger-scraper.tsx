@@ -173,7 +173,7 @@ export default function TriggerScraper() {
                 <Alert>
                   <Zap className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Firecrawl + AI:</strong> This scraper uses Firecrawl to fetch real data from government websites, 
+                    <strong>Firecrawl + AI:</strong> This tool uses Firecrawl to collect real data from government websites, 
                     then uses AI to extract and structure tender information. Results are verified and deduplicated.
                   </AlertDescription>
                 </Alert>
