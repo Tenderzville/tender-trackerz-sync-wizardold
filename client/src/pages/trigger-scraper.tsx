@@ -37,7 +37,7 @@ export default function TriggerScraper() {
   const { toast } = useToast();
   const [selectedSource, setSelectedSource] = useState<string>('all');
   
-  // Fetch recent scrape stats
+  // Fetch recent sync stats
   const { data: recentTenders } = useQuery({
     queryKey: ['recent-tenders-count'],
     queryFn: async () => {
