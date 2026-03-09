@@ -55,6 +55,8 @@ Deno.serve(async (req) => {
     const results: ScrapeResult[] = [];
     let totalProcessed = 0;
     let totalSaved = 0;
+    let firecrawlCallsUsed = 0;
+    const FIRECRAWL_MAX_CALLS_PER_RUN = 3; // Stay within free tier: 500 credits/mo ÷ 60 runs/mo ≈ 8 calls/run, cap at 3 for safety
 
     // ============================================================
     // SOURCE 1: tenders.go.ke - DIRECT PUBLIC API (no Firecrawl needed!)
