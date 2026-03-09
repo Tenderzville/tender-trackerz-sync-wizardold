@@ -11,6 +11,7 @@ import {
   Clock,
   DollarSign
 } from "lucide-react";
+import { PaywallGate } from "@/components/payment/PaywallGate";
 
 export default function Analytics() {
   const { data: tenders } = useQuery({
