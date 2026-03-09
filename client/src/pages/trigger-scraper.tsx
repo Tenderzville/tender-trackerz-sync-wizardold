@@ -73,7 +73,7 @@ export default function TriggerScraper() {
     },
   });
 
-  // Basic scraper - uses backup/synthetic data
+  // Basic sync - uses backup/sample data
   const basicScraperMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('manual-scraper-trigger', {});
@@ -82,13 +82,13 @@ export default function TriggerScraper() {
     },
     onSuccess: (data) => {
       toast({
-        title: "Basic Scraper Complete",
+        title: "Basic Sync Complete",
         description: `Processed ${data.result?.processed || 0} tenders, saved ${data.result?.saved || 0} new ones.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error triggering scraper",
+        title: "Error running sync",
         description: error.message || "Unknown error occurred",
         variant: "destructive",
       });
