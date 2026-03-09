@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
         console.log('Scraping mygov.go.ke via Firecrawl...');
         try {
           const mygovTenders = await scrapeWithFirecrawl('mygov', 'https://www.mygov.go.ke/all-tenders', FIRECRAWL_API_KEY);
+          firecrawlCallsUsed++;
           results.push({ source: 'mygov', tenders: mygovTenders });
 
           for (const tender of mygovTenders) {
