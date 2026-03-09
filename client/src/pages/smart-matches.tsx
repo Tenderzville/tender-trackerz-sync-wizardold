@@ -14,6 +14,7 @@ import {
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { PaywallGate } from '@/components/payment/PaywallGate';
 
 interface MatchedTender {
   id: number;
@@ -134,6 +135,7 @@ export default function SmartMatchesPage() {
   };
 
   return (
+    <PaywallGate requiredPlan="pro" featureName="Smart Matches">
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">
@@ -394,5 +396,6 @@ export default function SmartMatchesPage() {
         </div>
       </div>
     </div>
+    </PaywallGate>
   );
 }

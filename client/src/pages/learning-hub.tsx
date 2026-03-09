@@ -3,11 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { BookOpen, FileText, GraduationCap, Trophy, Download, ExternalLink, CheckCircle, Clock, Star, Mail, PenLine } from "lucide-react";
+import { BookOpen, FileText, GraduationCap, Trophy, Download, ExternalLink, CheckCircle, Clock, PenLine, Mail, AlertTriangle, User, CreditCard } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useLearningGuides, useLearningTemplates, useLearningCourses } from "@/hooks/use-learning-hub";
 import { SubmitContentDialog } from "@/components/learning/SubmitContentDialog";
+import { MySubmissions } from "@/components/learning/MySubmissions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const achievements = [
@@ -36,7 +36,6 @@ export default function LearningHub() {
     }
   };
 
-  // Anti-spam email display
   const emailUser = "info";
   const emailDomain = "tenderzville-portal.co.ke";
 
@@ -44,7 +43,7 @@ export default function LearningHub() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
             <div className="flex items-center gap-3">
               <GraduationCap className="h-7 w-7 text-primary" />
@@ -56,25 +55,49 @@ export default function LearningHub() {
           <p className="text-muted-foreground">{t('learn.subtitle')}</p>
         </div>
 
+        {/* Platform Disclaimer */}
+        <Card className="mb-6 border-amber-500/30 bg-amber-50/30 dark:bg-amber-900/10">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">Platform Disclaimer</p>
+                <p>
+                  TenderPro is a marketplace platform that connects learners with independent trainers 
+                  and content creators. We do not develop, deliver, or endorse any training material, 
+                  course, or certification listed here. All content is the sole responsibility of its 
+                  respective author. Learners should exercise due diligence — verify trainer credentials, 
+                  review course content carefully, and report any concerns to our team. TenderPro assumes 
+                  no liability for the quality, accuracy, or outcomes of any training provided through this platform.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5 mb-8">
-            <TabsTrigger value="guides" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-6 mb-8">
+            <TabsTrigger value="guides" className="flex items-center gap-1.5">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">{t('learn.guides')}</span>
             </TabsTrigger>
-            <TabsTrigger value="templates" className="flex items-center gap-2">
+            <TabsTrigger value="templates" className="flex items-center gap-1.5">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">{t('learn.templates')}</span>
             </TabsTrigger>
-            <TabsTrigger value="courses" className="flex items-center gap-2">
+            <TabsTrigger value="courses" className="flex items-center gap-1.5">
               <GraduationCap className="h-4 w-4" />
               <span className="hidden sm:inline">{t('learn.courses')}</span>
             </TabsTrigger>
-            <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <TabsTrigger value="submissions" className="flex items-center gap-1.5">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">My Submissions</span>
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="flex items-center gap-1.5">
               <Trophy className="h-4 w-4" />
               <span className="hidden sm:inline">{t('learn.achievements')}</span>
             </TabsTrigger>
-            <TabsTrigger value="blog" className="flex items-center gap-2">
+            <TabsTrigger value="blog" className="flex items-center gap-1.5">
               <PenLine className="h-4 w-4" />
               <span className="hidden sm:inline">Guest Blog</span>
             </TabsTrigger>
@@ -214,6 +237,11 @@ export default function LearningHub() {
             )}
           </TabsContent>
 
+          {/* My Submissions */}
+          <TabsContent value="submissions">
+            <MySubmissions />
+          </TabsContent>
+
           {/* Achievements */}
           <TabsContent value="achievements">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -261,7 +289,6 @@ export default function LearningHub() {
                     <Mail className="h-6 w-6 mx-auto mb-2 text-primary" />
                     <p className="text-sm text-muted-foreground mb-2">Send your article to:</p>
                     <p className="font-mono text-lg font-semibold text-foreground">
-                      {/* Anti-bot: rendered as separate spans */}
                       <span>{emailUser}</span>
                       <span aria-hidden="true"> [at] </span>
                       <span>{emailDomain}</span>

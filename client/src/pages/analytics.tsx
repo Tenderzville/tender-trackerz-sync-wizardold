@@ -11,6 +11,7 @@ import {
   Clock,
   DollarSign
 } from "lucide-react";
+import { PaywallGate } from "@/components/payment/PaywallGate";
 
 export default function Analytics() {
   const { data: tenders } = useQuery({
@@ -79,6 +80,7 @@ export default function Analytics() {
   })).sort((a, b) => b.count - a.count);
 
   return (
+    <PaywallGate requiredPlan="pro" featureName="Analytics Dashboard">
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
@@ -221,5 +223,6 @@ export default function Analytics() {
         </section>
       </div>
     </div>
+    </PaywallGate>
   );
 }

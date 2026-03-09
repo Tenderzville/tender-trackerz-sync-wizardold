@@ -16,6 +16,7 @@ import {
   RefreshCw, DollarSign, Users, History, AlertTriangle, Database
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PaywallGate } from "@/components/payment/PaywallGate";
 
 interface WinProbabilityResult {
   tenderId: number;
@@ -140,6 +141,7 @@ export default function AiAnalysis() {
   };
 
   return (
+    <PaywallGate requiredPlan="pro" featureName="AI Tender Analysis">
     <div className="flex h-screen bg-background">
       <DesktopSidebar />
       
@@ -471,5 +473,6 @@ export default function AiAnalysis() {
         <MobileBottomNav />
       </div>
     </div>
+    </PaywallGate>
   );
 }
