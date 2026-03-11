@@ -37,13 +37,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get the most recent tenders added in the last 2 hours
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    // Get tenders added in the last 14 hours (covers gap between 2x daily runs)
+    const fourteenHoursAgo = new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString();
+    // Only send tenders with 12+ days to deadline (no expiring ones)
+    const minDeadline = new Date();
+    minDeadline.setDate(minDeadline.getDate() + 12);
+    const minDeadlineStr = minDeadline.toISOString().split('T')[0];
 
     const { data: newTenders, error } = await supabase
       .from('tenders')
       .select('id, title, organization, category, location, deadline, budget_estimate, tender_number, source_url, scraped_from')
-      .gte('created_at', twoHoursAgo)
+      .gte('created_at', fourteenHoursAgo)
+      .gte('deadline', minDeadlineStr)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(20);
@@ -102,6 +107,7 @@ Deno.serve(async (req) => {
         sourceStr,
         '',
         `🌐 [Browse on TenderAlert](https://tenderproapp.tenderzville-portal.co.ke/browse)`,
+        `📢 Join @tenderzville for FREE daily alerts\\!`,
       ].filter(Boolean).join('\n');
 
       try {

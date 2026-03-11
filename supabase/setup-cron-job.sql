@@ -1,25 +1,37 @@
 -- Automated Tender Scraper Cron Job Setup
--- This script sets up a daily cron job to automatically scrape tenders
--- Run this using: supabase db execute -f supabase/setup-cron-job.sql
+-- Runs TWICE daily: 8 AM EAT (5 AM UTC) and 8 PM EAT (5 PM UTC)
+-- This ensures fresh tenders are scraped and pushed to Telegram automatically.
 
--- Schedule: Every day at 2 AM (02:00:00)
--- Adjust the schedule as needed using cron syntax
+-- First, remove old job if it exists
+SELECT cron.unschedule('automated-tender-scraper');
 
+-- Schedule morning run: 8 AM EAT = 5 AM UTC
 SELECT cron.schedule(
-  'automated-tender-scraper',
-  '0 2 * * *', -- Every day at 2 AM
+  'automated-tender-scraper-morning',
+  '0 5 * * *',
   $$
   SELECT
     net.http_post(
       url:='https://mwggjriyxxknotymfsvp.supabase.co/functions/v1/automated-scraper',
       headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z2dqcml5eHhrbm90eW1mc3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0OTc4MjIsImV4cCI6MjA2NDA3MzgyMn0.ksDROGnFHmiIW9ij1HuisTFRBm91F35MEfpIGwThT7Y"}'::jsonb,
-      body:='{"scheduled": true, "source": "cron"}'::jsonb
+      body:='{"scheduled": true, "source": "cron", "run": "morning"}'::jsonb
     ) as request_id;
   $$
 );
 
--- Verify the cron job was created
-SELECT * FROM cron.job WHERE jobname = 'automated-tender-scraper';
+-- Schedule evening run: 8 PM EAT = 5 PM UTC
+SELECT cron.schedule(
+  'automated-tender-scraper-evening',
+  '0 17 * * *',
+  $$
+  SELECT
+    net.http_post(
+      url:='https://mwggjriyxxknotymfsvp.supabase.co/functions/v1/automated-scraper',
+      headers:='{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13Z2dqcml5eHhrbm90eW1mc3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0OTc4MjIsImV4cCI6MjA2NDA3MzgyMn0.ksDROGnFHmiIW9ij1HuisTFRBm91F35MEfpIGwThT7Y"}'::jsonb,
+      body:='{"scheduled": true, "source": "cron", "run": "evening"}'::jsonb
+    ) as request_id;
+  $$
+);
 
--- To unschedule this job in the future, run:
--- SELECT cron.unschedule('automated-tender-scraper');
+-- Verify cron jobs
+SELECT * FROM cron.job WHERE jobname LIKE 'automated-tender-scraper%';
