@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Briefcase,
   Target,
-  Megaphone
+  Megaphone,
+  Send
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
@@ -191,6 +192,30 @@ export default function Dashboard() {
         )}
 
         <PWAUpdateBanner />
+
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Send className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Join Telegram for FREE daily tender alerts</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    New tenders are pushed automatically twice daily, and the channel only posts opportunities with 12+ days remaining.
+                  </p>
+                </div>
+              </div>
+              <Button asChild>
+                <a href="https://t.me/tenderzville" target="_blank" rel="noopener noreferrer">
+                  <Send className="h-4 w-4 mr-2" />
+                  Join @tenderzville
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-primary/5 to-primary/10 dark:from-slate-800 dark:to-slate-700 rounded-lg p-6 lg:p-8 mb-8">

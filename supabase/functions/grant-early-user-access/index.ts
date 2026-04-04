@@ -14,10 +14,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { user_id, action } = await req.json();
+    const { user_id, action, email } = await req.json().catch(() => ({}));
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Missing Supabase configuration');
@@ -43,10 +44,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate user_id for other actions
-    if (!user_id) {
+    const authHeader = req.headers.get('Authorization');
+
+    if (!authHeader || !supabaseAnonKey) {
       return new Response(
-        JSON.stringify({ success: false, error: 'user_id is required' }),
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
+
+    const { data: authData, error: authError } = await authClient.auth.getUser();
+
+    if (authError || !authData.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: adminRole, error: adminCheckError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', authData.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (adminCheckError || !adminRole) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate target identity for grant actions
+    if (!user_id && !email) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'user_id or email is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -60,12 +99,19 @@ Deno.serve(async (req) => {
     const currentCount = foundingCount || 0;
     console.log(`Founding members: ${currentCount}/${FOUNDING_MEMBER_LIMIT}`);
 
-    // Get user profile
-    const { data: profile } = await supabase
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : null;
+
+    let profileQuery = supabase
       .from('profiles')
-      .select('*')
-      .eq('id', user_id)
-      .single();
+      .select('*');
+
+    if (normalizedEmail) {
+      profileQuery = profileQuery.ilike('email', normalizedEmail);
+    } else {
+      profileQuery = profileQuery.eq('id', user_id);
+    }
+
+    const { data: profile } = await profileQuery.single();
 
     if (!profile) {
       return new Response(
@@ -139,7 +185,7 @@ Deno.serve(async (req) => {
         lock_reason: 'founding_member_free_period',
         updated_at: now.toISOString()
       })
-      .eq('id', user_id);
+      .eq('id', profile.id);
 
     if (updateError) {
       throw updateError;
@@ -147,7 +193,7 @@ Deno.serve(async (req) => {
 
     // Log subscription history
     await supabase.from('subscription_history').insert({
-      user_id,
+      user_id: profile.id,
       action: 'founding_member_granted',
       from_plan: profile.subscription_type || 'free',
       to_plan: 'pro',
@@ -162,7 +208,7 @@ Deno.serve(async (req) => {
 
     // Create welcome notification
     await supabase.from('user_alerts').insert({
-      user_id,
+      user_id: profile.id,
       type: 'founding_member_welcome',
       title: '🏆 Welcome, Founding Member!',
       message: `Congratulations! You're Founding Member #${currentCount + 1} of ${FOUNDING_MEMBER_LIMIT}! You've received 1 YEAR FREE Pro access. After your free year, you'll be prompted to subscribe to continue enjoying premium features.`,
@@ -179,6 +225,8 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Founding Member access granted!',
         is_founding_member: true,
+        user_id: profile.id,
+        email: profile.email,
         founding_member_number: currentCount + 1,
         spots_remaining: FOUNDING_MEMBER_LIMIT - currentCount - 1,
         expires_at: expiresAt.toISOString(),
