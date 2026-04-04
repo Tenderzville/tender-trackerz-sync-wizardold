@@ -5,8 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, FileText, Activity, Database, AlertCircle, Download, Zap, History, Megaphone, Check, X, GraduationCap, BookOpen } from 'lucide-react';
+import { Shield, Users, FileText, Activity, Database, AlertCircle, Download, Zap, History, Megaphone, Check, X, GraduationCap, BookOpen, Loader2, Mail } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 
@@ -82,6 +84,8 @@ export default function AdminDashboard() {
   const [pendingContent, setPendingContent] = useState<PendingContent[]>([]);
   const [importingData, setImportingData] = useState(false);
   const [importOffset, setImportOffset] = useState(0);
+  const [foundingMemberEmail, setFoundingMemberEmail] = useState('');
+  const [grantingFoundingMember, setGrantingFoundingMember] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -360,6 +364,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const grantFoundingMemberAccess = async () => {
+    const email = foundingMemberEmail.trim().toLowerCase();
+
+    if (!email) {
+      toast({ title: 'Email required', description: 'Enter the user email to grant Year 1 FREE access.', variant: 'destructive' });
+      return;
+    }
+
+    try {
+      setGrantingFoundingMember(true);
+      const { data, error } = await supabase.functions.invoke('grant-early-user-access', {
+        body: {
+          action: 'grant',
+          email,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || data?.message || 'Grant failed');
+
+      toast({
+        title: 'Founding Member granted',
+        description: `${email} now has Year 1 FREE Pro access as Founding Member #${data.founding_member_number}.`,
+      });
+      setFoundingMemberEmail('');
+      loadDashboardData();
+    } catch (error) {
+      toast({
+        title: 'Grant failed',
+        description: error instanceof Error ? error.message : 'Unable to grant founding member access.',
+        variant: 'destructive',
+      });
+    } finally {
+      setGrantingFoundingMember(false);
+    }
+  };
+
   if (loading || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -414,6 +455,40 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-primary" />
+            <CardTitle>Grant Founding Member Access</CardTitle>
+          </div>
+          <CardDescription>
+            Enter a user email to grant Year 1 FREE Pro access. The user must already have a profile with a company name set.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="founding-member-email">User email</Label>
+            <div className="flex flex-col gap-3 md:flex-row">
+              <Input
+                id="founding-member-email"
+                type="email"
+                placeholder="user@example.com"
+                value={foundingMemberEmail}
+                onChange={(event) => setFoundingMemberEmail(event.target.value)}
+              />
+              <Button onClick={grantFoundingMemberAccess} disabled={grantingFoundingMember}>
+                {grantingFoundingMember ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Granting...</> : 'Grant Year 1 FREE'}
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <Badge variant="secondary">Admin only</Badge>
+            <Badge variant="outline">100-slot cap enforced</Badge>
+            <Badge variant="outline">Company/profile check required</Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Alerts */}
       {(pendingAds.length > 0 || pendingContent.length > 0) && (
