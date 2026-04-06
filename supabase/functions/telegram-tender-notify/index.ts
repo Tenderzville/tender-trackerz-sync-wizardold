@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const LOOKBACK_HOURS = 14;
+const DEADLINE_FALLBACK_DAYS = [12, 7, 3, 1, 0];
+
 /**
  * Sends new tender notifications to a Telegram channel.
  * Called after scraper saves new tenders.
@@ -37,28 +40,23 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get tenders added in the last 14 hours (covers gap between 2x daily runs)
-    const fourteenHoursAgo = new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString();
-    // Only send tenders with 12+ days to deadline (no expiring ones)
-    const minDeadline = new Date();
-    minDeadline.setDate(minDeadline.getDate() + 12);
-    const minDeadlineStr = minDeadline.toISOString().split('T')[0];
+    // Get genuinely new tenders added in the last 14 hours (covers gap between 2x daily runs)
+    const fourteenHoursAgo = new Date(Date.now() - LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
 
-    const { data: newTenders, error } = await supabase
+    const { data: recentTenders, error } = await supabase
       .from('tenders')
       .select('id, title, organization, category, location, deadline, budget_estimate, tender_number, source_url, scraped_from')
       .gte('created_at', fourteenHoursAgo)
-      .gte('deadline', minDeadlineStr)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(50);
 
     if (error) {
       console.error('Error fetching new tenders:', error);
       throw error;
     }
 
-    if (!newTenders || newTenders.length === 0) {
+    if (!recentTenders || recentTenders.length === 0) {
       console.log('No new tenders to notify about');
       return new Response(
         JSON.stringify({ success: true, message: 'No new tenders to notify', sent: 0 }),
@@ -66,13 +64,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Sending ${newTenders.length} tender notifications to Telegram`);
+    const selection = selectTendersForNotification(recentTenders);
+
+    if (selection.tenders.length === 0) {
+      console.log('No valid, still-open tenders found for Telegram notification');
+      return new Response(
+        JSON.stringify({ success: true, message: 'No valid new tenders to notify', sent: 0, total: recentTenders.length }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { tenders: newTenders, minDaysUsed, usedFallback } = selection;
+
+    console.log(`Sending ${newTenders.length} tender notifications to Telegram (min days: ${minDaysUsed})`);
     let sentCount = 0;
 
     // Send summary message first
     const summaryMessage = `🔔 *${newTenders.length} New Tender${newTenders.length > 1 ? 's' : ''} Alert!*\n\n` +
       `📅 ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n` +
-      `Sources: ${[...new Set(newTenders.map(t => t.scraped_from || 'Unknown'))].join(', ')}`;
+      `Sources: ${[...new Set(newTenders.map(t => t.scraped_from || 'Unknown'))].join(', ')}\n` +
+      `${usedFallback
+        ? `⚠️ No 12\+ day tenders found, so these are the newest still-open tenders with *${minDaysUsed}\+ day${minDaysUsed === 1 ? '' : 's'}* remaining.`
+        : `✅ Only brand-new tenders with *${minDaysUsed}\+ days* remaining are included.`}`;
 
     await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, summaryMessage);
 
@@ -129,7 +142,7 @@ Deno.serve(async (req) => {
     console.log(`Successfully sent ${sentCount} Telegram notifications`);
 
     return new Response(
-      JSON.stringify({ success: true, sent: sentCount, total: newTenders.length }),
+      JSON.stringify({ success: true, sent: sentCount, total: newTenders.length, min_days_used: minDaysUsed, used_fallback: usedFallback }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -165,4 +178,35 @@ function escapeMarkdown(text: string): string {
   if (!text) return '';
   return text
     .replace(/([_*\[\]()~`>#+\-=|{}.!])/g, '\\$1');
+}
+
+function selectTendersForNotification<T extends { deadline: string | null }>(tenders: T[]) {
+  for (const minDays of DEADLINE_FALLBACK_DAYS) {
+    const minDeadline = getDeadlineThreshold(minDays);
+    const filtered = tenders.filter((tender) => {
+      if (!tender.deadline) return false;
+      return tender.deadline >= minDeadline;
+    });
+
+    if (filtered.length > 0) {
+      return {
+        tenders: filtered,
+        minDaysUsed: minDays,
+        usedFallback: minDays !== DEADLINE_FALLBACK_DAYS[0],
+      };
+    }
+  }
+
+  return {
+    tenders: [] as T[],
+    minDaysUsed: DEADLINE_FALLBACK_DAYS[DEADLINE_FALLBACK_DAYS.length - 1],
+    usedFallback: true,
+  };
+}
+
+function getDeadlineThreshold(minDays: number): string {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + minDays);
+  return date.toISOString().split('T')[0];
 }
