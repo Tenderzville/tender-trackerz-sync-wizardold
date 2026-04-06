@@ -150,6 +150,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (totalSaved > 0) {
+      try {
+        console.log(`Triggering Telegram notifications for ${totalSaved} newly saved tenders...`);
+        const { data: telegramData, error: telegramError } = await supabase.functions.invoke('telegram-tender-notify', {
+          body: { count: totalSaved, source },
+        });
+
+        if (telegramError) {
+          console.error('telegram-tender-notify error (non-blocking):', telegramError);
+        } else {
+          console.log('telegram-tender-notify result:', telegramData);
+        }
+      } catch (telegramInvokeError) {
+        console.error('Failed to trigger telegram-tender-notify (non-blocking):', telegramInvokeError);
+      }
+    } else {
+      console.log('No newly saved tenders; skipping Telegram notification trigger.');
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

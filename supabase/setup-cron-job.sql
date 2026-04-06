@@ -3,7 +3,8 @@
 -- This ensures fresh tenders are scraped and pushed to Telegram automatically.
 
 -- First, remove old job if it exists
-SELECT cron.unschedule('automated-tender-scraper');
+SELECT cron.unschedule('automated-tender-scraper-morning');
+SELECT cron.unschedule('automated-tender-scraper-evening');
 
 -- Schedule morning run: 8 AM EAT = 5 AM UTC
 SELECT cron.schedule(
