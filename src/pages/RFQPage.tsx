@@ -41,6 +41,11 @@ export default function RFQPage() {
     budget_range_max: '',
     deadline: '',
     document_links: [] as string[],
+    financier_name: '',
+    financier_contact: '',
+    financier_details: '',
+    sub_contractors: [] as { name: string; role: string; contact: string }[],
+    allow_interest_visibility: false,
   });
 
   // Fetch RFQs
