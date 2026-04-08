@@ -201,7 +201,7 @@ export default function SubscriptionPage() {
               </p>
             </div>
             <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" asChild>
-              <a href="https://t.me/tenderzville" target="_blank" rel="noopener noreferrer">
+              <a href="https://t.me/supplychain_coded" target="_blank" rel="noopener noreferrer">
                 <Send className="w-4 h-4 mr-1" />
                 Join Free
               </a>
