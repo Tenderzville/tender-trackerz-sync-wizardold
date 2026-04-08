@@ -347,5 +347,6 @@ export default function Subscription() {
           </div>
         </CardContent>
       </Card>
+    </div>
   );
 }
