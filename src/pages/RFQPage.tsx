@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Plus, DollarSign, MapPin, Calendar, Eye, Link, X } from 'lucide-react';
+import { FileText, Plus, DollarSign, MapPin, Calendar, Eye, Link, X, UserPlus, Users, ShieldCheck } from 'lucide-react';
 
 const CATEGORIES = [
   'Construction', 'IT & Technology', 'Medical & Healthcare', 'Consultancy',
