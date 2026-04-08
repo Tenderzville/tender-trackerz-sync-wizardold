@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         sourceStr,
         '',
         `🌐 [Browse on TenderAlert](https://tenderproapp.tenderzville-portal.co.ke/browse)`,
-        `📢 Join @tenderzville for FREE daily alerts\\!`,
+        `📢 Join @supplychain\\_coded for FREE daily alerts\\!`,
       ].filter(Boolean).join('\n');
 
       try {

@@ -10,10 +10,10 @@ interface PaystackPlan {
 }
 
 export const PAYSTACK_PLANS: PaystackPlan[] = [
-  { id: 'pro', name: 'Pro Monthly', amount: 2600, interval: 'monthly' },
-  { id: 'business', name: 'Business Monthly', amount: 6500, interval: 'monthly' },
-  { id: 'pro_annual', name: 'Pro Annual', amount: 24960, interval: 'annually' },
-  { id: 'business_annual', name: 'Business Annual', amount: 62400, interval: 'annually' },
+  { id: 'pro', name: 'Pro Monthly', amount: 500, interval: 'monthly' },
+  { id: 'business', name: 'Business Monthly', amount: 1500, interval: 'monthly' },
+  { id: 'pro_annual', name: 'Pro Annual', amount: 4800, interval: 'annually' },
+  { id: 'business_annual', name: 'Business Annual', amount: 14400, interval: 'annually' },
 ];
 
 export function usePaystack() {

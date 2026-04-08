@@ -673,11 +673,16 @@ export type Database = {
         Row: {
           attachments: string[] | null
           delivery_timeline: string | null
+          financier_contact: string | null
+          financier_details: string | null
+          financier_name: string | null
           id: number
           proposal_text: string | null
           quoted_amount: number
           rfq_id: number
+          show_interest_publicly: boolean | null
           status: string | null
+          sub_contractors: Json | null
           submitted_at: string | null
           supplier_id: string
           terms_and_conditions: string | null
@@ -687,11 +692,16 @@ export type Database = {
         Insert: {
           attachments?: string[] | null
           delivery_timeline?: string | null
+          financier_contact?: string | null
+          financier_details?: string | null
+          financier_name?: string | null
           id?: number
           proposal_text?: string | null
           quoted_amount: number
           rfq_id: number
+          show_interest_publicly?: boolean | null
           status?: string | null
+          sub_contractors?: Json | null
           submitted_at?: string | null
           supplier_id: string
           terms_and_conditions?: string | null
@@ -701,11 +711,16 @@ export type Database = {
         Update: {
           attachments?: string[] | null
           delivery_timeline?: string | null
+          financier_contact?: string | null
+          financier_details?: string | null
+          financier_name?: string | null
           id?: number
           proposal_text?: string | null
           quoted_amount?: number
           rfq_id?: number
+          show_interest_publicly?: boolean | null
           status?: string | null
+          sub_contractors?: Json | null
           submitted_at?: string | null
           supplier_id?: string
           terms_and_conditions?: string | null
@@ -738,6 +753,7 @@ export type Database = {
       }
       rfqs: {
         Row: {
+          allow_interest_visibility: boolean | null
           budget_range_max: number | null
           budget_range_min: number | null
           category: string
@@ -746,17 +762,22 @@ export type Database = {
           description: string
           document_links: string[] | null
           documents: string[] | null
+          financier_contact: string | null
+          financier_details: string | null
+          financier_name: string | null
           id: number
           location: string
           preferred_suppliers: string[] | null
           requirements: string[] | null
           status: string | null
+          sub_contractors: Json | null
           tags: string[] | null
           title: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          allow_interest_visibility?: boolean | null
           budget_range_max?: number | null
           budget_range_min?: number | null
           category: string
@@ -765,17 +786,22 @@ export type Database = {
           description: string
           document_links?: string[] | null
           documents?: string[] | null
+          financier_contact?: string | null
+          financier_details?: string | null
+          financier_name?: string | null
           id?: number
           location: string
           preferred_suppliers?: string[] | null
           requirements?: string[] | null
           status?: string | null
+          sub_contractors?: Json | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          allow_interest_visibility?: boolean | null
           budget_range_max?: number | null
           budget_range_min?: number | null
           category?: string
@@ -784,11 +810,15 @@ export type Database = {
           description?: string
           document_links?: string[] | null
           documents?: string[] | null
+          financier_contact?: string | null
+          financier_details?: string | null
+          financier_name?: string | null
           id?: number
           location?: string
           preferred_suppliers?: string[] | null
           requirements?: string[] | null
           status?: string | null
+          sub_contractors?: Json | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null

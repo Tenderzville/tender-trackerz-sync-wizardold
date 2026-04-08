@@ -342,7 +342,7 @@ export default function Landing() {
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    Priority support
+                    Real-time notifications
                   </li>
                 </ul>
                 <Button className="w-full mt-6" asChild>
