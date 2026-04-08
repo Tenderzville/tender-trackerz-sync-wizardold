@@ -94,8 +94,13 @@ export default function RFQPage() {
           budget_range_max: parseInt(data.budget_range_max) || 0,
           deadline: data.deadline,
           document_links: data.document_links,
+          financier_name: data.financier_name || null,
+          financier_contact: data.financier_contact || null,
+          financier_details: data.financier_details || null,
+          sub_contractors: data.sub_contractors.length > 0 ? data.sub_contractors : [],
+          allow_interest_visibility: data.allow_interest_visibility,
           status: 'active',
-        });
+        } as any);
       
       if (error) throw error;
     },
