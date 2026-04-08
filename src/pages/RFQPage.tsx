@@ -112,6 +112,8 @@ export default function RFQPage() {
       setFormData({
         title: '', description: '', category: '', location: '',
         budget_range_min: '', budget_range_max: '', deadline: '', document_links: [],
+        financier_name: '', financier_contact: '', financier_details: '',
+        sub_contractors: [], allow_interest_visibility: false,
       });
     },
     onError: (error: any) => {
