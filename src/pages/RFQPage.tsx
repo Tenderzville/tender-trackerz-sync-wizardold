@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Plus, DollarSign, MapPin, Calendar, Eye, Link, X } from 'lucide-react';
+import { FileText, Plus, DollarSign, MapPin, Calendar, Eye, Link, X, UserPlus, Users, ShieldCheck } from 'lucide-react';
 
 const CATEGORIES = [
   'Construction', 'IT & Technology', 'Medical & Healthcare', 'Consultancy',
@@ -41,6 +41,11 @@ export default function RFQPage() {
     budget_range_max: '',
     deadline: '',
     document_links: [] as string[],
+    financier_name: '',
+    financier_contact: '',
+    financier_details: '',
+    sub_contractors: [] as { name: string; role: string; contact: string }[],
+    allow_interest_visibility: false,
   });
 
   // Fetch RFQs
@@ -89,8 +94,13 @@ export default function RFQPage() {
           budget_range_max: parseInt(data.budget_range_max) || 0,
           deadline: data.deadline,
           document_links: data.document_links,
+          financier_name: data.financier_name || null,
+          financier_contact: data.financier_contact || null,
+          financier_details: data.financier_details || null,
+          sub_contractors: data.sub_contractors.length > 0 ? data.sub_contractors : [],
+          allow_interest_visibility: data.allow_interest_visibility,
           status: 'active',
-        });
+        } as any);
       
       if (error) throw error;
     },
@@ -102,6 +112,8 @@ export default function RFQPage() {
       setFormData({
         title: '', description: '', category: '', location: '',
         budget_range_min: '', budget_range_max: '', deadline: '', document_links: [],
+        financier_name: '', financier_contact: '', financier_details: '',
+        sub_contractors: [], allow_interest_visibility: false,
       });
     },
     onError: (error: any) => {
@@ -280,6 +292,126 @@ export default function RFQPage() {
                       ))}
                     </div>
                   )}
+                {/* Financier Details */}
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
+                    <ShieldCheck className="w-4 h-4" />
+                    Financier / Funding Details (Optional)
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Declare any financier or funding partner involved in this procurement for transparency
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Financier Name</Label>
+                      <Input
+                        value={formData.financier_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, financier_name: e.target.value }))}
+                        placeholder="Name of financier or funding entity"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Financier Contact</Label>
+                      <Input
+                        value={formData.financier_contact}
+                        onChange={(e) => setFormData(prev => ({ ...prev, financier_contact: e.target.value }))}
+                        placeholder="Phone or email"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Financier Details / Arrangement</Label>
+                    <Textarea
+                      value={formData.financier_details}
+                      onChange={(e) => setFormData(prev => ({ ...prev, financier_details: e.target.value }))}
+                      placeholder="Describe the funding arrangement, terms, or role of the financier..."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                {/* Sub-Contractors */}
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
+                    <Users className="w-4 h-4" />
+                    Sub-Contractors (Optional)
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Declare any sub-contractors involved in delivery
+                  </p>
+                  {formData.sub_contractors.map((sc, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <Input
+                        value={sc.name}
+                        onChange={(e) => {
+                          const updated = [...formData.sub_contractors];
+                          updated[i] = { ...updated[i], name: e.target.value };
+                          setFormData(prev => ({ ...prev, sub_contractors: updated }));
+                        }}
+                        placeholder="Company name"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={sc.role}
+                        onChange={(e) => {
+                          const updated = [...formData.sub_contractors];
+                          updated[i] = { ...updated[i], role: e.target.value };
+                          setFormData(prev => ({ ...prev, sub_contractors: updated }));
+                        }}
+                        placeholder="Role/scope"
+                        className="flex-1"
+                      />
+                      <Input
+                        value={sc.contact}
+                        onChange={(e) => {
+                          const updated = [...formData.sub_contractors];
+                          updated[i] = { ...updated[i], contact: e.target.value };
+                          setFormData(prev => ({ ...prev, sub_contractors: updated }));
+                        }}
+                        placeholder="Contact"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            sub_contractors: prev.sub_contractors.filter((_, idx) => idx !== i)
+                          }));
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      sub_contractors: [...prev.sub_contractors, { name: '', role: '', contact: '' }]
+                    }))}
+                  >
+                    <UserPlus className="w-4 h-4 mr-1" />
+                    Add Sub-Contractor
+                  </Button>
+                </div>
+
+                {/* Interest Visibility Toggle */}
+                <div className="flex items-center gap-3 border-t pt-4">
+                  <input
+                    type="checkbox"
+                    id="allow_interest_visibility"
+                    checked={formData.allow_interest_visibility}
+                    onChange={(e) => setFormData(prev => ({ ...prev, allow_interest_visibility: e.target.checked }))}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="allow_interest_visibility" className="text-sm cursor-pointer">
+                    Allow interested suppliers to be visible to other parties
+                  </Label>
                 </div>
               </div>
 

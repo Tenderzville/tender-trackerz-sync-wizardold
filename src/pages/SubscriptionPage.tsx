@@ -201,7 +201,7 @@ export default function SubscriptionPage() {
               </p>
             </div>
             <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" asChild>
-              <a href="https://t.me/tenderzville" target="_blank" rel="noopener noreferrer">
+              <a href="https://t.me/supplychain_coded" target="_blank" rel="noopener noreferrer">
                 <Send className="w-4 h-4 mr-1" />
                 Join Free
               </a>
@@ -386,15 +386,16 @@ export default function SubscriptionPage() {
         </CardContent>
       </Card>
 
-      {/* Payment Info */}
-      <Card className="bg-muted/50">
+      {/* Payment Disclaimer */}
+      <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
         <CardContent className="pt-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p className="flex items-center justify-center gap-2 mb-2">
-              <Shield className="w-4 h-4" />
-              Secure payments powered by Paystack
+          <div className="text-sm text-amber-900 dark:text-amber-200">
+            <p className="flex items-start gap-2">
+              <Shield className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                <strong>Payment Disclaimer:</strong> All payments are processed securely via Paystack. Subscription fees are non-refundable. By subscribing, you agree to our <a href="/terms" className="underline">Terms of Service</a>. TenderAlert Pro provides tools and estimates but does not guarantee tender success.
+              </span>
             </p>
-            <p>All payments are processed in Kenyan Shillings (KES) via M-Pesa, Card, or Bank Transfer</p>
           </div>
         </CardContent>
       </Card>

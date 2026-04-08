@@ -128,7 +128,7 @@ export default function SubscriptionCallback() {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.open('mailto:support@tenderzville.com', '_blank')}
+                  onClick={() => window.open('mailto:support@supplychain-coded.com', '_blank')}
                 >
                   Contact Support
                 </Button>

@@ -208,9 +208,9 @@ export default function Dashboard() {
                 </div>
               </div>
               <Button asChild>
-                <a href="https://t.me/tenderzville" target="_blank" rel="noopener noreferrer">
+                <a href="https://t.me/supplychain_coded" target="_blank" rel="noopener noreferrer">
                   <Send className="h-4 w-4 mr-2" />
-                  Join @tenderzville
+                  Join @supplychain_coded
                 </a>
               </Button>
             </div>
