@@ -233,6 +233,23 @@ export default function AdminDashboard() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Webhooks & n8n
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Configure Browse AI ingestion endpoints (MyGov, etc.) and n8n outbound automation.
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/admin/webhooks">Manage Webhooks</a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Automation Logs */}

@@ -540,6 +540,39 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_webhooks: {
+        Row: {
+          created_at: string
+          event_types: string[]
+          id: string
+          is_active: boolean
+          last_triggered_at: string | null
+          name: string
+          total_sent: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          event_types?: string[]
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          name: string
+          total_sent?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          event_types?: string[]
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          name?: string
+          total_sent?: number
+          url?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           business_type: string | null
@@ -1391,6 +1424,86 @@ export type Database = {
           version_number?: number
         }
         Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          last_received_at: string | null
+          name: string
+          secret: string
+          source: string
+          total_received: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_received_at?: string | null
+          name: string
+          secret: string
+          source: string
+          total_received?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_received_at?: string | null
+          name?: string
+          secret?: string
+          source?: string
+          total_received?: number
+        }
+        Relationships: []
+      }
+      webhook_ingestion_log: {
+        Row: {
+          created_at: string
+          endpoint_id: string | null
+          error_message: string | null
+          id: number
+          ip_address: string | null
+          items_processed: number | null
+          items_saved: number | null
+          payload: Json | null
+          source: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint_id?: string | null
+          error_message?: string | null
+          id?: number
+          ip_address?: string | null
+          items_processed?: number | null
+          items_saved?: number | null
+          payload?: Json | null
+          source: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint_id?: string | null
+          error_message?: string | null
+          id?: number
+          ip_address?: string | null
+          items_processed?: number | null
+          items_saved?: number | null
+          payload?: Json | null
+          source?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_ingestion_log_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

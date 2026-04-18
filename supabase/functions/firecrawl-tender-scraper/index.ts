@@ -424,7 +424,7 @@ async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boole
       category: tender.category,
       location: tender.location,
       deadline: tender.deadline,
-      budget_estimate: tender.budgetEstimate || null,
+      budget_estimate: (tender.budgetEstimate && Number(tender.budgetEstimate) > 50000) ? Number(tender.budgetEstimate) : null,
       requirements: tender.requirements || [],
       source_url: tender.sourceUrl,
       scraped_from: tender.scrapedFrom,
