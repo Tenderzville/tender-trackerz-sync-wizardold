@@ -13,6 +13,7 @@ import NotificationsPage from '@/pages/NotificationsPage';
 import AuthPage from '@/pages/AuthPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import AdminVerificationPage from '@/pages/AdminVerificationPage';
+import AdminWebhooksPage from '@/pages/AdminWebhooksPage';
 import AIAnalysisPage from '@/pages/AIAnalysisPage';
 import TermsPage from '@/pages/TermsPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -50,6 +51,7 @@ function AppRoutes() {
         <Route path="/notifications" component={NotificationsPage} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/verification" component={AdminVerificationPage} />
+        <Route path="/admin/webhooks" component={AdminWebhooksPage} />
         <Route path="/ai-analysis" component={AIAnalysisPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/settings" component={SettingsPage} />
