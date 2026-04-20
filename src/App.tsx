@@ -24,6 +24,7 @@ import ConsortiumsPage from '@/pages/ConsortiumsPage';
 import SubscriptionPage from '@/pages/SubscriptionPage';
 import SubscriptionCallbackPage from '@/pages/SubscriptionCallbackPage';
 import CommunityPage from '@/pages/CommunityPage';
+import BlogPage from '@/pages/BlogPage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -63,6 +64,8 @@ function AppRoutes() {
         <Route path="/subscription" component={SubscriptionPage} />
         <Route path="/subscription/callback" component={SubscriptionCallbackPage} />
         <Route path="/community" component={CommunityPage} />
+        <Route path="/blog/:slug" component={BlogPage} />
+        <Route path="/blog" component={BlogPage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>
