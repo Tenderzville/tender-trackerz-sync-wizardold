@@ -273,6 +273,85 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_posts: {
+        Row: {
+          body: string
+          created_at: string
+          id: number
+          is_locked: boolean
+          is_pinned: boolean
+          parent_id: number | null
+          tags: string[]
+          title: string | null
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: number
+          is_locked?: boolean
+          is_pinned?: boolean
+          parent_id?: number | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: number
+          is_locked?: boolean
+          is_pinned?: boolean
+          parent_id?: number | null
+          tags?: string[]
+          title?: string | null
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_votes: {
+        Row: {
+          created_at: string
+          id: number
+          post_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          post_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          post_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historical_tender_awards: {
         Row: {
           award_date: string | null

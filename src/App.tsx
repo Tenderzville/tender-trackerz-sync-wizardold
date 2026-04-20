@@ -23,6 +23,7 @@ import RFQPage from '@/pages/RFQPage';
 import ConsortiumsPage from '@/pages/ConsortiumsPage';
 import SubscriptionPage from '@/pages/SubscriptionPage';
 import SubscriptionCallbackPage from '@/pages/SubscriptionCallbackPage';
+import CommunityPage from '@/pages/CommunityPage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -61,6 +62,7 @@ function AppRoutes() {
         <Route path="/consortiums" component={ConsortiumsPage} />
         <Route path="/subscription" component={SubscriptionPage} />
         <Route path="/subscription/callback" component={SubscriptionCallbackPage} />
+        <Route path="/community" component={CommunityPage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>

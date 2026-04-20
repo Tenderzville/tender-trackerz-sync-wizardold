@@ -19,7 +19,8 @@ import {
   Send,
   Inbox,
   Target,
-  TrendingUp
+  TrendingUp,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +52,7 @@ export function AppNavigation() {
     { label: 'My RFQs', href: '/rfq?tab=my-rfqs', icon: Inbox, visibleTo: ['buyer'], description: 'Manage your requests' },
     { label: 'Find Suppliers', href: '/providers', icon: Users, visibleTo: ['buyer'], description: 'Browse service providers' },
     { label: 'Browse Tenders', href: '/tenders', icon: FileText, visibleTo: ['buyer'], description: 'View public tenders' },
+    { label: 'Community', href: '/community', icon: MessageSquare, visibleTo: ['buyer'], description: 'Q&A with peers' },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['buyer'] },
     { label: 'Profile', href: '/profile', icon: User, visibleTo: ['buyer'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['buyer'] },
@@ -66,6 +68,7 @@ export function AppNavigation() {
     { label: 'Bid on RFQs', href: '/rfq', icon: TrendingUp, visibleTo: ['supplier'], description: 'Submit quotes to buyers' },
     { label: 'Consortiums', href: '/consortiums', icon: Handshake, visibleTo: ['supplier'], description: 'Team up for big tenders' },
     { label: 'My Profile', href: '/providers?tab=my-profile', icon: User, visibleTo: ['supplier'], description: 'Manage supplier profile' },
+    { label: 'Community', href: '/community', icon: MessageSquare, visibleTo: ['supplier'], description: 'Q&A with peers' },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['supplier'] },
     { label: 'Profile', href: '/profile', icon: User, visibleTo: ['supplier'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['supplier'] },
@@ -81,6 +84,7 @@ export function AppNavigation() {
     { label: 'Consortiums', href: '/consortiums', icon: Handshake, visibleTo: ['all'] },
     { label: 'Service Providers', href: '/providers', icon: Users, visibleTo: ['all'] },
     { label: 'RFQ System', href: '/rfq', icon: Building2, visibleTo: ['all'] },
+    { label: 'Community', href: '/community', icon: MessageSquare, visibleTo: ['all'] },
     { label: 'Notifications', href: '/notifications', icon: Bell, badge: unreadCount, visibleTo: ['all'] },
     { label: 'Profile', href: '/profile', icon: User, visibleTo: ['all'] },
     { label: 'Settings', href: '/settings', icon: Settings, visibleTo: ['all'] },
