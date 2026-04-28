@@ -138,12 +138,12 @@ Deno.serve(async (req) => {
           matchReasons.push(`Location: ${tender.location}`);
         }
 
-        // 3. Budget range match (20 points)
-        const budget = tender.budget_estimate || 0;
+        // 3. Budget range match (20 points) — only score when an official budget exists
+        const budget = Number(tender.budget_estimate || 0);
         const budgetMin = preferences.budget_min || 0;
         const budgetMax = preferences.budget_max || Infinity;
         
-        if (budget >= budgetMin && budget <= budgetMax) {
+        if (budget > 0 && budget >= budgetMin && budget <= budgetMax) {
           matchScore += 20;
           matchReasons.push(`Budget: KES ${(budget / 1000000).toFixed(1)}M (within range)`);
         } else if (budget > 0) {
@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
         // Determine match level
         let matchLevel: TenderMatch['matchLevel'];
         if (matchScore >= 80) {
-          matchLevel = 'High Chance';
+          matchLevel = 'Strong Fit';
         } else if (matchScore >= 55) {
           matchLevel = 'Good Fit';
         } else if (matchScore >= 35) {
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
                 match_level: match.matchLevel,
                 match_reasons: match.matchReasons,
                 tender_deadline: match.tender.deadline,
-                tender_budget: match.tender.budget_estimate,
+                tender_budget: match.tender.budget_estimate || null,
               },
               is_read: false,
             })
