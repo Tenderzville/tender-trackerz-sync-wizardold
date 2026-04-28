@@ -298,6 +298,20 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'run-for-all-users') {
+      const { data: roleRows, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError || !roleRows) {
+        return new Response(JSON.stringify({ success: false, error: 'Admin access required' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Run matching for all users with preferences
       const { data: allUsers } = await supabase
         .from('user_preferences')
