@@ -21,7 +21,7 @@ interface TenderMatch {
   tender: any;
   matchScore: number;
   matchReasons: string[];
-  matchLevel: 'High Chance' | 'Good Fit' | 'Moderate' | 'Low Fit';
+  matchLevel: 'Strong Fit' | 'Good Fit' | 'Moderate' | 'Low Fit';
 }
 
 Deno.serve(async (req) => {
@@ -32,12 +32,40 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, userId } = await req.json();
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ success: false, error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid session' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { action, userId: requestedUserId } = await req.json();
+    const userId = requestedUserId || user.id;
     console.log(`Smart matcher: action=${action}, userId=${userId}`);
 
     if (action === 'match-tenders') {
+      if (userId !== user.id) {
+        return new Response(JSON.stringify({ success: false, error: 'Cannot generate matches for another user' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Get user preferences from dedicated table
       const { data: userPrefs } = await supabase
         .from('user_preferences')
@@ -110,12 +138,12 @@ Deno.serve(async (req) => {
           matchReasons.push(`Location: ${tender.location}`);
         }
 
-        // 3. Budget range match (20 points)
-        const budget = tender.budget_estimate || 0;
+        // 3. Budget range match (20 points) — only score when an official budget exists
+        const budget = Number(tender.budget_estimate || 0);
         const budgetMin = preferences.budget_min || 0;
         const budgetMax = preferences.budget_max || Infinity;
         
-        if (budget >= budgetMin && budget <= budgetMax) {
+        if (budget > 0 && budget >= budgetMin && budget <= budgetMax) {
           matchScore += 20;
           matchReasons.push(`Budget: KES ${(budget / 1000000).toFixed(1)}M (within range)`);
         } else if (budget > 0) {
@@ -177,7 +205,7 @@ Deno.serve(async (req) => {
         // Determine match level
         let matchLevel: TenderMatch['matchLevel'];
         if (matchScore >= 80) {
-          matchLevel = 'High Chance';
+          matchLevel = 'Strong Fit';
         } else if (matchScore >= 55) {
           matchLevel = 'Good Fit';
         } else if (matchScore >= 35) {
@@ -225,7 +253,7 @@ Deno.serve(async (req) => {
                 match_level: match.matchLevel,
                 match_reasons: match.matchReasons,
                 tender_deadline: match.tender.deadline,
-                tender_budget: match.tender.budget_estimate,
+                tender_budget: match.tender.budget_estimate || null,
               },
               is_read: false,
             })
@@ -270,6 +298,20 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'run-for-all-users') {
+      const { data: roleRows, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError || !roleRows) {
+        return new Response(JSON.stringify({ success: false, error: 'Admin access required' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Run matching for all users with preferences
       const { data: allUsers } = await supabase
         .from('user_preferences')

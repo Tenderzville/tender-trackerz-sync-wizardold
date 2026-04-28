@@ -234,7 +234,9 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
         category,
         location,
         deadline,
-        budgetEstimate: item.tender_fee > 0 ? item.tender_fee : 0,
+        // tender_fee is the bid-document fee, NOT the procurement budget.
+        // Keep budget unknown unless an official estimated procurement value is available.
+        budgetEstimate: 0,
         scrapedFrom: 'tenders.go.ke',
         sourceUrl,  // VERIFIED deep link: https://tenders.go.ke/tenders/{id}
         tenderNumber: item.tender_ref || undefined,

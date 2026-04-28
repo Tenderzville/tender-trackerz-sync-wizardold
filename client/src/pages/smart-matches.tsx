@@ -23,9 +23,9 @@ interface MatchedTender {
   category: string;
   location: string;
   deadline: string;
-  budget: number;
+  budget: number | null;
   score: number;
-  level: 'High Chance' | 'Good Fit' | 'Moderate' | 'Low Fit';
+  level: 'Strong Fit' | 'Good Fit' | 'Moderate' | 'Low Fit';
   reasons: string[];
   source_url?: string;
   tender_number?: string;
@@ -95,7 +95,7 @@ export default function SmartMatchesPage() {
 
   // Categorize matches by level
   const categorizedMatches = useMemo(() => ({
-    excellent: matches.filter((m) => m.level === 'High Chance'),
+    excellent: matches.filter((m) => m.level === 'Strong Fit'),
     good: matches.filter((m) => m.level === 'Good Fit'),
     fair: matches.filter((m) => m.level === 'Moderate' || m.level === 'Low Fit'),
   }), [matches]);
@@ -122,7 +122,7 @@ export default function SmartMatchesPage() {
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'High Chance': return 'bg-green-500/10 text-green-600 border-green-500/20';
+      case 'Strong Fit': return 'bg-green-500/10 text-green-600 border-green-500/20';
       case 'Good Fit': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
       case 'Moderate': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
       default: return 'bg-muted text-muted-foreground';
@@ -147,7 +147,7 @@ export default function SmartMatchesPage() {
                 <h1 className="text-2xl md:text-3xl font-bold">Smart Matches</h1>
               </div>
               <p className="text-muted-foreground text-sm">
-                AI-powered tender recommendations based on your preferences and history
+                Tender recommendations based on your preferences, saved tenders, and deadline timing
               </p>
             </div>
             <Button 
@@ -196,7 +196,7 @@ export default function SmartMatchesPage() {
                     <Star className="h-4 w-4 text-green-600" />
                     <div>
                       <p className="text-xl font-bold text-green-600">{categorizedMatches.excellent.length}</p>
-                      <p className="text-xs text-green-600/80">High Chance</p>
+                      <p className="text-xs text-green-600/80">Strong Fit</p>
                     </div>
                   </div>
                 </CardContent>
@@ -238,7 +238,7 @@ export default function SmartMatchesPage() {
             </TabsTrigger>
             <TabsTrigger value="excellent" className="gap-1 text-xs sm:text-sm">
               <Star className="h-3 w-3 sm:h-4 sm:w-4" />
-              High ({categorizedMatches.excellent.length})
+              Strong ({categorizedMatches.excellent.length})
             </TabsTrigger>
             <TabsTrigger value="good" className="gap-1 text-xs sm:text-sm">
               <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -324,7 +324,7 @@ export default function SmartMatchesPage() {
                               <Calendar className="h-3.5 w-3.5" />
                               {formatDistanceToNow(parseISO(match.deadline), { addSuffix: true })}
                             </span>
-                            {match.budget > 0 && (
+                            {match.budget && match.budget > 0 && (
                               <span className="flex items-center gap-1 text-muted-foreground">
                                 <DollarSign className="h-3.5 w-3.5" />
                                 {formatCurrency(match.budget)}
@@ -399,7 +399,7 @@ export default function SmartMatchesPage() {
           <p>
             <strong>📋 How it works:</strong> Scores are calculated based on your configured preferences in{' '}
             <strong>Settings</strong> (sectors, counties, keywords, budget range). If you haven't set up your preferences, 
-            all tenders will show a baseline score. <em>Configure your preferences for more accurate, personalised results.</em>
+            scores will rely mainly on deadline timing and saved-tender history. <em>Configure your preferences for more useful, personalised results.</em>
           </p>
           <p>
             <strong>🚫 No guarantees:</strong> TenderAlert Pro does not guarantee the accuracy, completeness, or timeliness 
