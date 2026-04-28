@@ -21,7 +21,7 @@ interface TenderMatch {
   tender: any;
   matchScore: number;
   matchReasons: string[];
-  matchLevel: 'High Chance' | 'Good Fit' | 'Moderate' | 'Low Fit';
+  matchLevel: 'Strong Fit' | 'Good Fit' | 'Moderate' | 'Low Fit';
 }
 
 Deno.serve(async (req) => {
@@ -32,12 +32,40 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { action, userId } = await req.json();
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ success: false, error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: userError } = await authClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ success: false, error: 'Invalid session' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { action, userId: requestedUserId } = await req.json();
+    const userId = requestedUserId || user.id;
     console.log(`Smart matcher: action=${action}, userId=${userId}`);
 
     if (action === 'match-tenders') {
+      if (userId !== user.id) {
+        return new Response(JSON.stringify({ success: false, error: 'Cannot generate matches for another user' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Get user preferences from dedicated table
       const { data: userPrefs } = await supabase
         .from('user_preferences')
