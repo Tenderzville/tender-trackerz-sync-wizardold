@@ -147,7 +147,7 @@ export default function SmartMatchesPage() {
                 <h1 className="text-2xl md:text-3xl font-bold">Smart Matches</h1>
               </div>
               <p className="text-muted-foreground text-sm">
-                AI-powered tender recommendations based on your preferences and history
+                Tender recommendations based on your preferences, saved tenders, and deadline timing
               </p>
             </div>
             <Button 
@@ -399,7 +399,7 @@ export default function SmartMatchesPage() {
           <p>
             <strong>📋 How it works:</strong> Scores are calculated based on your configured preferences in{' '}
             <strong>Settings</strong> (sectors, counties, keywords, budget range). If you haven't set up your preferences, 
-            all tenders will show a baseline score. <em>Configure your preferences for more accurate, personalised results.</em>
+            scores will rely mainly on deadline timing and saved-tender history. <em>Configure your preferences for more useful, personalised results.</em>
           </p>
           <p>
             <strong>🚫 No guarantees:</strong> TenderAlert Pro does not guarantee the accuracy, completeness, or timeliness 
