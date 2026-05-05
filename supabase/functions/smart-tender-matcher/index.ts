@@ -108,14 +108,30 @@ Deno.serve(async (req) => {
 
       console.log(`User preferences: ${inferredCategories.size} categories, ${inferredLocations.size} locations, ${inferredKeywords.size} keywords`);
 
-      // Get all active tenders
-      const { data: tenders, error } = await supabase
-        .from('tenders')
-        .select('*')
-        .eq('status', 'active')
-        .gte('deadline', new Date().toISOString().split('T')[0])
-        .order('created_at', { ascending: false })
-        .limit(100);
+      // Get all active tenders. Suppliers need ≥21 days runway to assemble a competitive bid;
+      // fall back to 14, then 7, only if the 21-day pool is empty so the page is never blank.
+      const today = new Date().toISOString().split('T')[0];
+      const minDeadlineCandidates = [21, 14, 7];
+      let tenders: any[] | null = null;
+      let error: any = null;
+      for (const minDays of minDeadlineCandidates) {
+        const threshold = new Date();
+        threshold.setHours(0, 0, 0, 0);
+        threshold.setDate(threshold.getDate() + minDays);
+        const cutoff = threshold.toISOString().split('T')[0];
+        const res = await supabase
+          .from('tenders')
+          .select('*')
+          .eq('status', 'active')
+          .gte('deadline', cutoff)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        tenders = res.data;
+        error = res.error;
+        if (error || (tenders && tenders.length > 0)) break;
+      }
+      // Final guard: never surface already-expired tenders
+      if (tenders) tenders = tenders.filter((t: any) => t.deadline && t.deadline >= today);
 
       if (error) throw error;
 
@@ -175,12 +191,15 @@ Deno.serve(async (req) => {
           (new Date(tender.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         );
         
-        if (daysUntilDeadline <= 7 && daysUntilDeadline > 0) {
+        // Reward tenders with adequate preparation runway (≥21 days is the supplier sweet spot).
+        if (daysUntilDeadline >= 21) {
           matchScore += 15;
-          matchReasons.push(`🔥 Urgent: ${daysUntilDeadline} days left`);
-        } else if (daysUntilDeadline <= 14) {
-          matchScore += 10;
-          matchReasons.push(`⏰ ${daysUntilDeadline} days remaining`);
+          matchReasons.push(`✅ ${daysUntilDeadline} days runway — adequate prep time`);
+        } else if (daysUntilDeadline >= 14) {
+          matchScore += 8;
+          matchReasons.push(`⏰ ${daysUntilDeadline} days remaining — tight but workable`);
+        } else if (daysUntilDeadline > 0) {
+          matchReasons.push(`⚠️ Only ${daysUntilDeadline} days left — high effort, low prep window`);
         }
 
         // 6. Organization reputation boost (if they've saved from same org before)
