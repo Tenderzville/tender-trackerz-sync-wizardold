@@ -54,9 +54,11 @@ export default function TendersPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [location, setLocation] = useState('all');
+  // Default to 21 days runway — suppliers need ≥21 days to assemble a competitive bid.
+  const [minDays, setMinDays] = useState<string>('21');
   const [selectedTender, setSelectedTender] = useState<any>(null);
 
-  const { data: tenders, isLoading, error } = useTenders({ 
+  const { data: rawTenders, isLoading, error } = useTenders({ 
     search, 
     category, 
     location,
@@ -65,6 +67,15 @@ export default function TendersPage() {
   const { data: savedTenders } = useSavedTenders(user?.id);
   const saveTender = useSaveTender();
   const unsaveTender = useUnsaveTender();
+
+  // Client-side filter: hide expired tenders and (by default) those with <21 days runway.
+  const tenders = (rawTenders ?? []).filter((t: any) => {
+    if (!t.deadline) return false;
+    const days = getDaysRemaining(t.deadline);
+    if (days < 0) return false;
+    if (minDays === 'all') return true;
+    return days >= parseInt(minDays, 10);
+  });
 
   const savedTenderIds = new Set(savedTenders?.map(s => s.tender_id) ?? []);
 
@@ -123,6 +134,17 @@ export default function TendersPage() {
                     {loc === 'all' ? 'All Locations' : loc}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={minDays} onValueChange={setMinDays}>
+              <SelectTrigger className="w-full md:w-56">
+                <SelectValue placeholder="Deadline runway" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="21">21+ days runway (recommended)</SelectItem>
+                <SelectItem value="14">14+ days runway</SelectItem>
+                <SelectItem value="7">7+ days runway</SelectItem>
+                <SelectItem value="all">All open tenders</SelectItem>
               </SelectContent>
             </Select>
           </div>
