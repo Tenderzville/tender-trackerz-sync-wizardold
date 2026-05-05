@@ -6,7 +6,8 @@ const corsHeaders = {
 };
 
 const LOOKBACK_HOURS = 14;
-const DEADLINE_FALLBACK_DAYS = [12, 7, 3, 1, 0];
+// Suppliers need ≥21 days to assemble a competitive bid. Fall back gracefully if pool is thin.
+const DEADLINE_FALLBACK_DAYS = [21, 14, 7, 3];
 
 /**
  * Sends new tender notifications to a Telegram channel.
