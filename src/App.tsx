@@ -25,6 +25,7 @@ import SubscriptionPage from '@/pages/SubscriptionPage';
 import SubscriptionCallbackPage from '@/pages/SubscriptionCallbackPage';
 import CommunityPage from '@/pages/CommunityPage';
 import BlogPage from '@/pages/BlogPage';
+import SourceKePage from '@/pages/SourceKePage';
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -66,6 +67,8 @@ function AppRoutes() {
         <Route path="/community" component={CommunityPage} />
         <Route path="/blog/:slug" component={BlogPage} />
         <Route path="/blog" component={BlogPage} />
+        <Route path="/sourceke" component={SourceKePage} />
+        <Route path="/source-ke" component={SourceKePage} />
         <Route>
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold">Page Not Found</h1>
