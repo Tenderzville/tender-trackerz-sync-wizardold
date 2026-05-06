@@ -1,5 +1,10 @@
 import { Link } from 'wouter';
 import { ExternalLink } from 'lucide-react';
+import { trackOutboundClick } from '@/lib/trackClick';
+
+const SOURCE_KE_URL = 'https://sourcekeapp.tenderzville-portal.co.ke/';
+const trackSourceKe = (source: string) => () =>
+  trackOutboundClick({ destination: SOURCE_KE_URL, source, campaign: 'footer' });
 
 export function AppFooter() {
   return (
@@ -35,10 +40,16 @@ export function AppFooter() {
           <h3 className="font-semibold mb-3">Quick Links</h3>
           <ul className="space-y-2 text-muted-foreground">
             <li>
+              <Link href="/sourceke" className="hover:text-foreground inline-flex items-center gap-1 font-medium text-foreground">
+                Source.ke Hub →
+              </Link>
+            </li>
+            <li>
               <a
-                href="https://sourcekeapp.tenderzville-portal.co.ke/"
+                href={SOURCE_KE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={trackSourceKe('footer_quicklinks')}
                 className="hover:text-foreground inline-flex items-center gap-1"
               >
                 Source.ke — B2B Marketplace <ExternalLink className="w-3 h-3" />
@@ -59,9 +70,10 @@ export function AppFooter() {
       <div className="border-t border-border px-4 lg:px-6 py-4 text-xs text-muted-foreground text-center">
         © 2026 TenderAlert · Part of the Tenderzville network ·{' '}
         <a
-          href="https://sourcekeapp.tenderzville-portal.co.ke/"
+          href={SOURCE_KE_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={trackSourceKe('footer_bottom')}
           className="hover:text-foreground underline"
         >
           Source.ke

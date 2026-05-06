@@ -88,3 +88,9 @@ verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false
+
+[functions.track-redirect]
+verify_jwt = false
+
+[functions.browse-ai-webhook]
+verify_jwt = false

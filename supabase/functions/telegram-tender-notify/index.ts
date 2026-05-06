@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
         sourceStr,
         '',
         `🌐 [Browse on TenderAlert](https://tenderproapp.tenderzville-portal.co.ke/browse)`,
-        `🤝 [Join Source\\.ke — B2B Supply Chain Marketplace](https://sourcekeapp.tenderzville-portal.co.ke/)`,
+        `🤝 [Join Source\\.ke — B2B Supply Chain Marketplace](https://mwggjriyxxknotymfsvp.supabase.co/functions/v1/track-redirect?to=https%3A%2F%2Fsourcekeapp.tenderzville-portal.co.ke%2F&src=telegram&c=tender_alert)`,
         `📢 Join @supplychain\\_coded for FREE daily alerts\\!`,
       ].filter(Boolean).join('\n');
 

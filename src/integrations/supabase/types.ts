@@ -619,6 +619,42 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_link_clicks: {
+        Row: {
+          campaign: string | null
+          created_at: string
+          destination: string
+          id: string
+          ip_address: unknown
+          referrer: string | null
+          source: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign?: string | null
+          created_at?: string
+          destination: string
+          id?: string
+          ip_address?: unknown
+          referrer?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign?: string | null
+          created_at?: string
+          destination?: string
+          id?: string
+          ip_address?: unknown
+          referrer?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       outbound_webhooks: {
         Row: {
           created_at: string
