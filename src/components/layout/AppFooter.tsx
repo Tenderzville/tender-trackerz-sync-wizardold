@@ -1,5 +1,10 @@
 import { Link } from 'wouter';
 import { ExternalLink } from 'lucide-react';
+import { trackOutboundClick } from '@/lib/trackClick';
+
+const SOURCE_KE_URL = 'https://sourcekeapp.tenderzville-portal.co.ke/';
+const trackSourceKe = (source: string) => () =>
+  trackOutboundClick({ destination: SOURCE_KE_URL, source, campaign: 'footer' });
 
 export function AppFooter() {
   return (
