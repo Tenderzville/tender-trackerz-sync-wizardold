@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const LOOKBACK_HOURS = 14;
-// Suppliers need ≥21 days to assemble a competitive bid. Fall back gracefully if pool is thin.
-const DEADLINE_FALLBACK_DAYS = [21, 14, 7, 3];
+// Suppliers need a real preparation window; never notify tenders with fewer than 14 days left.
+const MIN_SUPPLIER_PREP_DAYS = 14;
 
 /**
  * Sends new tender notifications to a Telegram channel.
@@ -84,9 +84,7 @@ Deno.serve(async (req) => {
     const summaryMessage = `🔔 *${newTenders.length} New Tender${newTenders.length > 1 ? 's' : ''} Alert!*\n\n` +
       `📅 ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n` +
       `Sources: ${[...new Set(newTenders.map(t => t.scraped_from || 'Unknown'))].join(', ')}\n` +
-      `${usedFallback
-        ? `⚠️ No 12\+ day tenders found, so these are the newest still-open tenders with *${minDaysUsed}\+ day${minDaysUsed === 1 ? '' : 's'}* remaining.`
-        : `✅ Only brand-new tenders with *${minDaysUsed}\+ days* remaining are included.`}`;
+      `✅ Only brand-new tenders with *${minDaysUsed}\+ days* remaining are included.`;
 
     await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, summaryMessage);
 
@@ -183,26 +181,13 @@ function escapeMarkdown(text: string): string {
 }
 
 function selectTendersForNotification<T extends { deadline: string | null }>(tenders: T[]) {
-  for (const minDays of DEADLINE_FALLBACK_DAYS) {
-    const minDeadline = getDeadlineThreshold(minDays);
-    const filtered = tenders.filter((tender) => {
-      if (!tender.deadline) return false;
-      return tender.deadline >= minDeadline;
-    });
-
-    if (filtered.length > 0) {
-      return {
-        tenders: filtered,
-        minDaysUsed: minDays,
-        usedFallback: minDays !== DEADLINE_FALLBACK_DAYS[0],
-      };
-    }
-  }
+  const minDeadline = getDeadlineThreshold(MIN_SUPPLIER_PREP_DAYS);
+  const filtered = tenders.filter((tender) => tender.deadline && tender.deadline >= minDeadline);
 
   return {
-    tenders: [] as T[],
-    minDaysUsed: DEADLINE_FALLBACK_DAYS[DEADLINE_FALLBACK_DAYS.length - 1],
-    usedFallback: true,
+    tenders: filtered,
+    minDaysUsed: MIN_SUPPLIER_PREP_DAYS,
+    usedFallback: false,
   };
 }
 
