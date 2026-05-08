@@ -18,7 +18,6 @@ import {
   Users
 } from 'lucide-react';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
-import { SourceKeBanner } from '@/components/SourceKeBanner';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -39,9 +38,6 @@ export default function DashboardPage() {
           Welcome back! Here's what's happening with tenders today.
         </p>
       </div>
-
-      <SourceKeBanner />
-
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
