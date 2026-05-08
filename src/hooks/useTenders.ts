@@ -4,11 +4,21 @@ import { Tables } from '@/integrations/supabase/types';
 
 type Tender = Tables<'tenders'>;
 
+const MIN_SUPPLIER_PREP_DAYS = 14;
+
+function getMinimumDeadlineDate(daysFromToday = MIN_SUPPLIER_PREP_DAYS) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + daysFromToday);
+  return date.toISOString().split('T')[0];
+}
+
 export function useTenders(filters?: {
   category?: string;
   location?: string;
   search?: string;
   status?: string;
+  minDays?: number | 'all';
 }) {
   return useQuery({
     queryKey: ['tenders', filters],
@@ -26,6 +36,9 @@ export function useTenders(filters?: {
       }
       if (filters?.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
+      }
+      if (filters?.status === 'active' && filters?.minDays !== 'all') {
+        query = query.gte('deadline', getMinimumDeadlineDate(filters?.minDays ?? MIN_SUPPLIER_PREP_DAYS));
       }
       if (filters?.search) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,organization.ilike.%${filters.search}%`);

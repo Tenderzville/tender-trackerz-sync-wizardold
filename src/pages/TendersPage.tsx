@@ -62,7 +62,8 @@ export default function TendersPage() {
     search, 
     category, 
     location,
-    status: 'active' 
+    status: 'active',
+    minDays: minDays === 'all' ? 'all' : parseInt(minDays, 10),
   });
   const { data: savedTenders } = useSavedTenders(user?.id);
   const saveTender = useSaveTender();
@@ -143,8 +144,6 @@ export default function TendersPage() {
               <SelectContent>
                 <SelectItem value="21">21+ days runway (recommended)</SelectItem>
                 <SelectItem value="14">14+ days runway</SelectItem>
-                <SelectItem value="7">7+ days runway</SelectItem>
-                <SelectItem value="all">All open tenders</SelectItem>
               </SelectContent>
             </Select>
           </div>

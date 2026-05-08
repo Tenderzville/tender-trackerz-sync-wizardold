@@ -27,6 +27,8 @@ interface ScrapeResult {
   error?: string;
 }
 
+const MIN_SUPPLIER_PREP_DAYS = 14;
+
 /**
  * Tender scraper using REAL APIs and verified URL formats:
  * 
@@ -395,6 +397,11 @@ Return ONLY a valid JSON array. If no tenders, return []`
 // Save tender to database, checking for duplicates
 // ============================================================
 async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boolean> {
+  if (!hasMinimumPreparationWindow(tender.deadline)) {
+    console.log(`Skipped short-deadline tender (${tender.deadline}): ${tender.title.substring(0, 50)}...`);
+    return false;
+  }
+
   // Check for duplicates by title OR tender_number
   const { data: existing } = await supabase
     .from('tenders')
@@ -493,4 +500,11 @@ function getFutureDate(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
   return date.toISOString().split('T')[0];
+}
+
+function hasMinimumPreparationWindow(deadline: string): boolean {
+  const threshold = new Date();
+  threshold.setHours(0, 0, 0, 0);
+  threshold.setDate(threshold.getDate() + MIN_SUPPLIER_PREP_DAYS);
+  return deadline >= threshold.toISOString().split('T')[0];
 }

@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
 };
 
+const HEADERLESS_BROWSE_AI_SOURCES = new Set(['mygov']);
+const MIN_SUPPLIER_PREP_DAYS = 14;
+
 /**
  * Inbound webhook for Browse AI (or similar scrapers) to push tender data.
  * Usage from Browse AI: POST https://mwggjriyxxknotymfsvp.supabase.co/functions/v1/browse-ai-webhook?source=mygov
@@ -34,12 +37,13 @@ Deno.serve(async (req) => {
   // Validate secret against webhook_endpoints
   const { data: endpoint } = await supabase
     .from('webhook_endpoints')
-    .select('id, secret, is_active, source')
+    .select('id, secret, is_active, source, total_received')
     .eq('source', sourceParam)
     .eq('is_active', true)
     .maybeSingle();
 
-  if (!endpoint || endpoint.secret !== providedSecret) {
+  const allowHeaderlessBrowseAi = HEADERLESS_BROWSE_AI_SOURCES.has(sourceParam) && !providedSecret;
+  if (!endpoint || (!allowHeaderlessBrowseAi && endpoint.secret !== providedSecret)) {
     await supabase.from('webhook_ingestion_log').insert({
       source: sourceParam, payload, status: 'unauthorized',
       error_message: 'Invalid or missing webhook secret', ip_address: ip,
@@ -58,6 +62,7 @@ Deno.serve(async (req) => {
     try {
       const normalized = normalizeTender(item, sourceParam);
       if (!normalized.title || !normalized.deadline) continue;
+      if (!hasMinimumPreparationWindow(normalized.deadline)) continue;
 
       // Skip if already exists (by tender_number or title+org)
       const { data: existing } = await supabase
@@ -76,7 +81,7 @@ Deno.serve(async (req) => {
   // Update endpoint stats
   await supabase.from('webhook_endpoints').update({
     last_received_at: new Date().toISOString(),
-    total_received: (endpoint as any).total_received ? undefined : undefined, // increment via RPC if needed
+    total_received: ((endpoint as any).total_received ?? 0) + items.length,
   }).eq('id', endpoint.id);
 
   await supabase.from('webhook_ingestion_log').insert({
@@ -143,11 +148,18 @@ function normalizeTender(raw: any, source: string) {
     category: pick('category', 'sector', 'type')?.toString() || 'General',
     location: pick('location', 'county', 'region')?.toString() || 'Kenya',
     deadline: parseDate(pick('deadline', 'closing_date', 'submission_deadline', 'close_date')),
-    budget_estimate: parseBudget(pick('budget', 'budget_estimate', 'estimated_value', 'value')),
+    budget_estimate: parseBudget(pick('budget', 'budget_estimate', 'estimated_value', 'value')) ?? 0,
     tender_number: pick('tender_number', 'tender_no', 'reference', 'ref')?.toString().slice(0, 100),
     source_url: pick('url', 'source_url', 'link')?.toString(),
     scraped_from: source,
     publish_date: parseDate(pick('publish_date', 'published_date', 'date_published')) || new Date().toISOString().split('T')[0],
     status: 'active',
   };
+}
+
+function hasMinimumPreparationWindow(deadline: string): boolean {
+  const threshold = new Date();
+  threshold.setHours(0, 0, 0, 0);
+  threshold.setDate(threshold.getDate() + MIN_SUPPLIER_PREP_DAYS);
+  return deadline >= threshold.toISOString().split('T')[0];
 }

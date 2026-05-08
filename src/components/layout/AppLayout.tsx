@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { AppNavigation } from './AppNavigation';
 import { AppFooter } from './AppFooter';
+import { SourceKeBanner } from '@/components/SourceKeBanner';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,7 +12,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background flex flex-col">
       <AppNavigation />
       <main className="lg:pl-64 pt-16 lg:pt-0 flex-1">
-        <div className="p-4 lg:p-6">
+        <div className="p-4 lg:p-6 space-y-6">
+          <SourceKeBanner />
           {children}
         </div>
         <div className="lg:pl-0">

@@ -18,17 +18,18 @@ import {
   Users
 } from 'lucide-react';
 import { formatCurrency, formatDate, getDaysRemaining } from '@/lib/utils';
-import { SourceKeBanner } from '@/components/SourceKeBanner';
+
+const MIN_SUPPLIER_PREP_DAYS = 14;
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { data: tenders, isLoading } = useTenders({ status: 'active' });
+  const { data: tenders, isLoading } = useTenders({ status: 'active', minDays: MIN_SUPPLIER_PREP_DAYS });
   const { data: savedTenders } = useSavedTenders(user?.id);
 
   const recentTenders = tenders?.slice(0, 5) ?? [];
   const totalTenders = tenders?.length ?? 0;
   const savedCount = savedTenders?.length ?? 0;
-  const urgentTenders = tenders?.filter(t => getDaysRemaining(t.deadline) <= 7).length ?? 0;
+  const urgentTenders = tenders?.filter(t => getDaysRemaining(t.deadline) <= 21).length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -39,9 +40,6 @@ export default function DashboardPage() {
           Welcome back! Here's what's happening with tenders today.
         </p>
       </div>
-
-      <SourceKeBanner />
-
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
@@ -80,7 +78,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{urgentTenders}</p>
-                <p className="text-xs text-muted-foreground">Closing Soon</p>
+                <p className="text-xs text-muted-foreground">14+ Days Left</p>
               </div>
             </div>
           </CardContent>
