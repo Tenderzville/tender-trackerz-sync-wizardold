@@ -62,7 +62,8 @@ export default function TendersPage() {
     search, 
     category, 
     location,
-    status: 'active' 
+    status: 'active',
+    minDays: minDays === 'all' ? 'all' : parseInt(minDays, 10),
   });
   const { data: savedTenders } = useSavedTenders(user?.id);
   const saveTender = useSaveTender();
