@@ -358,16 +358,16 @@ Return ONLY a valid JSON array. If no tenders, return []`
     return parsed.map((t: any) => {
       // Build the best possible source URL
       let sourceUrl: string;
+      const ref = t.tenderNumber || t.tenderId;
 
-      if (source === 'egpkenya' && t.tenderId) {
-        // eGP Kenya uses tender IDs but it's an SPA - search is more reliable
-        sourceUrl = `https://egpkenya.go.ke/tender`;
-      } else if (t.sourceLink?.startsWith('http')) {
+      if (t.sourceLink?.startsWith('http')) {
         sourceUrl = t.sourceLink;
       } else if (t.sourceLink?.startsWith('/')) {
         sourceUrl = `${baseUrl}${t.sourceLink}`;
-      } else if (t.tenderNumber) {
-        // For eGP Kenya, link to the main page (it's an SPA)
+      } else if (source === 'egpkenya' && ref) {
+        // eGP Kenya is an SPA — pre-fill the tender list search with the ref
+        sourceUrl = `https://egpkenya.go.ke/tender?search=${encodeURIComponent(String(ref))}`;
+      } else if (source === 'egpkenya') {
         sourceUrl = `https://egpkenya.go.ke/tender`;
       } else {
         sourceUrl = baseUrl;
