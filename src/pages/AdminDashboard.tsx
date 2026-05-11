@@ -250,6 +250,23 @@ export default function AdminDashboard() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Short-Window Review Queue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Inspect tenders auto-excluded for &lt;14 day deadlines. Override to publish or delete invalid listings.
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/admin/tender-queue">Open review queue</a>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Automation Logs */}
