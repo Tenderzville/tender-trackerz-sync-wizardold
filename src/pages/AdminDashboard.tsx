@@ -267,6 +267,44 @@ export default function AdminDashboard() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5" />
+              Resync eGP Kenya Links
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Rewrite existing eGP Kenya tender source URLs to the new <code>?search=&lt;tender_number&gt;</code> deep-link format.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={async () => {
+                  const { data, error } = await supabase.functions.invoke('resync-egp-urls', { body: { dryRun: true } });
+                  if (error) return alert(`Error: ${error.message}`);
+                  alert(`Dry run — would update ${data.updated} of ${data.scanned} rows.`);
+                }}
+              >
+                Preview
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={async () => {
+                  if (!confirm('Rewrite all eGP Kenya tender URLs?')) return;
+                  const { data, error } = await supabase.functions.invoke('resync-egp-urls', { body: { dryRun: false } });
+                  if (error) return alert(`Error: ${error.message}`);
+                  alert(`Updated ${data.updated} of ${data.scanned} rows.`);
+                }}
+              >
+                Apply
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Automation Logs */}
