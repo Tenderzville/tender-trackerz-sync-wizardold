@@ -6,7 +6,15 @@ const corsHeaders = {
 };
 
 const HEADERLESS_BROWSE_AI_SOURCES = new Set(['mygov']);
-const MIN_SUPPLIER_PREP_DAYS = 14;
+const DEFAULT_MIN_PREP_DAYS = 14;
+// Per-source overrides — MyGov tenders are often posted with shorter windows;
+// allow 10 days so they reach the live feed instead of being silently dropped.
+const SOURCE_MIN_PREP_DAYS: Record<string, number> = {
+  mygov: 10,
+};
+function getMinPrepDays(source: string): number {
+  return SOURCE_MIN_PREP_DAYS[source] ?? DEFAULT_MIN_PREP_DAYS;
+}
 
 /**
  * Inbound webhook for Browse AI (or similar scrapers) to push tender data.
@@ -62,7 +70,7 @@ Deno.serve(async (req) => {
     try {
       const normalized = normalizeTender(item, sourceParam);
       if (!normalized.title || !normalized.deadline) continue;
-      if (!hasMinimumPreparationWindow(normalized.deadline)) continue;
+      if (!hasMinimumPreparationWindow(normalized.deadline, sourceParam)) continue;
 
       // Skip if already exists (by tender_number or title+org)
       const { data: existing } = await supabase
@@ -157,9 +165,10 @@ function normalizeTender(raw: any, source: string) {
   };
 }
 
-function hasMinimumPreparationWindow(deadline: string): boolean {
+function hasMinimumPreparationWindow(deadline: string, source: string): boolean {
+  const days = getMinPrepDays(source);
   const threshold = new Date();
   threshold.setHours(0, 0, 0, 0);
-  threshold.setDate(threshold.getDate() + MIN_SUPPLIER_PREP_DAYS);
+  threshold.setDate(threshold.getDate() + days);
   return deadline >= threshold.toISOString().split('T')[0];
 }
