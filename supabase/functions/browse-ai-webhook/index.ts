@@ -165,9 +165,10 @@ function normalizeTender(raw: any, source: string) {
   };
 }
 
-function hasMinimumPreparationWindow(deadline: string): boolean {
+function hasMinimumPreparationWindow(deadline: string, source: string): boolean {
+  const days = getMinPrepDays(source);
   const threshold = new Date();
   threshold.setHours(0, 0, 0, 0);
-  threshold.setDate(threshold.getDate() + MIN_SUPPLIER_PREP_DAYS);
+  threshold.setDate(threshold.getDate() + days);
   return deadline >= threshold.toISOString().split('T')[0];
 }
