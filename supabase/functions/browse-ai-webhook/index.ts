@@ -6,7 +6,15 @@ const corsHeaders = {
 };
 
 const HEADERLESS_BROWSE_AI_SOURCES = new Set(['mygov']);
-const MIN_SUPPLIER_PREP_DAYS = 14;
+const DEFAULT_MIN_PREP_DAYS = 14;
+// Per-source overrides — MyGov tenders are often posted with shorter windows;
+// allow 10 days so they reach the live feed instead of being silently dropped.
+const SOURCE_MIN_PREP_DAYS: Record<string, number> = {
+  mygov: 10,
+};
+function getMinPrepDays(source: string): number {
+  return SOURCE_MIN_PREP_DAYS[source] ?? DEFAULT_MIN_PREP_DAYS;
+}
 
 /**
  * Inbound webhook for Browse AI (or similar scrapers) to push tender data.
