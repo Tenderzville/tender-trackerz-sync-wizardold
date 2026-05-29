@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     try {
       const normalized = normalizeTender(item, sourceParam);
       if (!normalized.title || !normalized.deadline) continue;
-      if (!hasMinimumPreparationWindow(normalized.deadline)) continue;
+      if (!hasMinimumPreparationWindow(normalized.deadline, sourceParam)) continue;
 
       // Skip if already exists (by tender_number or title+org)
       const { data: existing } = await supabase
