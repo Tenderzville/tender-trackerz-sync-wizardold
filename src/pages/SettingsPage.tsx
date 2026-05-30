@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Save, Plus, X, MapPin, Briefcase, Bell, DollarSign } from 'lucide-react';
+import { Settings, Save, Plus, X, MapPin, Briefcase, Bell, DollarSign, Webhook, ChevronRight } from 'lucide-react';
+import { Link } from 'wouter';
 
 const KENYAN_COUNTIES = [
   'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Kiambu', 'Machakos',
