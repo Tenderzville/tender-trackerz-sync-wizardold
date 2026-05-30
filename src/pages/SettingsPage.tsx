@@ -384,6 +384,20 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Webhook className="w-5 h-5" /> Integrations & API</CardTitle>
+          <CardDescription>Forward your tender matches to Zapier, n8n, Google Sheets, Slack, or your own AI agent.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/settings/integrations">
+            <Button variant="outline" className="w-full justify-between">
+              Manage my integrations <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }
