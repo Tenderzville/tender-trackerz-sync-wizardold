@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, Save, Plus, X, MapPin, Briefcase, Bell, DollarSign } from 'lucide-react';
+import { Settings, Save, Plus, X, MapPin, Briefcase, Bell, DollarSign, Webhook, ChevronRight } from 'lucide-react';
+import { Link } from 'wouter';
 
 const KENYAN_COUNTIES = [
   'Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Kiambu', 'Machakos',
@@ -381,6 +382,20 @@ export default function SettingsPage() {
               onCheckedChange={(checked) => setPreferences(prev => ({ ...prev, notification_sms: checked }))}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Webhook className="w-5 h-5" /> Integrations & API</CardTitle>
+          <CardDescription>Forward your tender matches to Zapier, n8n, Google Sheets, Slack, or your own AI agent.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/settings/integrations">
+            <Button variant="outline" className="w-full justify-between">
+              Manage my integrations <ChevronRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>

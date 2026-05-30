@@ -1387,6 +1387,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_integrations: {
+        Row: {
+          api_key: string | null
+          created_at: string
+          delivery_count: number
+          events: string[]
+          failure_count: number
+          filters: Json
+          id: string
+          is_active: boolean
+          last_error: string | null
+          last_status: string | null
+          last_triggered_at: string | null
+          name: string
+          provider: string
+          updated_at: string
+          user_id: string
+          webhook_url: string
+        }
+        Insert: {
+          api_key?: string | null
+          created_at?: string
+          delivery_count?: number
+          events?: string[]
+          failure_count?: number
+          filters?: Json
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_status?: string | null
+          last_triggered_at?: string | null
+          name: string
+          provider?: string
+          updated_at?: string
+          user_id: string
+          webhook_url: string
+        }
+        Update: {
+          api_key?: string | null
+          created_at?: string
+          delivery_count?: number
+          events?: string[]
+          failure_count?: number
+          filters?: Json
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_status?: string | null
+          last_triggered_at?: string | null
+          name?: string
+          provider?: string
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           budget_max: number | null

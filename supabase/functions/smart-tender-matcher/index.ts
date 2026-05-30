@@ -282,6 +282,33 @@ Deno.serve(async (req) => {
           if (!alertError && alert) {
             alertsCreated.push(alert.id);
             console.log(`Created alert for tender: ${match.tender.id}`);
+
+            // Fan-out to user's personal integrations (Zapier/n8n/Sheets/custom)
+            try {
+              await supabase.functions.invoke('user-integration-dispatcher', {
+                body: {
+                  action: 'dispatch',
+                  user_id: userId,
+                  event: 'tender.matched',
+                  payload: {
+                    tender: {
+                      id: match.tender.id,
+                      title: match.tender.title,
+                      organization: match.tender.organization,
+                      category: match.tender.category,
+                      location: match.tender.location,
+                      deadline: match.tender.deadline,
+                      budget_estimate: match.tender.budget_estimate || 0,
+                      source_url: match.tender.source_url,
+                      tender_number: match.tender.tender_number,
+                    },
+                    match: { score: match.matchScore, level: match.matchLevel, reasons: match.matchReasons },
+                  },
+                },
+              });
+            } catch (dispatchErr) {
+              console.error('User integration dispatch failed (non-blocking):', dispatchErr);
+            }
           }
         }
       }
