@@ -35,6 +35,21 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
     },
   });
 
+  const { data: hasPrefs } = useQuery<boolean>({
+    queryKey: ["user-has-preferences"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      const { data } = await supabase
+        .from("user_preferences")
+        .select("sectors, counties, keywords")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      return !!(data && ((data.sectors?.length ?? 0) > 0 || (data.counties?.length ?? 0) > 0 || (data.keywords?.length ?? 0) > 0));
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   if (isLoading) {
     return (
       <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700 animate-pulse">
