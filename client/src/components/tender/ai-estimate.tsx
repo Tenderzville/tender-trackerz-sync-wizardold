@@ -103,15 +103,21 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
           </Badge>
         </div>
         <p className="text-sm text-purple-700 dark:text-purple-300">
-          Estimated winning bid: 
+          Estimated winning bid:
           <span className="font-semibold ml-1">
              {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
           </span>
           <span className="mx-2">•</span>
-          Win probability: 
-           <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.win_probability)}`}>
-             {analysis.win_probability || 0}%
-          </span>
+          Bid Readiness:
+          {hasPrefs ? (
+            <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.win_probability)}`}>
+              {analysis.win_probability ?? '—'}%
+            </span>
+          ) : (
+            <a href="/settings" className="font-medium ml-1 text-primary underline inline-flex items-center gap-1">
+              <Settings className="h-3 w-3" /> Set preferences to see your alignment score
+            </a>
+          )}
         </p>
       </div>
     );
@@ -154,11 +160,18 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
           <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
             <div className="flex items-center space-x-2 mb-1">
               <AlertCircle className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium">Win Probability</span>
+              <span className="text-sm font-medium">Bid Readiness</span>
             </div>
-             <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.win_probability)}`}>
-               {analysis.win_probability || 0}%
-            </p>
+            {hasPrefs ? (
+              <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.win_probability)}`}>
+                {analysis.win_probability ?? '—'}%
+              </p>
+            ) : (
+              <a href="/settings" className="text-sm font-medium text-primary underline inline-flex items-center gap-1">
+                <Settings className="h-3.5 w-3.5" /> Set preferences to see your alignment score
+              </a>
+            )}
+            <p className="text-[10px] text-muted-foreground mt-1">Informational only · not a prediction</p>
           </div>
         </div>
 
