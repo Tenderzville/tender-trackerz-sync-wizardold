@@ -790,6 +790,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limit_entries: {
         Row: {
           created_at: string
@@ -1104,6 +1137,13 @@ export type Database = {
             referencedRelation: "service_providers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "service_provider_ads_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "service_providers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       service_providers: {
@@ -1304,7 +1344,9 @@ export type Database = {
           publish_date: string | null
           requirements: string[] | null
           scraped_from: string | null
+          source_status: string
           source_url: string | null
+          source_verified_at: string | null
           status: string | null
           tender_number: string | null
           title: string
@@ -1325,7 +1367,9 @@ export type Database = {
           publish_date?: string | null
           requirements?: string[] | null
           scraped_from?: string | null
+          source_status?: string
           source_url?: string | null
+          source_verified_at?: string | null
           status?: string | null
           tender_number?: string | null
           title: string
@@ -1346,7 +1390,9 @@ export type Database = {
           publish_date?: string | null
           requirements?: string[] | null
           scraped_from?: string | null
+          source_status?: string
           source_url?: string | null
+          source_verified_at?: string | null
           status?: string | null
           tender_number?: string | null
           title?: string
@@ -1605,6 +1651,7 @@ export type Database = {
           last_received_at: string | null
           name: string
           secret: string
+          secret_hash: string | null
           source: string
           total_received: number
         }
@@ -1615,6 +1662,7 @@ export type Database = {
           last_received_at?: string | null
           name: string
           secret: string
+          secret_hash?: string | null
           source: string
           total_received?: number
         }
@@ -1625,6 +1673,7 @@ export type Database = {
           last_received_at?: string | null
           name?: string
           secret?: string
+          secret_hash?: string | null
           source?: string
           total_received?: number
         }
@@ -1679,7 +1728,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      service_providers_public: {
+        Row: {
+          availability: string | null
+          certifications: string[] | null
+          created_at: string | null
+          description: string | null
+          experience: number | null
+          hourly_rate: number | null
+          id: number | null
+          linkedin: string | null
+          name: string | null
+          portfolio: string[] | null
+          profile_image: string | null
+          rating: number | null
+          review_count: number | null
+          specialization: string | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          availability?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          experience?: number | null
+          hourly_rate?: number | null
+          id?: number | null
+          linkedin?: string | null
+          name?: string | null
+          portfolio?: string[] | null
+          profile_image?: string | null
+          rating?: number | null
+          review_count?: number | null
+          specialization?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          availability?: string | null
+          certifications?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          experience?: number | null
+          hourly_rate?: number | null
+          id?: number | null
+          linkedin?: string | null
+          name?: string | null
+          portfolio?: string[] | null
+          profile_image?: string | null
+          rating?: number | null
+          review_count?: number | null
+          specialization?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_providers_user_fk"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cleanup_rate_limit_entries: { Args: never; Returns: undefined }
