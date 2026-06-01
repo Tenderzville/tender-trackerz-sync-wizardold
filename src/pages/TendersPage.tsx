@@ -218,6 +218,16 @@ export default function TendersPage() {
                             Est. {formatCurrency(tender.budget_estimate)}
                           </Badge>
                         )}
+                        {(tender as any).source_status === 'verified' && (
+                          <Badge variant="outline" className="border-green-500/40 text-green-700 bg-green-500/5">
+                            ✓ Source verified{(tender as any).source_verified_at ? ` ${formatDate((tender as any).source_verified_at)}` : ''}
+                          </Badge>
+                        )}
+                        {(tender as any).source_status === 'unverified' && (tender as any).source_verified_at && (
+                          <Badge variant="outline" className="border-amber-500/40 text-amber-700 bg-amber-500/5">
+                            ⚠ Source unreachable {formatDate((tender as any).source_verified_at)}
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
