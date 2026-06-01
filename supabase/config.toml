@@ -94,3 +94,9 @@ verify_jwt = false
 
 [functions.browse-ai-webhook]
 verify_jwt = false
+
+[functions.verify-tender-sources]
+verify_jwt = false
+
+[functions.send-web-push]
+verify_jwt = false
