@@ -309,6 +309,20 @@ Deno.serve(async (req) => {
             } catch (dispatchErr) {
               console.error('User integration dispatch failed (non-blocking):', dispatchErr);
             }
+
+            // Fire web push notification (FB/IG-style banner)
+            try {
+              await supabase.functions.invoke('send-web-push', {
+                body: {
+                  user_id: userId,
+                  title: `New tender match: ${match.tender.title}`.slice(0, 100),
+                  body: `${match.matchLevel} · ${match.tender.organization} · Deadline ${match.tender.deadline}`,
+                  url: `/tenders?tender=${match.tender.id}`,
+                },
+              });
+            } catch (pushErr) {
+              console.error('Web push failed (non-blocking):', pushErr);
+            }
           }
         }
       }

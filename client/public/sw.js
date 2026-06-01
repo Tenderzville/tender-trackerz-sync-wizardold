@@ -53,21 +53,20 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Push event for notifications
+// Push event for notifications (FB/IG-style banner)
 self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { title: 'TenderAlert', body: event.data ? event.data.text() : '' }; }
+  const title = data.title || 'TenderAlert';
   const options = {
-    body: event.data ? event.data.text() : 'New tender notification',
+    body: data.body || 'You have a new tender match.',
     icon: '/icon-192x192.png',
     badge: '/badge-72x72.png',
-    tag: 'tender-notification',
-    data: {
-      url: '/'
-    }
+    tag: data.tag || 'tender-notification',
+    data: { url: data.url || '/' },
+    requireInteraction: false,
   };
-
-  event.waitUntil(
-    self.registration.showNotification('TenderAlert Pro', options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Notification click event

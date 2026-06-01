@@ -12,8 +12,9 @@ export function useServiceProviders(filters?: {
   return useQuery({
     queryKey: ['service-providers', filters],
     queryFn: async () => {
-      let query = supabase
-        .from('service_providers')
+      // Use the public view that omits email/phone for privacy.
+      let query = (supabase as any)
+        .from('service_providers_public')
         .select('*')
         .order('rating', { ascending: false });
 
@@ -29,7 +30,7 @@ export function useServiceProviders(filters?: {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as ServiceProvider[];
+      return (data || []) as ServiceProvider[];
     },
   });
 }
