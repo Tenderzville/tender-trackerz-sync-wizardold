@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { Link } from 'wouter';
 import { useTenders } from '@/hooks/useTenders';
 import { useSavedTenders, useSaveTender, useUnsaveTender } from '@/hooks/useTenders';
@@ -33,6 +34,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Dashboard — Kenya Tender Alerts & AI Bid Intelligence" description="Personalised dashboard for Kenyan suppliers: live MyGov, eGP and PPRA tender alerts, smart matches, saved bids and consortium tools." path="/" />
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>

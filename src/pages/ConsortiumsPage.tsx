@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -179,6 +180,7 @@ export default function ConsortiumsPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Consortium Bidding — Join Forces on Kenyan Tenders" description="Form or join consortiums of Kenyan suppliers to bid on larger tenders. Manage members, skills and joint proposals." path="/consortiums" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ export default function AuthPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+        <SEO title="Sign In or Sign Up — TenderAlert Pro Kenya" description="Create your free TenderAlert Pro account to receive Kenyan tender alerts, AI bid insights and consortium tools." path="/auth" />
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );

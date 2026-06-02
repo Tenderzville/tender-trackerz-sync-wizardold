@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ function ReplyThread({ parentId }: { parentId: number }) {
 
   return (
     <div className="space-y-3 mt-3 pl-4 border-l-2 border-border">
+      <SEO title="TenderPro Community — Kenya Procurement Q&A Forum" description="Ask and answer questions about Kenyan procurement, AGPO, e-GP, county tenders and bid preparation. Lightweight Q&A for suppliers." path="/community" />
       {replies.map((r) => (
         <div key={r.id} className="flex gap-3">
           <div className="flex flex-col items-center">

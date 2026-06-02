@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -152,6 +153,7 @@ export default function RFQPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Post & Browse RFQs — Kenyan Procurement Requests" description="Post public or private RFQs, invite financiers and subcontractors, and respond to buyer requests across Kenyan counties." path="/rfq" />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useServiceProviders } from '@/hooks/useServiceProviders';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ export default function ProvidersPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Service Providers Directory — Verified Kenyan Suppliers" description="Find verified Kenyan service providers and subcontractors for construction, IT, consulting, legal and more. Build winning consortiums." path="/providers" />
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Service Providers</h1>

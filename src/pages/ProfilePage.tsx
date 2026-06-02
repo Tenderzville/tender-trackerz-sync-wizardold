@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { SEO } from '@/components/SEO';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -301,6 +302,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
+        <SEO title="Company Profile & Verification — TenderAlert Pro" description="Complete your company profile, business type and verification documents to unlock smart Kenyan tender matches." path="/profile" />
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
