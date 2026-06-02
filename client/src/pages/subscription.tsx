@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -125,6 +126,7 @@ export default function Subscription() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Pricing & Plans — TenderAlert Pro Kenya" description="Free, Pro and Business plans for Kenyan tender intelligence. Paystack billing in KES, founding-member discounts and loyalty rewards." path="/subscription" />
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-2">
           <Crown className="w-7 h-7 text-primary" />

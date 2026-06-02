@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SEO } from '@/components/SEO';
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { ArrowLeft, Shield, FileText, AlertTriangle, Scale, Clock, Users, CreditCard, Brain, Bot } from "lucide-react";
@@ -8,6 +9,7 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-8">
+      <SEO title="Terms & Conditions — TenderAlert Pro" description="Terms of service, AI disclaimers and liability rules for using the TenderAlert Pro Kenyan tender intelligence platform." path="/terms" />
       <div className="container mx-auto max-w-4xl">
         <Button 
           variant="ghost" 

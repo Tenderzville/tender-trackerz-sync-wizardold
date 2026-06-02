@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SEO } from '@/components/SEO';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -140,6 +141,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen bg-background pb-20 md:pb-8 md:pl-64">
+      <SEO title="Company Profile & Verification — TenderAlert Pro" description="Complete your company profile, business type and verification documents." path="/profile" noindex />
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Profile Settings</h1>

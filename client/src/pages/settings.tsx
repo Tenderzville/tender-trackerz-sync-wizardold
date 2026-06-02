@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SEO } from '@/components/SEO';
 import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Account Settings — TenderAlert Pro" description="Manage notification preferences, sector, county and language." path="/settings" noindex />
       <div className="container max-w-4xl py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">

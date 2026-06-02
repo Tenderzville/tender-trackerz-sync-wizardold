@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,7 @@ export default function SubscriptionCallback() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+      <SEO title="Payment Confirmation — TenderAlert Pro" description="Processing your Paystack subscription payment." path="/subscription/callback" noindex />
       <Card className={`max-w-md w-full ${getStatusColor()}`}>
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

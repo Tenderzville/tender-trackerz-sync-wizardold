@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { SEO } from '@/components/SEO';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -197,6 +198,7 @@ export default function PerformanceDashboard() {
 
   return (
     <PaywallGate requiredPlan="pro" featureName="Performance Dashboard">
+      <SEO title="Performance Dashboard — TenderAlert Pro" description="Operational performance metrics and system health." path="/performance" noindex />
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}

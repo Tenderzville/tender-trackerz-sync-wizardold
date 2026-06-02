@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ export default function LearningHub() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Learning Hub — Kenyan Procurement Courses & Guides" description="User-submitted courses and guides on Kenyan tender preparation, AGPO and bid strategy." path="/learning" />
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <div className="mb-6">
