@@ -21,7 +21,6 @@ function ReplyThread({ parentId }: { parentId: number }) {
 
   return (
     <div className="space-y-3 mt-3 pl-4 border-l-2 border-border">
-      <SEO title="TenderPro Community — Kenya Procurement Q&A Forum" description="Ask and answer questions about Kenyan procurement, AGPO, e-GP, county tenders and bid preparation. Lightweight Q&A for suppliers." path="/community" />
       {replies.map((r) => (
         <div key={r.id} className="flex gap-3">
           <div className="flex flex-col items-center">
@@ -137,6 +136,7 @@ export default function CommunityPage() {
 
   return (
     <div className="container mx-auto max-w-4xl py-6 space-y-4">
+      <SEO title="TenderPro Community — Kenya Procurement Q&A Forum" description="Ask and answer questions about Kenyan procurement, AGPO, e-GP, county tenders and bid preparation. Lightweight Q&A for suppliers." path="/community" jsonLd={{ '@context': 'https://schema.org', '@type': 'DiscussionForumPosting', name: 'TenderPro Community', url: 'https://tenderproapp.tenderzville-portal.co.ke/community' }} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Community Q&A</h1>
