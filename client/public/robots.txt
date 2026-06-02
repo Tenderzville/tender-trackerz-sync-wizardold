@@ -4,4 +4,4 @@ Disallow: /admin/
 Disallow: /trigger-scraper
 Disallow: /subscription/callback
 
-Sitemap: https://tenderproapp.tenderzville-portal.co.ke/sitemap.xml
+Sitemap: https://tender-trackerz-sync-wizard.lovable.app/sitemap.xml

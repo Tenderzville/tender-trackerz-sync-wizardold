@@ -1,0 +1,24 @@
+# TenderAlert
+
+> Kenya & East Africa B2B tender and bid intelligence platform — automated tender discovery, AI-powered bid readiness scoring, supplier verification, and RFQ workflows for buyers and suppliers.
+
+TenderAlert aggregates public tender notices from e-GP, PPRA, county portals, and other Kenyan sources, then matches them to verified suppliers using a 7-factor opportunity alignment score. Includes 39,000+ historical award records, consortium bidding tools, and KES-denominated subscription tiers via Paystack.
+
+## Pages
+
+- [Home](/): Overview of TenderAlert's tender discovery and bid intelligence platform.
+- [Tenders](/tenders): Browse active Kenyan government and private tender opportunities.
+- [Smart Matches](/smart-matches): AI-matched tenders ranked by alignment with your profile.
+- [AI Analysis](/ai-analysis): Bid Readiness and Historical Alignment scoring for tenders.
+- [Service Providers](/providers): Verified supplier directory across Kenya.
+- [RFQ](/rfq): Public Request-for-Quotation marketplace for buyers and suppliers.
+- [Consortiums](/consortiums): Find partners for joint bidding on large tenders.
+- [Community](/community): Q&A forum for procurement professionals.
+- [Blog](/blog): Guides on Kenyan procurement, AGPO, e-GP, and winning bids.
+- [Subscription](/subscription): Free, Pro, and Business plan pricing (KES).
+- [Terms](/terms): Terms of service and AI liability disclaimers.
+
+## Optional
+
+- [Saved Tenders](/saved): Personal saved-tender list (requires sign-in).
+- [Notifications](/notifications): User notification center (requires sign-in).
