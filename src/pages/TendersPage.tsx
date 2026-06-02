@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useTenders, useSaveTender, useUnsaveTender, useSavedTenders } from '@/hooks/useTenders';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,6 +93,7 @@ export default function TendersPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Browse Kenya Government Tenders — MyGov, eGP, PPRA" description="Search verified, real-time Kenyan government tenders from MyGov, eGP Kenya and PPRA. Filter by sector, county, deadline and budget." path="/tenders" />
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Browse Tenders</h1>

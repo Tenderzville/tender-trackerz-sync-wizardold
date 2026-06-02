@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,6 +26,7 @@ function CopyBlock({ code, label }: { code: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="relative">
+      <SEO title="Integrations — Telegram, Email, Webhooks" description="Connect TenderAlert Pro to Telegram, email and webhooks for instant Kenyan tender alerts in your workflow." path="/integrations" />
       {label && <div className="text-xs text-muted-foreground mb-1">{label}</div>}
       <pre className="bg-muted text-foreground text-xs rounded-md p-3 overflow-x-auto border">
         <code>{code}</code>

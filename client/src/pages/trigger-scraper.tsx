@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -107,6 +108,7 @@ export default function TriggerScraper() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8">
+      <SEO title="Admin: Trigger Tender Sync — TenderAlert Pro" description="Internal admin tool to trigger tender data sync." path="/trigger-scraper" noindex />
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

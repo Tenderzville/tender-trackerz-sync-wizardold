@@ -1,4 +1,5 @@
 import { useNotifications } from '@/hooks/useNotifications';
+import { SEO } from '@/components/SEO';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Notifications — Tender Alerts & Updates" description="Your real-time alerts for new matching Kenyan tenders, closing deadlines and consortium activity." path="/notifications" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Notifications</h1>

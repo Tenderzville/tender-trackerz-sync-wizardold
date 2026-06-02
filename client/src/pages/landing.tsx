@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
@@ -18,6 +19,7 @@ import {
 export default function Landing() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders with real-time alerts, AI bid readiness scoring and consortium tools." path="/" />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">

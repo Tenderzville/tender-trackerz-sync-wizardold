@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TenderCard } from "@/components/tender/tender-card";
@@ -127,6 +128,7 @@ export default function BrowseTenders() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Browse Kenya Government Tenders — MyGov, eGP, PPRA" description="Search verified, real-time Kenyan government tenders from MyGov, eGP Kenya and PPRA. Filter by sector, county, deadline and budget." path="/browse" jsonLd={{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Kenya Government Tenders', url: 'https://tenderproapp.tenderzville-portal.co.ke/browse', about: 'Real-time tender opportunities from Kenyan government portals.' }} />
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <section className="mb-8">

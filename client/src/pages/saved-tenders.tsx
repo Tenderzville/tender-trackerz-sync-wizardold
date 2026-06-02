@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { SEO } from '@/components/SEO';
 import { TenderCard } from "@/components/tender/tender-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,6 +107,7 @@ export default function SavedTenders() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Saved Tenders — Your Shortlist" description="Your shortlisted Kenyan tenders with deadline reminders." path="/saved" noindex />
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <section className="mb-8">

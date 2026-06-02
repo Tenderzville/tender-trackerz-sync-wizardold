@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -189,6 +190,7 @@ export default function Marketplace() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Marketplace — Verified Kenyan Service Providers & Ads" description="Discover service providers and sponsored offers across Kenya." path="/marketplace" />
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">

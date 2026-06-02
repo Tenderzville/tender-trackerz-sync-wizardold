@@ -1,8 +1,10 @@
 import { AutomationStatus } from "@/components/automation/AutomationStatus";
+import { SEO } from '@/components/SEO';
 
 export default function AutomationPage() {
   return (
     <div className="container mx-auto p-6">
+      <SEO title="Admin: Automation — TenderAlert Pro" description="Internal admin automation controls." path="/admin/automation" noindex />
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Automation Dashboard</h1>
         <p className="text-muted-foreground mt-2">

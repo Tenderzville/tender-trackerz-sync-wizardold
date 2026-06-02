@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
@@ -142,6 +143,7 @@ export default function AiAnalysis() {
 
   return (
     <PaywallGate requiredPlan="pro" featureName="AI Tender Analysis">
+      <SEO title="AI Tender Analysis — Bid Readiness & Historical Alignment" description="Compliant AI insights for Kenyan tenders: Bid Readiness Score, Historical Alignment Index and compliance checks." path="/ai-analysis" />
     <div className="flex h-screen bg-background">
       <DesktopSidebar />
       

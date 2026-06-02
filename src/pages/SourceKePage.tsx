@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, ShoppingBag, Truck, Users, FileText, Megaphone, Network } from 'lucide-react';
@@ -35,6 +36,7 @@ export default function SourceKePage() {
 
   return (
     <div className="container mx-auto max-w-5xl space-y-6">
+      <SEO title="Source.ke — Kenyan Supplier Sourcing" description="Source verified Kenyan suppliers and service providers for procurement, projects and consortiums." path="/sourceke" />
       <div>
         <Badge variant="secondary" className="mb-2">Partner network</Badge>
         <h1 className="text-3xl font-bold">Source.ke — B2B Supply Chain Hub</h1>

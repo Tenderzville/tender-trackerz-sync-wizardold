@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -686,6 +687,7 @@ export default function Consortiums() {
                     const tender = getTenderForConsortium(consortium.tender_id);
                     return (
                       <Card key={consortium.id} className="hover:border-primary transition-colors">
+                        <SEO title="Consortium Bidding — Join Forces on Kenyan Tenders" description="Form or join consortiums of Kenyan suppliers to bid on larger tenders." path="/consortiums" />
                         <CardContent className="p-4">
                           <h3 className="text-lg font-semibold mb-2">{consortium.name}</h3>
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { SEO } from '@/components/SEO';
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -169,6 +170,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Dashboard — Kenya Tender Alerts & AI Bid Intelligence" description="Personalised dashboard for Kenyan suppliers: live MyGov, eGP and PPRA tender alerts, smart matches and saved bids." path="/dashboard" />
       <div className="container mx-auto py-8 px-4">
 
         {/* Setup Preferences Banner */}

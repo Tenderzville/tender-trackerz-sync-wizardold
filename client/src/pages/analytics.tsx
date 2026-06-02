@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { SEO } from '@/components/SEO';
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,7 @@ export default function Analytics() {
 
   return (
     <PaywallGate requiredPlan="pro" featureName="Analytics Dashboard">
+      <SEO title="Analytics — Win Rates, ROI & Bid Performance" description="Track your tender win rate, ROI and bid performance across Kenyan procurement." path="/analytics" noindex />
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
         {/* Header */}

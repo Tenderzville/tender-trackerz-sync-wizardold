@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, ArrowRight, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 
 interface BlogPost {
   id: string;
@@ -763,6 +764,25 @@ function BlogPostCard({ post }: { post: BlogPost }) {
 export default function BlogPage() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="TenderAlert Blog — Kenya Supplier Portal Guides"
+        description="Expert guides on Kenyan government tenders, eGP, AGPO, consortium bidding and county procurement. Win more bids on the official supplier portal."
+        path="/blog"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "TenderAlert Blog",
+          url: "https://tenderproapp.tenderzville-portal.co.ke/blog",
+          blogPost: blogPosts.map((p) => ({
+            "@type": "BlogPosting",
+            headline: p.title,
+            description: p.excerpt,
+            datePublished: p.date,
+            url: `https://tenderproapp.tenderzville-portal.co.ke/blog#${p.slug}`,
+            author: { "@type": "Organization", name: "TenderAlert Pro" },
+          })),
+        }}
+      />
       <div className="container mx-auto py-8 px-4 max-w-5xl">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">

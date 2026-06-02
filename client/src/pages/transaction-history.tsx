@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -367,6 +368,7 @@ export default function TransactionHistoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
+      <SEO title="Transaction History & Receipts — TenderAlert Pro" description="Your subscription receipts and invoices, downloadable as PDF." path="/transactions" noindex />
       <div className="container mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">

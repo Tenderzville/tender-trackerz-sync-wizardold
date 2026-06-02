@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SEO } from '@/components/SEO';
 import { Shield, FileText, AlertTriangle, Scale } from 'lucide-react';
 
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
+      <SEO title="Terms & Conditions — TenderAlert Pro" description="Terms of service, AI disclaimers and liability rules for using the TenderAlert Pro Kenyan tender intelligence platform." path="/terms" />
       {/* Header */}
       <div className="text-center pt-6">
         <div className="flex justify-center mb-4">

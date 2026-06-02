@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -168,6 +169,7 @@ export default function AIAnalysisPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="AI Tender Analysis — Bid Readiness & Historical Alignment" description="Compliant AI insights for Kenyan tenders: Bid Readiness Score, Historical Alignment Index and compliance checks. No win-probability hype." path="/ai-analysis" />
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">

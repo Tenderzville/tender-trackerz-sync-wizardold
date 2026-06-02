@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { SEO } from '@/components/SEO';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -136,6 +137,7 @@ export default function SmartMatchesPage() {
 
   return (
     <PaywallGate requiredPlan="pro" featureName="Smart Matches">
+      <SEO title="Smart Tender Matches — Personalised for Your Business" description="AI-ranked Kenyan tender matches aligned to your sector, county, experience and capacity." path="/smart-matches" noindex />
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-b">

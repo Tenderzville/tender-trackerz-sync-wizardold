@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { SEO } from '@/components/SEO';
 import { Navigate } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,6 +110,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Admin Dashboard — TenderAlert Pro" description="Internal admin console for tender, user, ads and learning content moderation." path="/admin" noindex />
       <div className="flex items-center gap-3">
         <ShieldCheck className="w-8 h-8 text-primary" />
         <div>

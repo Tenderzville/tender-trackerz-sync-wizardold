@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEO } from '@/components/SEO';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DesktopSidebar } from "@/components/layout/desktop-sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
@@ -349,6 +350,7 @@ export default function RfqSystem() {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900">
+      <SEO title="Post & Browse RFQs — Kenyan Procurement Requests" description="Post public or private RFQs and respond to buyer requests across Kenyan counties." path="/rfq-system" />
       <DesktopSidebar />
       
       <div className="flex-1 overflow-auto">

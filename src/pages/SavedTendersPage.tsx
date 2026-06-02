@@ -1,4 +1,5 @@
 import { useSavedTenders, useUnsaveTender } from '@/hooks/useTenders';
+import { SEO } from '@/components/SEO';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ export default function SavedTendersPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Saved Tenders — Your Shortlist" description="Your shortlisted Kenyan tenders with deadline reminders and quick access to bid documents." path="/saved" />
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Saved Tenders</h1>
         <p className="text-muted-foreground mt-1">
