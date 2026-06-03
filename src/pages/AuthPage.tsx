@@ -22,7 +22,7 @@ export default function AuthPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <SEO title="Sign In or Sign Up — TenderAlert Pro Kenya" description="Create your free TenderAlert Pro account to receive Kenyan tender alerts, AI bid insights and consortium tools." path="/auth" />
+        <SEO title="Sign Up Free — Kenya Tender Alerts on WhatsApp, Telegram & Email" description="Create your free TenderAlert Pro account to get daily MyGov, eGP Kenya and PPRA tender alerts, AGPO opportunities, county tenders, AI bid scoring and consortium matching." path="/auth" keywords="Kenya tenders, tender alerts Kenya, MyGov tenders, eGP Kenya, PPRA tenders, AGPO tenders, county tenders Kenya, NG-CDF tenders, government tenders Kenya, tender notifications Kenya, bid management Kenya, Telegram tender alerts, WhatsApp tender alerts, free tender alerts Kenya, sign up tender alerts" />
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );

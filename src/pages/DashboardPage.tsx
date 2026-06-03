@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <SEO title="Dashboard — Kenya Tender Alerts & AI Bid Intelligence" description="Personalised dashboard for Kenyan suppliers: live MyGov, eGP and PPRA tender alerts, smart matches, saved bids and consortium tools." path="/" />
+      <SEO title="Kenya Tender Alerts Dashboard — MyGov, eGP, PPRA, County & NG-CDF" description="Free Kenyan tender alerts dashboard: live MyGov, eGP Kenya, PPRA, county and NG-CDF tenders, AI bid intelligence, AGPO matches, saved bids and consortium tools." path="/" keywords="Kenya tenders today, daily tender alerts Kenya, MyGov tenders, eGP Kenya tenders, PPRA tenders, county tenders Kenya, NG-CDF tenders, AGPO tenders, women youth PWD tenders Kenya, tender dashboard Kenya, AI tender matching Kenya" />
       {/* Header */}
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
