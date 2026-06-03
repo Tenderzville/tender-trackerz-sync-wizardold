@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
   for (const row of rows ?? []) {
     scanned++;
-    const desired = buildUrl(row.tender_number);
+    const desired = desiredUrl(row.source_url);
     if (row.source_url === desired) { skipped++; continue; }
     if (samples.length < 10) samples.push({ id: row.id, from: row.source_url, to: desired });
     if (!dryRun) {
