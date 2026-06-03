@@ -122,7 +122,9 @@ function AppRoutes() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppRoutes />
+      <LegacyRedirectGate>
+        <AppRoutes />
+      </LegacyRedirectGate>
     </QueryClientProvider>
   );
 }
