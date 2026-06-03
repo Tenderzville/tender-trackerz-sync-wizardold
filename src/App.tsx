@@ -1,8 +1,36 @@
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Route, Switch } from 'wouter';
+import { Route, Switch, useLocation } from 'wouter';
 import { queryClient } from '@/lib/queryClient';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useAuth } from '@/hooks/useAuth';
+
+// Legacy URLs → current canonical paths. Mirrors vercel.json redirects so the
+// preview environment and any non-Vercel host also resolve old links.
+const LEGACY_REDIRECTS: Record<string, string> = {
+  '/saved-tenders': '/saved',
+  '/learning-hub': '/community',
+  '/marketplace': '/providers',
+  '/analytics': '/',
+  '/performance': '/',
+  '/service-providers': '/providers',
+  '/browse': '/tenders',
+  '/source-ke': '/sourceke',
+  '/login': '/auth',
+  '/signup': '/auth',
+  '/register': '/auth',
+  '/dashboard': '/',
+  '/home': '/',
+};
+
+function LegacyRedirectGate({ children }: { children: React.ReactNode }) {
+  const [location, setLocation] = useLocation();
+  useEffect(() => {
+    const target = LEGACY_REDIRECTS[location];
+    if (target && target !== location) setLocation(target, { replace: true });
+  }, [location, setLocation]);
+  return <>{children}</>;
+}
 
 // Pages
 import DashboardPage from '@/pages/DashboardPage';
