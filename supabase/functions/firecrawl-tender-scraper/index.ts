@@ -264,6 +264,10 @@ async function scrapeWithFirecrawl(
   url: string,
   apiKey: string
 ): Promise<TenderData[]> {
+  // eGP is an SPA — needs more time + we also need the link list so we can
+  // reconstruct authoritative deep links of the form
+  // https://egpkenya.go.ke/tender/view-tender-notice/{id}/{hash}
+  const isEgp = source === 'egpkenya';
   const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -272,9 +276,9 @@ async function scrapeWithFirecrawl(
     },
     body: JSON.stringify({
       url,
-      formats: ['markdown'],
-      onlyMainContent: true,
-      waitFor: 3000,
+      formats: isEgp ? ['markdown', 'links'] : ['markdown'],
+      onlyMainContent: !isEgp,
+      waitFor: isEgp ? 8000 : 3000,
     }),
   });
 
@@ -285,13 +289,19 @@ async function scrapeWithFirecrawl(
 
   const scrapeData = await scrapeResponse.json();
   const markdown = scrapeData.data?.markdown || scrapeData.markdown || '';
+  const links: string[] = scrapeData.data?.links || scrapeData.links || [];
 
   if (markdown.length < 100) {
     console.log(`Not enough content from ${source}`);
     return [];
   }
 
-  return await parseWithAI(source, markdown);
+  // Collect eGP deep links so the AI can attach the correct authoritative URL
+  const egpDeepLinks = isEgp
+    ? links.filter((l) => /\/tender\/view-tender-notice\/\d+\/[A-F0-9]+/i.test(l))
+    : [];
+
+  return await parseWithAI(source, markdown, egpDeepLinks);
 }
 
 async function parseWithAI(source: string, markdown: string): Promise<TenderData[]> {
