@@ -1,4 +1,20 @@
 {
+  "redirects": [
+    { "source": "/saved-tenders", "destination": "/saved", "permanent": true },
+    { "source": "/learning-hub", "destination": "/community", "permanent": true },
+    { "source": "/marketplace", "destination": "/providers", "permanent": true },
+    { "source": "/analytics", "destination": "/", "permanent": true },
+    { "source": "/performance", "destination": "/", "permanent": true },
+    { "source": "/service-providers", "destination": "/providers", "permanent": true },
+    { "source": "/browse", "destination": "/tenders", "permanent": true },
+    { "source": "/source-ke", "destination": "/sourceke", "permanent": true },
+    { "source": "/login", "destination": "/auth", "permanent": true },
+    { "source": "/signup", "destination": "/auth", "permanent": true },
+    { "source": "/register", "destination": "/auth", "permanent": true },
+    { "source": "/dashboard", "destination": "/", "permanent": true },
+    { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/sitemap_index.xml", "destination": "/sitemap-index.xml", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -10,6 +26,13 @@
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/(sitemap.*\\.xml|sitemap-index\\.xml)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
   ]
