@@ -8,10 +8,14 @@ const corsHeaders = {
 };
 
 const BASE = 'https://egpkenya.go.ke/tender';
+const DEEP_LINK_RE = /\/tender\/view-tender-notice\/\d+\/[A-F0-9]+/i;
 
-function buildUrl(tenderNumber?: string | null): string {
-  if (!tenderNumber) return BASE;
-  return `${BASE}?search=${encodeURIComponent(tenderNumber)}`;
+// eGP Kenya is an SPA: ?search= is ignored. We can only deep-link when we have
+// the authoritative /view-tender-notice/{id}/{hash} URL captured at scrape time.
+// Anything else must fall back to the listing page.
+function desiredUrl(currentUrl?: string | null): string {
+  if (currentUrl && DEEP_LINK_RE.test(currentUrl)) return currentUrl;
+  return BASE;
 }
 
 Deno.serve(async (req) => {
@@ -62,7 +66,7 @@ Deno.serve(async (req) => {
 
   for (const row of rows ?? []) {
     scanned++;
-    const desired = buildUrl(row.tender_number);
+    const desired = desiredUrl(row.source_url);
     if (row.source_url === desired) { skipped++; continue; }
     if (samples.length < 10) samples.push({ id: row.id, from: row.source_url, to: desired });
     if (!dryRun) {

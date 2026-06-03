@@ -264,6 +264,10 @@ async function scrapeWithFirecrawl(
   url: string,
   apiKey: string
 ): Promise<TenderData[]> {
+  // eGP is an SPA — needs more time + we also need the link list so we can
+  // reconstruct authoritative deep links of the form
+  // https://egpkenya.go.ke/tender/view-tender-notice/{id}/{hash}
+  const isEgp = source === 'egpkenya';
   const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -272,9 +276,9 @@ async function scrapeWithFirecrawl(
     },
     body: JSON.stringify({
       url,
-      formats: ['markdown'],
-      onlyMainContent: true,
-      waitFor: 3000,
+      formats: isEgp ? ['markdown', 'links'] : ['markdown'],
+      onlyMainContent: !isEgp,
+      waitFor: isEgp ? 8000 : 3000,
     }),
   });
 
@@ -285,22 +289,32 @@ async function scrapeWithFirecrawl(
 
   const scrapeData = await scrapeResponse.json();
   const markdown = scrapeData.data?.markdown || scrapeData.markdown || '';
+  const links: string[] = scrapeData.data?.links || scrapeData.links || [];
 
   if (markdown.length < 100) {
     console.log(`Not enough content from ${source}`);
     return [];
   }
 
-  return await parseWithAI(source, markdown);
+  // Collect eGP deep links so the AI can attach the correct authoritative URL
+  const egpDeepLinks = isEgp
+    ? links.filter((l) => /\/tender\/view-tender-notice\/\d+\/[A-F0-9]+/i.test(l))
+    : [];
+
+  return await parseWithAI(source, markdown, egpDeepLinks);
 }
 
-async function parseWithAI(source: string, markdown: string): Promise<TenderData[]> {
+async function parseWithAI(source: string, markdown: string, deepLinks: string[] = []): Promise<TenderData[]> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) return [];
 
   const baseUrl = source === 'mygov' ? 'https://www.mygov.go.ke'
     : source === 'ppra' ? 'https://ppra.go.ke'
     : 'https://egpkenya.go.ke';
+
+  const deepLinkHint = deepLinks.length
+    ? `\n\nAUTHORITATIVE DEEP LINKS (eGP Kenya tender detail URLs found on the page — match each tender to one of these by the numeric tender ID embedded in the URL after /view-tender-notice/):\n${deepLinks.slice(0, 200).join('\n')}\n\nFor each tender, set sourceLink to the FULL matching URL from the list above when the tender ID matches.`
+    : '';
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -329,9 +343,9 @@ Each tender must have:
 - tenderNumber: Official reference/tender number if available
 - description: Brief description
 - tenderId: The numeric tender ID if visible (e.g., "Tender ID : 13401" → 13401)
-- sourceLink: Specific URL path to this tender if visible
+- sourceLink: Full deep-link URL to this tender if visible (prefer absolute URLs)
 
-IMPORTANT: Extract verbatim. Do NOT generate or paraphrase.
+IMPORTANT: Extract verbatim. Do NOT generate or paraphrase.${deepLinkHint}
 
 CONTENT:
 ${markdown.substring(0, 8000)}
@@ -355,19 +369,29 @@ Return ONLY a valid JSON array. If no tenders, return []`
 
     const parsed = JSON.parse(jsonStr.trim());
 
+    // Build a lookup of eGP deep links by numeric tender id (URL segment after /view-tender-notice/)
+    const egpLinkById = new Map<string, string>();
+    for (const link of deepLinks) {
+      const m = link.match(/\/view-tender-notice\/(\d+)\/[A-F0-9]+/i);
+      if (m) egpLinkById.set(m[1], link);
+    }
+
     return parsed.map((t: any) => {
       // Build the best possible source URL
       let sourceUrl: string;
-      const ref = t.tenderNumber || t.tenderId;
+      const tid = t.tenderId ? String(t.tenderId).match(/\d+/)?.[0] : undefined;
 
-      if (t.sourceLink?.startsWith('http')) {
+      if (source === 'egpkenya' && tid && egpLinkById.has(tid)) {
+        // Authoritative deep link reconstructed from scraped page links
+        sourceUrl = egpLinkById.get(tid)!;
+      } else if (t.sourceLink?.startsWith('http') && /view-tender-notice\/\d+\/[A-F0-9]+/i.test(t.sourceLink)) {
+        sourceUrl = t.sourceLink;
+      } else if (t.sourceLink?.startsWith('http')) {
         sourceUrl = t.sourceLink;
       } else if (t.sourceLink?.startsWith('/')) {
         sourceUrl = `${baseUrl}${t.sourceLink}`;
-      } else if (source === 'egpkenya' && ref) {
-        // eGP Kenya is an SPA — pre-fill the tender list search with the ref
-        sourceUrl = `https://egpkenya.go.ke/tender?search=${encodeURIComponent(String(ref))}`;
       } else if (source === 'egpkenya') {
+        // SPA listing — ?search= is ignored by the portal, so just link to the list
         sourceUrl = `https://egpkenya.go.ke/tender`;
       } else {
         sourceUrl = baseUrl;
