@@ -1800,6 +1800,22 @@ export type Database = {
     Functions: {
       cleanup_rate_limit_entries: { Args: never; Returns: undefined }
       get_founding_members_count: { Args: never; Returns: number }
+      get_quote_financier: {
+        Args: { _quote_id: number }
+        Returns: {
+          financier_contact: string
+          financier_details: string
+          financier_name: string
+        }[]
+      }
+      get_rfq_financier: {
+        Args: { _rfq_id: number }
+        Returns: {
+          financier_contact: string
+          financier_details: string
+          financier_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
