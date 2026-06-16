@@ -139,6 +139,10 @@ Deno.serve(async (req) => {
       const moreMessage = `➕ *${newTenders.length - 10} more tenders* available on the platform.\n\n` +
         `🔗 [View All Tenders](https://tenderproapp.tenderzville-portal.co.ke/browse)`;
       await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, moreMessage);
+      const overflowIds = newTenders.slice(10).map(t => (t as any).id);
+      if (overflowIds.length) {
+        await supabase.from('tenders').update({ telegram_notified_at: new Date().toISOString() }).in('id', overflowIds);
+      }
     }
 
     console.log(`Successfully sent ${sentCount} Telegram notifications`);
