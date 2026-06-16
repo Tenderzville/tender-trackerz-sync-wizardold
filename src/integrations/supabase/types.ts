@@ -1339,6 +1339,7 @@ export type Database = {
           description: string
           documents: string[] | null
           id: number
+          linkedin_posted_at: string | null
           location: string
           organization: string
           publish_date: string | null
@@ -1363,6 +1364,7 @@ export type Database = {
           description: string
           documents?: string[] | null
           id?: number
+          linkedin_posted_at?: string | null
           location: string
           organization: string
           publish_date?: string | null
@@ -1387,6 +1389,7 @@ export type Database = {
           description?: string
           documents?: string[] | null
           id?: number
+          linkedin_posted_at?: string | null
           location?: string
           organization?: string
           publish_date?: string | null
