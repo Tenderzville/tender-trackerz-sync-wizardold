@@ -41,13 +41,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get genuinely new tenders added in the last 14 hours (covers gap between 2x daily runs)
-    const fourteenHoursAgo = new Date(Date.now() - LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
+    // Pick unnotified tenders from the last 7 days (catches up missed runs)
+    const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: recentTenders, error } = await supabase
       .from('tenders')
       .select('id, title, organization, category, location, deadline, budget_estimate, tender_number, source_url, scraped_from')
-      .gte('created_at', fourteenHoursAgo)
+      .gte('created_at', cutoff)
+      .is('telegram_notified_at', null)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(50);
