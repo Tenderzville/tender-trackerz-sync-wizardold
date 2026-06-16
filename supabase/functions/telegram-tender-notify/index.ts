@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
       try {
         await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, message);
         sentCount++;
+        await supabase.from('tenders').update({ telegram_notified_at: new Date().toISOString() }).eq('id', tender.id);
         // Rate limit: 1 message per second
         await new Promise(resolve => setTimeout(resolve, 1100));
       } catch (msgError) {
