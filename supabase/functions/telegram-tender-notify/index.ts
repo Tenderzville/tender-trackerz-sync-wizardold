@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LOOKBACK_HOURS = 14;
+const LOOKBACK_DAYS = 7;
 // Suppliers need a real preparation window; never notify tenders with fewer than 14 days left.
 const MIN_SUPPLIER_PREP_DAYS = 14;
 
@@ -41,13 +41,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Get genuinely new tenders added in the last 14 hours (covers gap between 2x daily runs)
-    const fourteenHoursAgo = new Date(Date.now() - LOOKBACK_HOURS * 60 * 60 * 1000).toISOString();
+    // Pick unnotified tenders from the last 7 days (catches up missed runs)
+    const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: recentTenders, error } = await supabase
       .from('tenders')
       .select('id, title, organization, category, location, deadline, budget_estimate, tender_number, source_url, scraped_from')
-      .gte('created_at', fourteenHoursAgo)
+      .gte('created_at', cutoff)
+      .is('telegram_notified_at', null)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(50);
@@ -126,6 +127,7 @@ Deno.serve(async (req) => {
       try {
         await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, message);
         sentCount++;
+        await supabase.from('tenders').update({ telegram_notified_at: new Date().toISOString() }).eq('id', tender.id);
         // Rate limit: 1 message per second
         await new Promise(resolve => setTimeout(resolve, 1100));
       } catch (msgError) {
@@ -137,6 +139,10 @@ Deno.serve(async (req) => {
       const moreMessage = `➕ *${newTenders.length - 10} more tenders* available on the platform.\n\n` +
         `🔗 [View All Tenders](https://tenderproapp.tenderzville-portal.co.ke/browse)`;
       await sendTelegramMessage(TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, moreMessage);
+      const overflowIds = newTenders.slice(10).map(t => (t as any).id);
+      if (overflowIds.length) {
+        await supabase.from('tenders').update({ telegram_notified_at: new Date().toISOString() }).in('id', overflowIds);
+      }
     }
 
     console.log(`Successfully sent ${sentCount} Telegram notifications`);

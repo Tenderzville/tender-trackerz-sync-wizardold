@@ -1348,6 +1348,7 @@ export type Database = {
           source_url: string | null
           source_verified_at: string | null
           status: string | null
+          telegram_notified_at: string | null
           tender_number: string | null
           title: string
           updated_at: string | null
@@ -1371,6 +1372,7 @@ export type Database = {
           source_url?: string | null
           source_verified_at?: string | null
           status?: string | null
+          telegram_notified_at?: string | null
           tender_number?: string | null
           title: string
           updated_at?: string | null
@@ -1394,6 +1396,7 @@ export type Database = {
           source_url?: string | null
           source_verified_at?: string | null
           status?: string | null
+          telegram_notified_at?: string | null
           tender_number?: string | null
           title?: string
           updated_at?: string | null
