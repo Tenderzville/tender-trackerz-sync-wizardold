@@ -1,0 +1,2 @@
+ALTER TABLE public.tenders ADD COLUMN IF NOT EXISTS telegram_notified_at timestamptz;
+CREATE INDEX IF NOT EXISTS idx_tenders_telegram_notified ON public.tenders (telegram_notified_at, created_at) WHERE telegram_notified_at IS NULL;

@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LOOKBACK_HOURS = 14;
+const LOOKBACK_DAYS = 7;
 // Suppliers need a real preparation window; never notify tenders with fewer than 14 days left.
 const MIN_SUPPLIER_PREP_DAYS = 14;
 
