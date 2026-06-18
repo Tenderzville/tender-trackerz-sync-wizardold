@@ -7,9 +7,10 @@ import path from 'path';
 console.log('Starting TenderTracker Pro development server...');
 console.log('Redirecting to Vite development server...');
 
-// Change to client directory and start Vite
-const clientPath = path.join(process.cwd(), 'client');
-process.chdir(clientPath);
+// Run Vite from the project root so it picks up vite.config.ts (with `@` alias),
+// postcss.config.js and tailwind.config.ts. The root `index.html` references
+// `/client/src/main.tsx` directly.
+const clientPath = process.cwd();
 
 // Start Vite development server
 const viteProcess = exec('npx vite --host 0.0.0.0 --port 8080', (error, stdout, stderr) => {
