@@ -17,10 +17,8 @@ import authBackground from '@/assets/auth-background.jpg';
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { signIn, signUp, signInWithMagicLink, resetPassword, updatePassword, isAuthenticated, isLoading } = useAuth();
-  const { initiateOAuth, isLoading: stytchLoading } = useStytch();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'supabase' | 'stytch'>('supabase');
   const [activeTab, setActiveTab] = useState<'signin' | 'magiclink' | 'reset' | 'signup'>('signin');
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [resetEmail, setResetEmail] = useState('');
