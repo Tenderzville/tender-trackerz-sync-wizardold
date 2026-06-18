@@ -157,7 +157,7 @@ export default function AuthPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setError(null);
-        setAuthMethod('supabase');
+        setActiveTab('signin');
         setIsPasswordRecovery(true);
         setMessage('Please enter your new password below.');
         // Now safe to clean the URL.
