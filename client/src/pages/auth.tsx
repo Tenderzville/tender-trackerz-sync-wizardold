@@ -9,19 +9,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
-import { useStytch } from '@/hooks/useStytch';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, ArrowLeft, Mail, Lock, Chrome, Github, Briefcase, ShoppingCart } from 'lucide-react';
+import { Bell, ArrowLeft, Mail, Lock, Briefcase, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import authBackground from '@/assets/auth-background.jpg';
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { signIn, signUp, signInWithMagicLink, resetPassword, updatePassword, isAuthenticated, isLoading } = useAuth();
-  const { initiateOAuth, isLoading: stytchLoading } = useStytch();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'supabase' | 'stytch'>('supabase');
   const [activeTab, setActiveTab] = useState<'signin' | 'magiclink' | 'reset' | 'signup'>('signin');
   const [magicLinkEmail, setMagicLinkEmail] = useState('');
   const [resetEmail, setResetEmail] = useState('');
@@ -160,7 +157,7 @@ export default function AuthPage() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setError(null);
-        setAuthMethod('supabase');
+        setActiveTab('signin');
         setIsPasswordRecovery(true);
         setMessage('Please enter your new password below.');
         // Now safe to clean the URL.
@@ -394,95 +391,12 @@ export default function AuthPage() {
             <CardHeader className="text-center space-y-4">
               <CardTitle className="text-2xl">Welcome to TenderAlert</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Choose your preferred authentication method
+                Sign in to access your tender dashboard
               </p>
-              
-              {/* Auth Method Toggle */}
-              <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                <Button
-                  variant={authMethod === 'supabase' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setAuthMethod('supabase')}
-                >
-                  Email Auth
-                </Button>
-                <Button
-                  variant={authMethod === 'stytch' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setAuthMethod('stytch')}
-                >
-                  OAuth (Stytch)
-                </Button>
-              </div>
             </CardHeader>
             <CardContent>
-              {authMethod === 'stytch' ? (
-                /* Stytch OAuth Options */
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('google');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <Chrome className="h-4 w-4 mr-2" />
-                      Continue with Google
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('github');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <Github className="h-4 w-4 mr-2" />
-                      Continue with GitHub
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('microsoft');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 23 23">
-                        <path fill="#f35325" d="M0 0h11v11H0z"/>
-                        <path fill="#81bc06" d="M12 0h11v11H12z"/>
-                        <path fill="#05a6f0" d="M0 12h11v11H0z"/>
-                        <path fill="#ffba08" d="M12 12h11v11H12z"/>
-                      </svg>
-                      Continue with Microsoft
-                    </Button>
-                  </div>
-                  
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <div className="text-center text-sm text-muted-foreground">
-                    <p>Secure OAuth powered by Stytch</p>
-                  </div>
-                </div>
-              ) : (
-                /* Supabase Email Auth */
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="signin"><Lock className="h-4 w-4" /></TabsTrigger>
                 <TabsTrigger value="magiclink"><Mail className="h-4 w-4" /></TabsTrigger>
@@ -719,8 +633,7 @@ export default function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
-                </Tabs>
-              )}
+              </Tabs>
             </CardContent>
           </Card>
         </div>
