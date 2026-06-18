@@ -391,95 +391,12 @@ export default function AuthPage() {
             <CardHeader className="text-center space-y-4">
               <CardTitle className="text-2xl">Welcome to TenderAlert</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Choose your preferred authentication method
+                Sign in to access your tender dashboard
               </p>
-              
-              {/* Auth Method Toggle */}
-              <div className="flex gap-2 p-1 bg-muted rounded-lg">
-                <Button
-                  variant={authMethod === 'supabase' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setAuthMethod('supabase')}
-                >
-                  Email Auth
-                </Button>
-                <Button
-                  variant={authMethod === 'stytch' ? 'default' : 'ghost'}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setAuthMethod('stytch')}
-                >
-                  OAuth (Stytch)
-                </Button>
-              </div>
             </CardHeader>
             <CardContent>
-              {authMethod === 'stytch' ? (
-                /* Stytch OAuth Options */
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('google');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <Chrome className="h-4 w-4 mr-2" />
-                      Continue with Google
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('github');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <Github className="h-4 w-4 mr-2" />
-                      Continue with GitHub
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        setError(null);
-                        const result = await initiateOAuth('microsoft');
-                        if (!result.success) setError(result.error || 'OAuth failed');
-                      }}
-                      disabled={stytchLoading}
-                    >
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 23 23">
-                        <path fill="#f35325" d="M0 0h11v11H0z"/>
-                        <path fill="#81bc06" d="M12 0h11v11H12z"/>
-                        <path fill="#05a6f0" d="M0 12h11v11H0z"/>
-                        <path fill="#ffba08" d="M12 12h11v11H12z"/>
-                      </svg>
-                      Continue with Microsoft
-                    </Button>
-                  </div>
-                  
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <div className="text-center text-sm text-muted-foreground">
-                    <p>Secure OAuth powered by Stytch</p>
-                  </div>
-                </div>
-              ) : (
-                /* Supabase Email Auth */
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="signin"><Lock className="h-4 w-4" /></TabsTrigger>
                 <TabsTrigger value="magiclink"><Mail className="h-4 w-4" /></TabsTrigger>
