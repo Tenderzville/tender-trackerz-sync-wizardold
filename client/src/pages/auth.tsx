@@ -633,8 +633,7 @@ export default function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
-                </Tabs>
-              )}
+              </Tabs>
             </CardContent>
           </Card>
         </div>
