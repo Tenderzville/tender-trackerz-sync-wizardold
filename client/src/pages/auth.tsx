@@ -9,9 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAuth } from '@/hooks/useAuth';
-import { useStytch } from '@/hooks/useStytch';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell, ArrowLeft, Mail, Lock, Chrome, Github, Briefcase, ShoppingCart } from 'lucide-react';
+import { Bell, ArrowLeft, Mail, Lock, Briefcase, ShoppingCart } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import authBackground from '@/assets/auth-background.jpg';
 
