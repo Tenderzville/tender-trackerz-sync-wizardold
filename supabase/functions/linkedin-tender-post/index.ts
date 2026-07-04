@@ -60,10 +60,11 @@ Deno.serve(async (req) => {
       }, 500);
     }
 
-    let body: { tenderIds?: number[]; limit?: number; dryRun?: boolean } = {};
+    let body: { tenderIds?: number[]; limit?: number; dryRun?: boolean; lookbackDays?: number } = {};
     try { body = await req.json(); } catch { /* allow empty body */ }
     const limit = Math.min(Math.max(body.limit ?? DEFAULT_LIMIT, 1), 10);
     const dryRun = body.dryRun === true;
+    const lookbackDays = Math.min(Math.max(body.lookbackDays ?? LOOKBACK_DAYS, 1), 60);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
     );
 
     // Pick tenders
-    const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
     const minDeadline = new Date();
     minDeadline.setHours(0, 0, 0, 0);
     minDeadline.setDate(minDeadline.getDate() + MIN_PREP_DAYS);
