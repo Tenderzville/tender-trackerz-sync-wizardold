@@ -60,10 +60,11 @@ Deno.serve(async (req) => {
       }, 500);
     }
 
-    let body: { tenderIds?: number[]; limit?: number; dryRun?: boolean } = {};
+    let body: { tenderIds?: number[]; limit?: number; dryRun?: boolean; lookbackDays?: number } = {};
     try { body = await req.json(); } catch { /* allow empty body */ }
     const limit = Math.min(Math.max(body.limit ?? DEFAULT_LIMIT, 1), 10);
     const dryRun = body.dryRun === true;
+    const lookbackDays = Math.min(Math.max(body.lookbackDays ?? LOOKBACK_DAYS, 1), 60);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
