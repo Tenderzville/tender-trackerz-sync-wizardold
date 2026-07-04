@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     );
 
     // Pick tenders
-    const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
     const minDeadline = new Date();
     minDeadline.setHours(0, 0, 0, 0);
     minDeadline.setDate(minDeadline.getDate() + MIN_PREP_DAYS);
