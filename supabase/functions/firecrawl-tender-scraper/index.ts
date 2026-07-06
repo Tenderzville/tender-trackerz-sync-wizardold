@@ -268,6 +268,18 @@ async function scrapeWithFirecrawl(
   // reconstruct authoritative deep links of the form
   // https://egpkenya.go.ke/tender/view-tender-notice/{id}/{hash}
   const isEgp = source === 'egpkenya';
+  const isMygov = source === 'mygov';
+
+  // Per-source Firecrawl tuning — egpkenya and mygov are JS-heavy / bot-guarded,
+  // so we bump waitFor and set a generous timeout to avoid SCRAPE_TIMEOUT.
+  const waitFor = isEgp ? 15000 : isMygov ? 8000 : 3000;
+  const timeout = isEgp ? 90000 : isMygov ? 60000 : 45000;
+  // Grab links for both eGP (deep-link reconstruction) and MyGov (post URLs).
+  const formats = (isEgp || isMygov) ? ['markdown', 'links'] : ['markdown'];
+  // MyGov main-content extractor was returning "Not enough content" — turn it
+  // off so the full listing markup reaches the AI parser.
+  const onlyMainContent = !isEgp && !isMygov;
+
   const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -276,9 +288,10 @@ async function scrapeWithFirecrawl(
     },
     body: JSON.stringify({
       url,
-      formats: isEgp ? ['markdown', 'links'] : ['markdown'],
-      onlyMainContent: !isEgp,
-      waitFor: isEgp ? 8000 : 3000,
+      formats,
+      onlyMainContent,
+      waitFor,
+      timeout,
     }),
   });
 
@@ -292,9 +305,10 @@ async function scrapeWithFirecrawl(
   const links: string[] = scrapeData.data?.links || scrapeData.links || [];
 
   if (markdown.length < 100) {
-    console.log(`Not enough content from ${source}`);
+    console.log(`Not enough content from ${source} (markdown length: ${markdown.length}, links: ${links.length})`);
     return [];
   }
+
 
   // Collect eGP deep links so the AI can attach the correct authoritative URL
   const egpDeepLinks = isEgp
