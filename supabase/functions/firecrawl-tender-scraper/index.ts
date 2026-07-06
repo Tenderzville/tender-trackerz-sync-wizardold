@@ -435,10 +435,14 @@ Return ONLY a valid JSON array. If no tenders, return []`
 // Save tender to database, checking for duplicates
 // ============================================================
 async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boolean> {
-  if (!hasMinimumPreparationWindow(tender.deadline)) {
-    console.log(`Skipped short-deadline tender (${tender.deadline}): ${tender.title.substring(0, 50)}...`);
-    return false;
+  // Short-window tenders are still saved (visible to admins in the queue);
+  // the enforce_tender_supplier_prep_window trigger will flag them as
+  // status='short_window' so downstream distribution (LinkedIn/Telegram) skips them.
+  const isShortWindow = !hasMinimumPreparationWindow(tender.deadline);
+  if (isShortWindow) {
+    console.log(`Saving short-window tender for admin review (${tender.deadline}): ${tender.title.substring(0, 50)}...`);
   }
+
 
   // Check for duplicates by title OR tender_number
   const { data: existing } = await supabase
