@@ -268,6 +268,18 @@ async function scrapeWithFirecrawl(
   // reconstruct authoritative deep links of the form
   // https://egpkenya.go.ke/tender/view-tender-notice/{id}/{hash}
   const isEgp = source === 'egpkenya';
+  const isMygov = source === 'mygov';
+
+  // Per-source Firecrawl tuning — egpkenya and mygov are JS-heavy / bot-guarded,
+  // so we bump waitFor and set a generous timeout to avoid SCRAPE_TIMEOUT.
+  const waitFor = isEgp ? 15000 : isMygov ? 8000 : 3000;
+  const timeout = isEgp ? 90000 : isMygov ? 60000 : 45000;
+  // Grab links for both eGP (deep-link reconstruction) and MyGov (post URLs).
+  const formats = (isEgp || isMygov) ? ['markdown', 'links'] : ['markdown'];
+  // MyGov main-content extractor was returning "Not enough content" — turn it
+  // off so the full listing markup reaches the AI parser.
+  const onlyMainContent = !isEgp && !isMygov;
+
   const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
     method: 'POST',
     headers: {
@@ -276,9 +288,10 @@ async function scrapeWithFirecrawl(
     },
     body: JSON.stringify({
       url,
-      formats: isEgp ? ['markdown', 'links'] : ['markdown'],
-      onlyMainContent: !isEgp,
-      waitFor: isEgp ? 8000 : 3000,
+      formats,
+      onlyMainContent,
+      waitFor,
+      timeout,
     }),
   });
 
@@ -292,9 +305,10 @@ async function scrapeWithFirecrawl(
   const links: string[] = scrapeData.data?.links || scrapeData.links || [];
 
   if (markdown.length < 100) {
-    console.log(`Not enough content from ${source}`);
+    console.log(`Not enough content from ${source} (markdown length: ${markdown.length}, links: ${links.length})`);
     return [];
   }
+
 
   // Collect eGP deep links so the AI can attach the correct authoritative URL
   const egpDeepLinks = isEgp
@@ -421,10 +435,14 @@ Return ONLY a valid JSON array. If no tenders, return []`
 // Save tender to database, checking for duplicates
 // ============================================================
 async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boolean> {
-  if (!hasMinimumPreparationWindow(tender.deadline)) {
-    console.log(`Skipped short-deadline tender (${tender.deadline}): ${tender.title.substring(0, 50)}...`);
-    return false;
+  // Short-window tenders are still saved (visible to admins in the queue);
+  // the enforce_tender_supplier_prep_window trigger will flag them as
+  // status='short_window' so downstream distribution (LinkedIn/Telegram) skips them.
+  const isShortWindow = !hasMinimumPreparationWindow(tender.deadline);
+  if (isShortWindow) {
+    console.log(`Saving short-window tender for admin review (${tender.deadline}): ${tender.title.substring(0, 50)}...`);
   }
+
 
   // Check for duplicates by title OR tender_number
   const { data: existing } = await supabase
