@@ -197,9 +197,14 @@ Deno.serve(async (req) => {
 async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
   const tenders: TenderData[] = [];
 
-  // Fetch multiple pages to get more tenders
-  for (let page = 1; page <= 3; page++) {
-    const apiUrl = `https://tenders.go.ke/api/active-tenders?perpage=50&page=${page}`;
+  // The API returns results sorted by close_at ASC (closing-soonest first).
+  // Early pages are all short-window tenders that fail the 14-day supplier prep
+  // filter, so we MUST paginate deep enough to reach long-window tenders.
+  // Cap at 25 pages (1,250 tenders) to keep runtime bounded.
+  const PER_PAGE = 50;
+  const MAX_PAGES = 25;
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const apiUrl = `https://tenders.go.ke/api/active-tenders?perpage=${PER_PAGE}&page=${page}`;
     console.log(`Fetching tenders.go.ke API page ${page}...`);
 
     const response = await fetch(apiUrl, {
@@ -247,7 +252,7 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
       });
     }
 
-    console.log(`Page ${page}: extracted ${items.length} tenders`);
+    console.log(`Page ${page}: extracted ${items.length} tenders (running total: ${tenders.length})`);
 
     // Stop if we've reached the last page
     if (page >= (json.last_page || 1)) break;
