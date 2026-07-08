@@ -197,60 +197,58 @@ Deno.serve(async (req) => {
 async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
   const tenders: TenderData[] = [];
 
-  // Fetch multiple pages to get more tenders
-  for (let page = 1; page <= 3; page++) {
-    const apiUrl = `https://tenders.go.ke/api/active-tenders?perpage=50&page=${page}`;
-    console.log(`Fetching tenders.go.ke API page ${page}...`);
+  // The API returns results sorted by close_at ASC (closing-soonest first).
+  // Early pages are all short-window tenders that fail the 14-day supplier prep
+  // filter, so we MUST paginate deep enough to reach long-window tenders.
+  // Fetch pages in parallel to stay under edge-function wall-time limits.
+  const PER_PAGE = 50;
+  const MAX_PAGES = 20;
+  const pageNumbers = Array.from({ length: MAX_PAGES }, (_, i) => i + 1);
 
-    const response = await fetch(apiUrl, {
-      headers: { 'Accept': 'application/json' },
+  const fetchPage = async (page: number) => {
+    const apiUrl = `https://tenders.go.ke/api/active-tenders?perpage=${PER_PAGE}&page=${page}`;
+    try {
+      const response = await fetch(apiUrl, { headers: { 'Accept': 'application/json' } });
+      if (!response.ok) {
+        console.error(`tenders.go.ke page ${page} -> HTTP ${response.status}`);
+        return [] as any[];
+      }
+      const json = await response.json();
+      return (json.data || []) as any[];
+    } catch (err) {
+      console.error(`tenders.go.ke page ${page} error:`, err);
+      return [] as any[];
+    }
+  };
+
+  const pages = await Promise.all(pageNumbers.map(fetchPage));
+  const items = pages.flat();
+  console.log(`tenders.go.ke: fetched ${items.length} items across ${MAX_PAGES} pages`);
+
+  for (const item of items) {
+    const sourceUrl = `https://tenders.go.ke/tenders/${item.id}`;
+    const category = mapProcurementCategory(
+      item.procurement_category?.title || item.procurement_category?.code || ''
+    );
+    const deadline = item.close_at
+      ? new Date(item.close_at).toISOString().split('T')[0]
+      : getFutureDate(30);
+    const location = item.pe?.city || item.pe?.physical_address || 'Kenya';
+
+    tenders.push({
+      title: item.title || 'Untitled Tender',
+      description: item.description || `${item.title} - Procurement by ${item.pe?.name || 'Government of Kenya'}`,
+      organization: item.pe?.name || 'Government of Kenya',
+      category,
+      location,
+      deadline,
+      budgetEstimate: 0,
+      scrapedFrom: 'tenders.go.ke',
+      sourceUrl,
+      tenderNumber: item.tender_ref || undefined,
+      contactEmail: item.pe?.email || undefined,
+      contactPhone: item.pe?.telephone || undefined,
     });
-
-    if (!response.ok) {
-      console.error(`tenders.go.ke API returned ${response.status}`);
-      break;
-    }
-
-    const json = await response.json();
-    const items = json.data || [];
-
-    for (const item of items) {
-      // CRITICAL: The verified working deep-link format
-      const sourceUrl = `https://tenders.go.ke/tenders/${item.id}`;
-
-      const category = mapProcurementCategory(
-        item.procurement_category?.title || item.procurement_category?.code || ''
-      );
-
-      const deadline = item.close_at
-        ? new Date(item.close_at).toISOString().split('T')[0]
-        : getFutureDate(30);
-
-      // Extract location from PE county if available
-      const location = item.pe?.city || item.pe?.physical_address || 'Kenya';
-
-      tenders.push({
-        title: item.title || 'Untitled Tender',
-        description: item.description || `${item.title} - Procurement by ${item.pe?.name || 'Government of Kenya'}`,
-        organization: item.pe?.name || 'Government of Kenya',
-        category,
-        location,
-        deadline,
-        // tender_fee is the bid-document fee, NOT the procurement budget.
-        // Keep budget unknown unless an official estimated procurement value is available.
-        budgetEstimate: 0,
-        scrapedFrom: 'tenders.go.ke',
-        sourceUrl,  // VERIFIED deep link: https://tenders.go.ke/tenders/{id}
-        tenderNumber: item.tender_ref || undefined,
-        contactEmail: item.pe?.email || undefined,
-        contactPhone: item.pe?.telephone || undefined,
-      });
-    }
-
-    console.log(`Page ${page}: extracted ${items.length} tenders`);
-
-    // Stop if we've reached the last page
-    if (page >= (json.last_page || 1)) break;
   }
 
   return tenders;
