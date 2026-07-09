@@ -273,6 +273,21 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Monitoring & Demo Video
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Live pipeline health for scraper, Telegram and LinkedIn distribution. Also configure the landing page demo video (YouTube).
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <a href="/admin/monitoring">Open monitoring</a>
+            </Button>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5" />
               Resync eGP Kenya Links
             </CardTitle>

@@ -43,6 +43,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import AdminVerificationPage from '@/pages/AdminVerificationPage';
 import AdminWebhooksPage from '@/pages/AdminWebhooksPage';
 import AdminTenderQueuePage from '@/pages/AdminTenderQueuePage';
+import AdminMonitoringPage from '@/pages/AdminMonitoringPage';
 import AIAnalysisPage from '@/pages/AIAnalysisPage';
 import TermsPage from '@/pages/TermsPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -93,6 +94,7 @@ function AppRoutes() {
         <Route path="/admin/verification" component={AdminVerificationPage} />
         <Route path="/admin/webhooks" component={AdminWebhooksPage} />
         <Route path="/admin/tender-queue" component={AdminTenderQueuePage} />
+        <Route path="/admin/monitoring" component={AdminMonitoringPage} />
         <Route path="/ai-analysis" component={AIAnalysisPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/settings" component={SettingsPage} />

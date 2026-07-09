@@ -3,19 +3,50 @@ import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
-import { 
-  Bell, 
-  Users, 
-  Brain, 
-  Shield, 
-  Smartphone, 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Bell,
+  Users,
+  Brain,
+  Shield,
+  Smartphone,
   TrendingUp,
   Star,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  PlayCircle
 } from "lucide-react";
 
+function toEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+    if (u.hostname.includes('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) return `https://www.youtube.com/embed/${v}`;
+      if (u.pathname.startsWith('/embed/')) return url;
+    }
+  } catch { /* noop */ }
+  return null;
+}
+
 export default function Landing() {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const [demoUrl, setDemoUrl] = useState<string>('');
+
+  useEffect(() => {
+    supabase.from('site_settings').select('value').eq('key', 'demo_video_url').maybeSingle()
+      .then(({ data }) => {
+        const url = (data?.value as any)?.url;
+        if (typeof url === 'string') setDemoUrl(url);
+      });
+  }, []);
+
+  const embedUrl = toEmbedUrl(demoUrl);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, eGP Kenya & PPRA, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
@@ -60,12 +91,37 @@ export default function Landing() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="px-8">
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8"
+              onClick={() => embedUrl ? setDemoOpen(true) : window.alert('Demo video is not configured yet.')}
+              disabled={!embedUrl}
+              aria-label="Watch product demo"
+            >
+              <PlayCircle className="mr-2 h-5 w-5" />
               Watch Demo
             </Button>
           </div>
         </div>
       </section>
+
+      <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>Product demo</DialogTitle></DialogHeader>
+          {embedUrl && (
+            <div className="aspect-video w-full">
+              <iframe
+                src={embedUrl}
+                title="TenderAlert demo"
+                className="w-full h-full rounded-lg"
+                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Features Grid */}
       <section className="py-20 px-4 bg-white dark:bg-slate-800">
