@@ -47,6 +47,7 @@ export default function Landing() {
 
   const embedUrl = toEmbedUrl(demoUrl);
 
+  return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, eGP Kenya & PPRA, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
       {/* Header */}
@@ -90,12 +91,37 @@ export default function Landing() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </a>
             </Button>
-            <Button variant="outline" size="lg" className="px-8">
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8"
+              onClick={() => embedUrl ? setDemoOpen(true) : window.alert('Demo video is not configured yet.')}
+              disabled={!embedUrl}
+              aria-label="Watch product demo"
+            >
+              <PlayCircle className="mr-2 h-5 w-5" />
               Watch Demo
             </Button>
           </div>
         </div>
       </section>
+
+      <Dialog open={demoOpen} onOpenChange={setDemoOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader><DialogTitle>Product demo</DialogTitle></DialogHeader>
+          {embedUrl && (
+            <div className="aspect-video w-full">
+              <iframe
+                src={embedUrl}
+                title="TenderAlert demo"
+                className="w-full h-full rounded-lg"
+                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Features Grid */}
       <section className="py-20 px-4 bg-white dark:bg-slate-800">
