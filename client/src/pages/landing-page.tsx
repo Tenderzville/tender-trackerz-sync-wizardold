@@ -3,6 +3,7 @@ import { SEO } from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { TenderTicker } from "@/components/landing/TenderTicker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,18 +72,23 @@ export default function Landing() {
         </div>
       </header>
 
+      {/* Live tender headlines */}
+      <TenderTicker />
+
       {/* Hero Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
-          <Badge variant="secondary" className="mb-4">
-            🇰🇪 Made for Kenyan Suppliers
-          </Badge>
           <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            Kenya's Premier Tender Notification Platform
+            Stop hunting tenders across 47 counties. We do it for you.
           </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-3xl mx-auto">
-            Never miss a tender opportunity again. Get AI-powered insights, form winning consortiums, 
-            and access professional services to boost your success rate.
+          <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-3xl mx-auto">
+            Built for Kenyan SME suppliers and contractors who bid on county and national
+            government work. Every MyGov, eGP and PPRA notice — matched to what you actually
+            supply, with at least 14 days to prepare a serious bid.
+          </p>
+          <p className="text-base text-slate-500 dark:text-slate-400 mb-8 max-w-2xl mx-auto">
+            Replaces roughly 8 hours a week of portal-checking, and flags the tenders you are
+            realistically compliant for before you spend money on bid documents.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="px-8" asChild>
