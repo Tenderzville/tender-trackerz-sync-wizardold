@@ -100,7 +100,8 @@ export default function Landing() {
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-3xl mx-auto">
             Built for Kenyan SME suppliers and contractors who bid on{" "}
-            {focusLabel ?? "county and national"} government work. Every MyGov, eGP and PPRA
+            {focusLabel ? `${focusLabel} work` : "county and national government work"}. Every MyGov, eGP and PPRA
+
             notice — matched to what you actually supply, with at least 14 days to prepare a
             serious bid.
           </p>
