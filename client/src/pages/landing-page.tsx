@@ -79,13 +79,17 @@ export default function Landing() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            Stop hunting tenders across 47 counties. We do it for you.
+            {focusLabel
+              ? `Stop hunting ${focusLabel} tenders. We do it for you.`
+              : "Stop hunting tenders across 47 counties. We do it for you."}
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-3xl mx-auto">
-            Built for Kenyan SME suppliers and contractors who bid on county and national
-            government work. Every MyGov, eGP and PPRA notice — matched to what you actually
-            supply, with at least 14 days to prepare a serious bid.
+            Built for Kenyan SME suppliers and contractors who bid on{" "}
+            {focusLabel ?? "county and national"} government work. Every MyGov, eGP and PPRA
+            notice — matched to what you actually supply, with at least 14 days to prepare a
+            serious bid.
           </p>
+
           <p className="text-base text-slate-500 dark:text-slate-400 mb-8 max-w-2xl mx-auto">
             Replaces roughly 8 hours a week of portal-checking, and flags the tenders you are
             realistically compliant for before you spend money on bid documents.
