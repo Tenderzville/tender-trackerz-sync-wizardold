@@ -48,6 +48,19 @@ export default function Landing() {
 
   const embedUrl = toEmbedUrl(demoUrl);
 
+  const { scope, counties } = useCountyFocus();
+  const focusLabel =
+    scope === "national"
+      ? "national government"
+      : counties.length === 1
+        ? `${counties[0]} County`
+        : counties.length > 1
+          ? `${counties.slice(0, 2).join(" & ")}${counties.length > 2 ? ` +${counties.length - 2} more` : ""} county`
+          : scope === "county"
+            ? "county government"
+            : null;
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, eGP Kenya & PPRA, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
