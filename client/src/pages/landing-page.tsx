@@ -7,6 +7,8 @@ import { TenderTicker } from "@/components/landing/TenderTicker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCountyFocus } from "@/hooks/use-county-focus";
+
 import {
   Bell,
   Users,
@@ -48,6 +50,19 @@ export default function Landing() {
 
   const embedUrl = toEmbedUrl(demoUrl);
 
+  const { scope, counties } = useCountyFocus();
+  const focusLabel =
+    scope === "national"
+      ? "national government"
+      : counties.length === 1
+        ? `${counties[0]} County`
+        : counties.length > 1
+          ? `${counties.slice(0, 2).join(" & ")}${counties.length > 2 ? ` +${counties.length - 2} more` : ""} county`
+          : scope === "county"
+            ? "county government"
+            : null;
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, eGP Kenya & PPRA, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
@@ -79,13 +94,18 @@ export default function Landing() {
       <section className="py-20 px-4">
         <div className="container mx-auto text-center">
           <h1 className="text-4xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-            Stop hunting tenders across 47 counties. We do it for you.
+            {focusLabel
+              ? `Stop hunting ${focusLabel} tenders. We do it for you.`
+              : "Stop hunting tenders across 47 counties. We do it for you."}
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-3xl mx-auto">
-            Built for Kenyan SME suppliers and contractors who bid on county and national
-            government work. Every MyGov, eGP and PPRA notice — matched to what you actually
-            supply, with at least 14 days to prepare a serious bid.
+            Built for Kenyan SME suppliers and contractors who bid on{" "}
+            {focusLabel ? `${focusLabel} work` : "county and national government work"}. Every MyGov, eGP and PPRA
+
+            notice — matched to what you actually supply, with at least 14 days to prepare a
+            serious bid.
           </p>
+
           <p className="text-base text-slate-500 dark:text-slate-400 mb-8 max-w-2xl mx-auto">
             Replaces roughly 8 hours a week of portal-checking, and flags the tenders you are
             realistically compliant for before you spend money on bid documents.
