@@ -7,6 +7,8 @@ import { TenderTicker } from "@/components/landing/TenderTicker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCountyFocus } from "@/hooks/use-county-focus";
+
 import {
   Bell,
   Users,
