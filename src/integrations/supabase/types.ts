@@ -1349,6 +1349,59 @@ export type Database = {
         }
         Relationships: []
       }
+      tender_posters: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          ends_at: string | null
+          id: number
+          image_path: string
+          is_active: boolean
+          link_url: string | null
+          starts_at: string
+          tender_id: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          ends_at?: string | null
+          id?: never
+          image_path: string
+          is_active?: boolean
+          link_url?: string | null
+          starts_at?: string
+          tender_id?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: never
+          image_path?: string
+          is_active?: boolean
+          link_url?: string | null
+          starts_at?: string
+          tender_id?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tender_posters_tender_id_fkey"
+            columns: ["tender_id"]
+            isOneToOne: false
+            referencedRelation: "tenders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenders: {
         Row: {
           budget_estimate: number | null
