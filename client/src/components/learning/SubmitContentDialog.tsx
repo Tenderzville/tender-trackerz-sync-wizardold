@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { useSubmitGuide, useSubmitTemplate, useSubmitCourse } from "@/hooks/use-learning-hub";
+import { FileUploadField } from "@/components/upload/FileUploadField";
+import { StoredFile } from "@/lib/storage";
 
 type ContentType = "guide" | "template" | "course";
 
@@ -25,6 +27,7 @@ export function SubmitContentDialog() {
   // Template fields
   const [format, setFormat] = useState("PDF");
   const [fileUrl, setFileUrl] = useState("");
+  const [templateFiles, setTemplateFiles] = useState<StoredFile[]>([]);
 
   // Course fields
   const [level, setLevel] = useState("Beginner");
@@ -41,7 +44,7 @@ export function SubmitContentDialog() {
 
   const resetForm = () => {
     setTitle(""); setDescription(""); setContent(""); setCategory("Beginner");
-    setReadTime("10 min"); setFormat("PDF"); setFileUrl(""); setLevel("Beginner");
+    setReadTime("10 min"); setFormat("PDF"); setFileUrl(""); setTemplateFiles([]); setLevel("Beginner");
     setModules(1); setDuration("1 hour"); setTopics(""); setCourseUrl("");
   };
 
@@ -51,8 +54,10 @@ export function SubmitContentDialog() {
     if (type === "guide") {
       await submitGuide.mutateAsync({ title, description, content, category, read_time: readTime });
     } else if (type === "template") {
-      if (!fileUrl.trim()) return;
-      await submitTemplate.mutateAsync({ title, description, format, category, file_url: fileUrl });
+      const uploaded = templateFiles[0]?.path;
+      const source = uploaded ? `learning-materials:${uploaded}` : fileUrl.trim();
+      if (!source) return;
+      await submitTemplate.mutateAsync({ title, description, format, category, file_url: source });
     } else {
       await submitCourse.mutateAsync({
         title, description, level, modules, duration,
@@ -136,10 +141,19 @@ export function SubmitContentDialog() {
 
           {type === "template" && (
             <>
-              <div>
-                <Label>File URL *</Label>
+              <div className="space-y-2">
+                <Label>Template file *</Label>
+                <FileUploadField
+                  bucket="learning-materials"
+                  label="Upload file"
+                  accept={["application/pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]}
+                  maxFiles={1}
+                  multiple={false}
+                  value={templateFiles}
+                  onChange={setTemplateFiles}
+                />
+                <p className="text-xs text-muted-foreground">Or paste a link instead</p>
                 <Input value={fileUrl} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://drive.google.com/..." type="url" />
-                <p className="text-xs text-muted-foreground mt-1">Upload to Google Drive, Dropbox, or any file host and paste the link</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
