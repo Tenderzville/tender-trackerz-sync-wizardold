@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileUploadField } from "@/components/upload/FileUploadField";
 import { StoredFile, getViewUrl } from "@/lib/storage";
-import { KENYA_COUNTIES } from "@/lib/counties";
+import { KENYA_COUNTIES } from "@/components/landing/TenderTicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Loader2, Pencil, Image as ImageIcon } from "lucide-react";
 
