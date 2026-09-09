@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield, Users, FileText, Activity, Database, AlertCircle, Download, Zap, History, Megaphone, Check, X, GraduationCap, BookOpen, Loader2, Mail } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
+import { PosterManager } from '@/components/admin/PosterManager';
 
 interface Stats {
   totalUsers: number;
@@ -571,9 +572,18 @@ export default function AdminDashboard() {
             <Megaphone className="h-3.5 w-3.5" />
             {t('admin.adApproval')} {pendingAds.length > 0 && <Badge variant="destructive" className="ml-1 text-xs px-1.5">{pendingAds.length}</Badge>}
           </TabsTrigger>
+          <TabsTrigger value="posters" className="gap-1">
+            <Megaphone className="h-3.5 w-3.5" />
+            Posters
+          </TabsTrigger>
           <TabsTrigger value="automation">Automation Logs</TabsTrigger>
           <TabsTrigger value="security">Security Audit</TabsTrigger>
         </TabsList>
+
+        {/* Posters Tab */}
+        <TabsContent value="posters" className="space-y-4">
+          <PosterManager />
+        </TabsContent>
 
         {/* Learning Content Tab */}
         <TabsContent value="learning" className="space-y-4">

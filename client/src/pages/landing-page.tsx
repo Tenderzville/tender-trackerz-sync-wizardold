@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { TenderTicker } from "@/components/landing/TenderTicker";
+import { ActivePosters } from "@/components/posters/ActivePosters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +90,7 @@ export default function Landing() {
 
       {/* Live tender headlines */}
       <TenderTicker />
+      <ActivePosters className="container mx-auto px-4 py-10" />
 
       {/* Hero Section */}
       <section className="py-20 px-4">
