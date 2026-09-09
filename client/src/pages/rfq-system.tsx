@@ -20,6 +20,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { FileUploadField } from "@/components/upload/FileUploadField";
+import { StoredFile } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   FileText, 
@@ -93,6 +95,7 @@ export default function RfqSystem() {
   const queryClient = useQueryClient();
 
   const [newDocumentLink, setNewDocumentLink] = useState("");
+  const [quoteAttachments, setQuoteAttachments] = useState<StoredFile[]>([]);
 
   const form = useForm<RfqFormData>({
     resolver: zodResolver(rfqSchema),
@@ -275,6 +278,7 @@ export default function RfqSystem() {
         delivery_timeline: data.delivery_timeline,
         proposal_text: data.proposal_text,
         validity_period: data.validity_period,
+        attachments: quoteAttachments.map((f) => f.url),
         status: "pending",
       });
 
@@ -285,6 +289,7 @@ export default function RfqSystem() {
       setIsQuoteOpen(false);
       setSelectedRfq(null);
       quoteForm.reset();
+      setQuoteAttachments([]);
       toast({ title: "Quote submitted successfully!" });
     },
     onError: (error: any) => {
@@ -518,6 +523,15 @@ export default function RfqSystem() {
                           <FormItem>
                             <FormLabel>Document Links (Optional)</FormLabel>
                             <div className="space-y-2">
+                              <FileUploadField
+                                bucket="rfq-documents"
+                                label="Upload documents"
+                                value={[]}
+                                onChange={(files) =>
+                                  field.onChange([...(field.value || []), ...files.map((f) => f.url)])
+                                }
+                                maxFiles={5}
+                              />
                               <div className="flex gap-2">
                                 <Input
                                   placeholder="https://example.com/document.pdf"
@@ -820,6 +834,17 @@ export default function RfqSystem() {
                     </FormItem>
                   )}
                 />
+
+                <div className="space-y-2">
+                  <FormLabel>Attachments (optional)</FormLabel>
+                  <FileUploadField
+                    bucket="quote-attachments"
+                    label="Attach files"
+                    value={quoteAttachments}
+                    onChange={setQuoteAttachments}
+                    maxFiles={5}
+                  />
+                </div>
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsQuoteOpen(false)}>

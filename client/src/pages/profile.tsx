@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { uploadFile } from "@/lib/storage";
+import { useRef } from "react";
 import { User, Building2, Phone, MapPin, Briefcase, Mail, Calendar, Award, Loader2, Save, Camera } from "lucide-react";
 
 const profileSchema = z.object({
@@ -44,6 +46,9 @@ export default function ProfilePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: async () => {
@@ -58,6 +63,34 @@ export default function ProfilePage() {
     },
     enabled: !!user?.id,
   });
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user?.id) return;
+    setAvatarUploading(true);
+    try {
+      const stored = await uploadFile("profile-images", file, {
+        maxSizeMB: 3,
+        accept: ["image/*"],
+      });
+      const { error } = await supabase
+        .from("profiles")
+        .update({ profile_image_url: stored.url })
+        .eq("id", user.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
+      toast({ title: "Profile photo updated" });
+    } catch (err: any) {
+      toast({
+        title: "Upload failed",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const {
     register,
@@ -164,10 +197,19 @@ export default function ProfilePage() {
                     size="icon"
                     variant="secondary"
                     className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full shadow"
-                    disabled
+                    disabled={avatarUploading}
+                    onClick={() => avatarInputRef.current?.click()}
+                    aria-label="Change profile photo"
                   >
-                    <Camera className="h-4 w-4" />
+                    {avatarUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                   </Button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
                 </div>
                 <div className="text-center sm:text-left flex-1">
                   <h2 className="text-2xl font-semibold">
