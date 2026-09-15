@@ -1351,6 +1351,7 @@ export type Database = {
       }
       tender_posters: {
         Row: {
+          county: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -1365,6 +1366,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          county?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -1379,6 +1381,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          county?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
