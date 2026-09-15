@@ -28,8 +28,20 @@ Each app card gets a "How to connect" guide with the exact webhook URL steps for
 - **Delivery tracking**: each integration already records last status, error, and delivery count — surface these as green/red badges per card so users see at a glance what's working.
 - **Validation**: webhook URLs validated (https required), email toggle verified server-side before sending.
 
+## What you need to do
+
+- **Email alerts**: nothing. We send to the email on your Supabase account using the project's existing email sender. Just toggle it on in Settings.
+- **Gmail specifically**: make sure `tenderproapp@tenderzville-portal.co.ke` (or whatever sender domain Supabase is configured with) is not landing in your Promotions/Spam tab. If you want a custom "from" address, that needs DNS records added in your domain provider — we can do that separately.
+- **Slack / Discord / Teams**: create an incoming webhook in your workspace and paste the URL into the integration form.
+- **Google Sheets**: use the built-in Apps Script snippet we provide, or connect via Zapier/Make and paste their webhook URL.
+- **Telegram personal**: create a Telegram bot with @BotFather, get the bot token, and paste it (we treat it like a webhook/API key).
+- **n8n / Zapier / Make**: copy the webhook URL we generate and use it as the trigger in your workflow.
+
+No paid subscriptions are required for the free tiers listed above.
+
 ## Verification
 
 - Trigger `email-tender-notify` manually and confirm an email lands.
 - Trigger the dispatcher against a test webhook URL and confirm a 200 + delivery count increments.
 - Check the Settings page renders the directory, toggle, and badges; run the security scan after.
+
