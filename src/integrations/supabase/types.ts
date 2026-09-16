@@ -702,6 +702,9 @@ export type Database = {
           is_early_user: boolean | null
           is_founding_member: boolean | null
           last_name: string | null
+          linkedin_profile_url: string | null
+          linkedin_tag_opt_in: boolean
+          linkedin_tagged_at: string | null
           location: string | null
           lock_reason: string | null
           loyalty_points: number | null
@@ -735,6 +738,9 @@ export type Database = {
           is_early_user?: boolean | null
           is_founding_member?: boolean | null
           last_name?: string | null
+          linkedin_profile_url?: string | null
+          linkedin_tag_opt_in?: boolean
+          linkedin_tagged_at?: string | null
           location?: string | null
           lock_reason?: string | null
           loyalty_points?: number | null
@@ -768,6 +774,9 @@ export type Database = {
           is_early_user?: boolean | null
           is_founding_member?: boolean | null
           last_name?: string | null
+          linkedin_profile_url?: string | null
+          linkedin_tag_opt_in?: boolean
+          linkedin_tagged_at?: string | null
           location?: string | null
           lock_reason?: string | null
           loyalty_points?: number | null
