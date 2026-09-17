@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { WeeklyInsights } from "@/components/dashboard/WeeklyInsights";
 
 interface TenderData {
   id: number;

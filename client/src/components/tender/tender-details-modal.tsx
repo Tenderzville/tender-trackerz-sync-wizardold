@@ -289,11 +289,19 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {tender.contact_email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a href={`mailto:${tender.contact_email}`} className="text-primary hover:underline">
-                          {tender.contact_email}
-                        </a>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <a href={`mailto:${tender.contact_email}`} className="text-primary hover:underline">
+                            {tender.contact_email}
+                          </a>
+                        </div>
+                        {/^[^@]+@(gmail|yahoo|hotmail|outlook|live)\./i.test(tender.contact_email) && (
+                          <p className="text-xs text-muted-foreground">
+                            This is the personal contact listed by the buyer on the source portal. Always use the
+                            official address inside the tender document when submitting or asking questions.
+                          </p>
+                        )}
                       </div>
                     )}
                     {tender.contact_phone && (

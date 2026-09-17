@@ -11,6 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Save, Plus, X, Bell, Mail, MessageSquare, Target, MapPin, Coins, Search } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ConnectAppsTab from "@/components/settings/ConnectAppsTab";
 
 const KENYAN_COUNTIES = [
   "Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika", "Malindi", "Kitale",
@@ -193,6 +195,17 @@ export default function SettingsPage() {
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </div>
+
+        <Tabs defaultValue="preferences" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="apps">Connect your apps</TabsTrigger>
+          </TabsList>
+          <TabsContent value="apps">
+            <ConnectAppsTab />
+          </TabsContent>
+          <TabsContent value="preferences" className="space-y-6">
+
 
         {/* Sectors */}
         <Card>
@@ -397,6 +410,8 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
