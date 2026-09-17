@@ -196,6 +196,8 @@ export default function Dashboard() {
 
         <PWAUpdateBanner />
 
+        <WeeklyInsights />
+
         <Card className="mb-6 border-primary/20 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
