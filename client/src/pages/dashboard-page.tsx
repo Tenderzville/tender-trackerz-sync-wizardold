@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { WeeklyInsights } from "@/components/dashboard/WeeklyInsights";
 
 interface TenderData {
   id: number;
@@ -194,6 +195,8 @@ export default function Dashboard() {
         )}
 
         <PWAUpdateBanner />
+
+        <WeeklyInsights />
 
         <Card className="mb-6 border-primary/20 bg-primary/5">
           <CardContent className="p-4">
