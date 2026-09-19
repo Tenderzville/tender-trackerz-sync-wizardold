@@ -1915,6 +1915,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      reconcile_duplicate_tenders: { Args: never; Returns: number }
+      tender_dedup_key: { Args: { _source_url: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
