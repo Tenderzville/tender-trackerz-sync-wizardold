@@ -186,3 +186,12 @@ function hasMinimumPreparationWindow(deadline: string, source: string): boolean 
   threshold.setDate(threshold.getDate() + days);
   return deadline >= threshold.toISOString().split('T')[0];
 }
+
+/** Mirrors public.tender_dedup_key() so ingestion and the unique index agree. */
+function normalizeSourceUrl(url?: string | null): string | null {
+  if (!url || !url.trim()) return null;
+  return url.trim().split('#')[0].split('?')[0]
+    .replace(/^http:\/\//i, 'https://')
+    .replace(/\/+$/, '')
+    .toLowerCase();
+}
