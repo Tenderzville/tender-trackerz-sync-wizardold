@@ -442,25 +442,48 @@ async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boole
   }
 
 
-  // Check for duplicates by title OR tender_number
-  const { data: existing } = await supabase
-    .from('tenders')
-    .select('id')
-    .or(
-      `title.eq.${tender.title}` +
-      (tender.tenderNumber ? `,tender_number.eq.${tender.tenderNumber}` : '')
-    )
-    .maybeSingle();
+  // Canonical identity: the normalized source link, matching the database's
+  // unique index (tenders_dedup_key_unique). Falls back to title/tender_number
+  // only when the source has no usable link.
+  const canonicalUrl = normalizeSourceUrl(tender.sourceUrl);
+
+  let existing: { id: number } | null = null;
+
+  if (canonicalUrl) {
+    const { data } = await supabase
+      .from('tenders')
+      .select('id, source_url')
+      .ilike('source_url', `${canonicalUrl}%`)
+      .limit(50);
+
+    existing = (data || []).find((row: any) => normalizeSourceUrl(row.source_url) === canonicalUrl) || null;
+  }
+
+  if (!existing) {
+    const { data } = await supabase
+      .from('tenders')
+      .select('id')
+      .or(
+        `title.eq.${tender.title}` +
+        (tender.tenderNumber ? `,tender_number.eq.${tender.tenderNumber}` : '')
+      )
+      .limit(1);
+    existing = (data && data[0]) || null;
+  }
 
   if (existing) {
-    // Update source_url if the existing one is broken
-    if (tender.sourceUrl && tender.sourceUrl.includes('tenders.go.ke/tenders/')) {
-      await supabase
-        .from('tenders')
-        .update({ source_url: tender.sourceUrl })
-        .eq('id', existing.id);
-      console.log(`Updated URL for existing tender: ${tender.title.substring(0, 50)}...`);
-    }
+    // Refresh details on the existing record instead of inserting a copy
+    await supabase
+      .from('tenders')
+      .update({
+        source_url: tender.sourceUrl || undefined,
+        deadline: tender.deadline,
+        tender_number: tender.tenderNumber || undefined,
+        contact_email: tender.contactEmail || undefined,
+        contact_phone: tender.contactPhone || undefined,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
     return false;
   }
 
@@ -547,4 +570,19 @@ function hasMinimumPreparationWindow(deadline: string): boolean {
   threshold.setHours(0, 0, 0, 0);
   threshold.setDate(threshold.getDate() + MIN_SUPPLIER_PREP_DAYS);
   return deadline >= threshold.toISOString().split('T')[0];
+}
+
+/**
+ * Mirrors public.tender_dedup_key() in the database so the scraper and the
+ * unique index agree on what counts as the same tender notice.
+ */
+export function normalizeSourceUrl(url?: string | null): string | null {
+  if (!url || !url.trim()) return null;
+  return url
+    .trim()
+    .split('#')[0]
+    .split('?')[0]
+    .replace(/^http:\/\//i, 'https://')
+    .replace(/\/+$/, '')
+    .toLowerCase();
 }

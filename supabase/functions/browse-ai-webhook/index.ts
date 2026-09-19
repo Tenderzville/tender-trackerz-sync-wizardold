@@ -72,11 +72,25 @@ Deno.serve(async (req) => {
       if (!normalized.title || !normalized.deadline) continue;
       if (!hasMinimumPreparationWindow(normalized.deadline, sourceParam)) continue;
 
-      // Skip if already exists (by tender_number or title+org)
-      const { data: existing } = await supabase
-        .from('tenders').select('id')
-        .or(`tender_number.eq.${normalized.tender_number || '__none__'},and(title.eq.${normalized.title.replace(/,/g,'')},organization.eq.${normalized.organization})`)
-        .maybeSingle();
+      // Skip if already exists — canonical source link first, then ref/title+org
+      const canonicalUrl = normalizeSourceUrl(normalized.source_url);
+      let existing: any = null;
+
+      if (canonicalUrl) {
+        const { data } = await supabase
+          .from('tenders').select('id, source_url')
+          .ilike('source_url', `${canonicalUrl}%`)
+          .limit(50);
+        existing = (data || []).find((r: any) => normalizeSourceUrl(r.source_url) === canonicalUrl) || null;
+      }
+
+      if (!existing) {
+        const { data } = await supabase
+          .from('tenders').select('id')
+          .or(`tender_number.eq.${normalized.tender_number || '__none__'},and(title.eq.${normalized.title.replace(/,/g,'')},organization.eq.${normalized.organization})`)
+          .limit(1);
+        existing = (data && data[0]) || null;
+      }
       if (existing) continue;
 
       const { error } = await supabase.from('tenders').insert(normalized);
@@ -171,4 +185,13 @@ function hasMinimumPreparationWindow(deadline: string, source: string): boolean 
   threshold.setHours(0, 0, 0, 0);
   threshold.setDate(threshold.getDate() + days);
   return deadline >= threshold.toISOString().split('T')[0];
+}
+
+/** Mirrors public.tender_dedup_key() so ingestion and the unique index agree. */
+function normalizeSourceUrl(url?: string | null): string | null {
+  if (!url || !url.trim()) return null;
+  return url.trim().split('#')[0].split('?')[0]
+    .replace(/^http:\/\//i, 'https://')
+    .replace(/\/+$/, '')
+    .toLowerCase();
 }
