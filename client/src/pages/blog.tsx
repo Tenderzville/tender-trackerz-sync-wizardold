@@ -5,6 +5,7 @@ import { Calendar, Clock, ArrowRight, BookOpen, ChevronDown, ChevronUp } from "l
 import { Link } from "wouter";
 import { useState } from "react";
 import { SEO } from "@/components/SEO";
+import { howToPosts } from "@/content/howto-posts";
 
 interface BlogPost {
   id: string;
@@ -17,7 +18,8 @@ interface BlogPost {
   content: string;
 }
 
-const blogPosts: BlogPost[] = [
+export const blogPosts: BlogPost[] = [
+  ...howToPosts,
   {
     id: "1",
     title: "How to Win Government Tenders in Kenya: A Complete Supplier Portal Guide",
@@ -99,119 +101,9 @@ Many suppliers lose tenders not because of pricing, but due to avoidable errors:
 
 ## Leveraging Technology for Tender Success
 
-Modern supplier portal platforms like TenderAlert aggregate opportunities from tenders.go.ke, eGP Kenya, MyGov, and PPRA into a single dashboard. This saves hours of manual searching and ensures you never miss relevant opportunities. AI-powered analysis can estimate win probability and suggest optimal pricing strategies based on historical data.
+Modern supplier portal platforms like TenderAlert aggregate opportunities from official government portals such as tenders.go.ke, MyGov and PPRA into a single dashboard. This saves hours of manual searching and ensures you never miss relevant opportunities. AI-powered analysis can assess bid readiness and suggest optimal pricing strategies based on historical data.
 
 Building a systematic approach to government tendering — from supplier portal registration to bid submission — dramatically increases your success rate. The key is consistency, attention to detail, and continuous improvement based on feedback from both won and lost bids.`,
-  },
-  {
-    id: "2",
-    title: "Understanding eGP Kenya: The Modern Supplier Portal for Government Procurement",
-    excerpt: "eGP Kenya has transformed how suppliers access government tenders. Here's everything you need to know about the new supplier portal.",
-    category: "Platform Update",
-    date: "2026-02-25",
-    readTime: "11 min",
-    slug: "understanding-egp-kenya-portal",
-    content: `The electronic Government Procurement (eGP) system represents a fundamental shift in how Kenya manages public procurement. As the government transitions from manual processes to a fully digital supplier portal, understanding eGP Kenya is essential for any supplier wanting to participate in government business.
-
-## What is eGP Kenya?
-
-eGP Kenya (egpkenya.go.ke) is the government's electronic procurement supplier portal designed to digitize the entire procurement cycle — from tender advertisement to contract management. It replaces many of the legacy systems that previously made government procurement cumbersome and opaque.
-
-The supplier portal was developed with support from the World Bank and aims to improve transparency, reduce procurement processing time, and make government procurement more accessible to a wider range of suppliers, including small and medium enterprises.
-
-## The Relationship Between tenders.go.ke and eGP Kenya
-
-Many suppliers are confused about the relationship between tenders.go.ke and egpkenya.go.ke. Here's the clarification:
-
-**tenders.go.ke** remains the primary public-facing supplier portal for viewing active tenders. It provides a searchable database of all published government procurement opportunities with direct links to tender documents and details. This is the portal most suppliers use daily to find opportunities.
-
-**egpkenya.go.ke** is the backend electronic procurement system where registered suppliers can submit bids electronically, manage their profiles, and track procurement processes. It handles the transactional side of procurement.
-
-Both portals are part of the integrated supplier portal ecosystem. Suppliers should register on both platforms to maximize their access to government procurement opportunities.
-
-## Key Features of the eGP Supplier Portal
-
-### Electronic Bid Submission
-The most significant feature of the eGP supplier portal is the ability to submit bids electronically. This eliminates the need for physical document delivery, reducing costs and logistical challenges for suppliers, especially those outside Nairobi. The supplier portal uses secure encryption to protect bid documents until the official opening date.
-
-### Supplier Registration and Prequalification
-The supplier portal maintains a centralized supplier registry. Once registered, your profile is accessible to all procuring entities, eliminating the need to register separately with each government agency. The prequalification process through the supplier portal is streamlined with document uploads and automated verification.
-
-### Real-Time Notifications
-Registered suppliers on the eGP supplier portal receive automatic notifications for:
-- New tenders matching their registered categories
-- Tender addenda and clarifications
-- Bid opening schedules
-- Award notifications
-- Contract management updates
-
-### Reverse Auction Functionality
-For certain categories of goods, the supplier portal supports reverse auctions where suppliers can competitively bid down prices in real-time. This feature is particularly useful for commodity purchases where specifications are standardized.
-
-### Contract Management
-Post-award, the supplier portal facilitates contract management including:
-- Digital contract signing
-- Milestone tracking
-- Invoice submission
-- Payment tracking
-- Performance evaluation
-
-## Registration Process on the eGP Supplier Portal
-
-### Step 1: Create Your Account
-Visit egpkenya.go.ke and click on the supplier registration link. You'll need to provide:
-- Business registration details
-- Contact information
-- Banking details for payment processing
-- Tax compliance documentation
-
-### Step 2: Upload Required Documents
-The supplier portal requires scanned copies of:
-- Certificate of Incorporation
-- KRA PIN Certificate
-- Current Tax Compliance Certificate
-- CR12 Form (for companies)
-- AGPO Certificate (if applicable)
-- Business permits
-
-### Step 3: Category Selection
-Select the goods, works, and services categories relevant to your business. This is crucial as the supplier portal uses these categories to match you with relevant tender opportunities. Choose carefully — you can update categories later, but initial selection affects which notifications you receive.
-
-### Step 4: Verification
-The supplier portal team will verify your documents. This typically takes 5-10 business days. You'll receive email confirmation once your supplier portal account is activated.
-
-## Best Practices for Using the eGP Supplier Portal
-
-**Keep Your Profile Updated**: Regularly update your supplier portal profile with new certifications, completed projects, and financial information. Procuring entities review supplier profiles when evaluating bids.
-
-**Monitor Dashboard Daily**: The supplier portal dashboard shows tender opportunities, pending actions, and important deadlines. Make it a daily habit to check for new opportunities and updates.
-
-**Use the Search Function Effectively**: The supplier portal's search functionality allows filtering by category, location, procuring entity, and value range. Save your preferred search filters to quickly access relevant tenders.
-
-**Respond to Clarifications Promptly**: When procuring entities issue clarifications through the supplier portal, respond quickly. These clarifications can significantly impact your bid strategy.
-
-**Maintain Document Readiness**: Keep digital copies of all frequently required documents organized and ready for upload on the supplier portal. This saves time when tender deadlines are tight.
-
-## Troubleshooting Common eGP Supplier Portal Issues
-
-**Login Problems**: Clear your browser cache and cookies. The supplier portal works best with Chrome or Firefox. If issues persist, contact the eGP helpdesk.
-
-**Document Upload Failures**: Ensure documents are in the required format (usually PDF) and within the size limit specified by the supplier portal. Compress large files before uploading.
-
-**Bid Submission Errors**: Always submit well before the deadline. The supplier portal may experience high traffic near closing times. If you encounter errors, take screenshots and contact support immediately.
-
-**Payment Issues**: For tender fees payable through the supplier portal, use the prescribed payment methods. Keep payment receipts as proof in case of system discrepancies.
-
-## The Future of eGP in Kenya
-
-The government continues to invest in improving the supplier portal infrastructure. Upcoming features include:
-- Mobile application for supplier portal access on smartphones
-- Integration with M-Pesa for tender fee payments
-- AI-powered bid evaluation assistance
-- Blockchain-based document verification
-- Enhanced analytics for suppliers to track their bidding performance
-
-The eGP supplier portal represents the future of government procurement in Kenya. Suppliers who master this platform will have a significant competitive advantage in accessing the billions of shillings in government contracts awarded annually.`,
   },
   {
     id: "3",
@@ -268,7 +160,7 @@ Once verified, your AGPO certificate is issued through the supplier portal. The 
 
 ## How to Find AGPO Tenders on the Supplier Portal
 
-AGPO tenders are published alongside regular tenders on tenders.go.ke and egpkenya.go.ke. They are typically marked with:
+AGPO tenders are published alongside regular tenders on official government procurement portals. They are typically marked with:
 - "Reserved for AGPO" or "Preference and Reservation: YES" in the tender notice
 - Specific mention of youth, women, or PWD categories
 - Lower financial requirements (reduced bid security, no tender fees in some cases)
@@ -343,7 +235,7 @@ The key to success is persistence, continuous improvement, and leveraging techno
 
 A consortium (also called a joint venture or joint bid) is a temporary partnership between two or more companies formed specifically to bid for and execute a particular tender found on the supplier portal. Each member brings specific capabilities — technical expertise, financial resources, equipment, or local presence — that collectively meet or exceed the tender requirements.
 
-Under Kenyan procurement law, consortiums are recognized and regulated. The supplier portal on tenders.go.ke and eGP Kenya supports consortium registrations, allowing multiple companies to submit a unified bid.
+Under Kenyan procurement law, consortiums are recognized and regulated. The supplier portal used by public entities supports consortium registrations, allowing multiple companies to submit a unified bid.
 
 ## When Should You Form a Consortium?
 
@@ -541,7 +433,7 @@ The procurement process doesn't end when you submit through the supplier portal.
 
 The most successful suppliers on the supplier portal treat each tender bid as a project with defined stages, quality checks, and review processes. Consider implementing:
 
-- **Bid/No-Bid Decision Framework**: Evaluate each tender from the supplier portal against criteria like win probability, strategic value, resource availability, and competition level before committing resources.
+- **Bid/No-Bid Decision Framework**: Evaluate each tender from the supplier portal against criteria like bid readiness, strategic value, resource availability, and competition level before committing resources.
 - **Document Library**: Maintain a repository of frequently required documents, pre-written capability statements, and case studies ready for supplier portal submission.
 - **Review Process**: Have at least two people review every bid before submission through the supplier portal — one for content accuracy and one for compliance with all formal requirements.
 - **Post-Bid Analysis**: Track your success rate on the supplier portal and analyze patterns in wins and losses to continuously improve your approach.
@@ -669,7 +561,7 @@ Identify specific needs that most counties share — healthcare equipment, water
 
 Modern supplier portal platforms have transformed how suppliers access county opportunities:
 - **Automated Monitoring**: Set up alerts on TenderAlert for specific counties and categories instead of manually checking 47 county websites plus the national supplier portal
-- **AI Analysis**: Use win probability estimates to prioritize which county tenders to bid for through the supplier portal
+- **AI Analysis**: Use bid readiness insights to prioritize which county tenders to bid for through the supplier portal
 - **Consortium Matching**: Find partners in target counties through the supplier portal's consortium features
 - **Historical Data**: Review past award data from the supplier portal to understand pricing patterns and competition levels in specific counties
 
@@ -683,16 +575,19 @@ const getCategoryColor = (category: string) => {
     "Platform Update": "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
     AGPO: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
     Strategy: "bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400",
+    "How-To": "bg-primary/10 text-primary",
     Tips: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
   };
   return colors[category] || "bg-muted text-muted-foreground";
 };
 
 function BlogPostCard({ post }: { post: BlogPost }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(
+    typeof window !== "undefined" && window.location.hash === `#${post.slug}`
+  );
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card id={post.slug} className="hover:shadow-lg transition-shadow scroll-mt-24">
       <CardContent className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
@@ -766,7 +661,7 @@ export default function BlogPage() {
     <div className="min-h-screen bg-background">
       <SEO
         title="TenderAlert Blog — Kenya Supplier Portal Guides"
-        description="Expert guides on Kenyan government tenders, eGP, AGPO, consortium bidding and county procurement. Win more bids on the official supplier portal."
+        description="Expert guides on Kenyan government tenders, supplier registration, AGPO, consortium bidding and county procurement. Win more bids on the official supplier portal."
         path="/blog"
         jsonLd={{
           "@context": "https://schema.org",
@@ -799,6 +694,13 @@ export default function BlogPage() {
             <BlogPostCard key={post.id} post={post} />
           ))}
         </div>
+
+        <p className="mt-8 text-xs text-muted-foreground border rounded-lg p-4">
+          <strong>Disclaimer:</strong> These guides are general information, not legal, tax or financial advice.
+          Laws, fees and portal procedures change — always confirm requirements in the official tender document
+          and with the relevant government body. TenderAlert is an independent service and is not affiliated with
+          the National Treasury, PPRA, KRA or any procuring entity.
+        </p>
 
         <div className="mt-12 text-center">
           <Card className="bg-primary/5 border-primary/20">

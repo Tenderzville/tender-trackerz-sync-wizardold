@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
               status: 'READY',
               originalUrl: APP_URL,
               title: { text: 'TenderAlert Pro — Kenya Tender Alerts' },
-              description: { text: 'Daily MyGov, eGP, PPRA & county tender alerts for Kenyan suppliers.' },
+              description: { text: 'Daily MyGov, PPRA & county tender alerts for Kenyan suppliers.' },
             }],
           },
         },
@@ -154,7 +154,7 @@ function buildPostText(members: MemberRow[], totalNew: number): string {
 
   const header =
     `🎉 Welcome to our new TenderAlert members — ${month}\n\n` +
-    `${totalNew} Kenyan suppliers, contractors and consultants joined us this month to track MyGov, eGP, PPRA and county tenders in one place.\n`;
+    `${totalNew} Kenyan suppliers, contractors and consultants joined us this month to track MyGov, PPRA and county tenders in one place.\n`;
 
   const named = members.length
     ? `\nA special welcome to those who asked to be mentioned:\n` +

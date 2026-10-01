@@ -347,7 +347,7 @@ serve(async (req) => {
     
     let allAwards: HistoricalAward[] = [];
     
-    if (source === 'all' || source === 'egp_kenya') {
+    if (false) { // e-GP collection disabled 2026-10-01
       const egpAwards = await scrapeEgpAwards();
       allAwards.push(...egpAwards);
     }

@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
                 status: 'READY',
                 originalUrl: APP_URL,
                 title: { text: 'TenderAlert Pro — Kenya Tender Alerts' },
-                description: { text: 'Daily MyGov, eGP, PPRA & county tender alerts on Telegram, WhatsApp & Email.' },
+                description: { text: 'Daily MyGov, PPRA & county tender alerts on Telegram, WhatsApp & Email.' },
               },
             ],
           },
@@ -195,7 +195,7 @@ function fmtDate(d: string | null): string {
 function buildPostText(tenders: TenderRow[]): string {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const header = `📢 New Kenyan Tender Opportunities — ${today}\n\n` +
-    `Fresh procurement opportunities verified from MyGov, eGP Kenya, PPRA and county portals. ` +
+    `Fresh procurement opportunities verified from MyGov, PPRA and county portals. ` +
     `All listings below have a minimum ${MIN_PREP_DAYS}-day preparation window so your team can bid properly.\n`;
 
   const items = tenders.map((t, i) => {

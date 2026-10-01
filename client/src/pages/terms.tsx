@@ -173,7 +173,7 @@ export default function TermsPage() {
             <CardContent className="space-y-4 text-sm text-muted-foreground">
               <p>
                 TenderAlert Pro aggregates publicly available tender information from official Kenyan government 
-                procurement portals including MyGov Kenya, e-GP Kenya, PPIP (tenders.go.ke), and PPRA. 
+                procurement portals including MyGov Kenya, PPIP (tenders.go.ke), and PPRA. 
                 This data is publicly accessible and is collected in compliance with applicable laws.
               </p>
               <ul className="space-y-1">

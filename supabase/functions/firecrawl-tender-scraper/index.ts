@@ -80,29 +80,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ============================================================
-    // SOURCE 2: egpkenya.go.ke - Firecrawl scrape
-    // ============================================================
-    if (source === 'all' || source === 'egpkenya') {
-      const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-      if (FIRECRAWL_API_KEY && firecrawlCallsUsed < FIRECRAWL_MAX_CALLS_PER_RUN) {
-        console.log('Scraping egpkenya.go.ke via Firecrawl...');
-        try {
-          const egpTenders = await scrapeWithFirecrawl('egpkenya', 'https://egpkenya.go.ke/tender', FIRECRAWL_API_KEY);
-          firecrawlCallsUsed++;
-          results.push({ source: 'egpkenya', tenders: egpTenders });
-
-          for (const tender of egpTenders) {
-            totalProcessed++;
-            const saved = await saveTenderIfNew(supabase, tender);
-            if (saved) totalSaved++;
-          }
-        } catch (err) {
-          console.error('egpkenya scrape error:', err);
-          results.push({ source: 'egpkenya', tenders: [], error: err instanceof Error ? err.message : 'Unknown error' });
-        }
-      }
-    }
+    // SOURCE 2 (e-GP) permanently disabled 2026-10-01 at owner's request:
+    // no automated collection from that portal. Users get a plain link only.
 
     // ============================================================
     // SOURCE 3: mygov.go.ke - Firecrawl scrape
