@@ -171,7 +171,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Dashboard — Kenya Tender Alerts & AI Bid Intelligence" description="Personalised dashboard for Kenyan suppliers: live MyGov, eGP and PPRA tender alerts, smart matches and saved bids." path="/dashboard" />
+      <SEO title="Dashboard — Kenya Tender Alerts & AI Bid Intelligence" description="Personalised dashboard for Kenyan suppliers: live MyGov, PPRA and county tender alerts, smart matches and saved bids." path="/dashboard" />
       <div className="container mx-auto py-8 px-4">
 
         {/* Setup Preferences Banner */}

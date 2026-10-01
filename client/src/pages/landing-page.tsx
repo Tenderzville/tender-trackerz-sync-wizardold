@@ -66,7 +66,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, eGP Kenya & PPRA, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
+      <SEO title="TenderAlert Pro — Kenya Tender Alerts & AI Bid Intelligence" description="Win more Kenyan government tenders. Real-time alerts from MyGov, PPRA & county portals, AI bid readiness scoring, consortium tools and verified supplier directory." path="/" />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -102,7 +102,7 @@ export default function Landing() {
           </h1>
           <p className="text-xl text-slate-600 dark:text-slate-300 mb-4 max-w-3xl mx-auto">
             Built for Kenyan SME suppliers and contractors who bid on{" "}
-            {focusLabel ? `${focusLabel} work` : "county and national government work"}. Every MyGov, eGP and PPRA
+            {focusLabel ? `${focusLabel} work` : "county and national government work"}. Every MyGov, PPRA and county
 
             notice — matched to what you actually supply, with at least 14 days to prepare a
             serious bid.

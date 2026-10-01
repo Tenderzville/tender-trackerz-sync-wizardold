@@ -433,7 +433,7 @@ The procurement process doesn't end when you submit through the supplier portal.
 
 The most successful suppliers on the supplier portal treat each tender bid as a project with defined stages, quality checks, and review processes. Consider implementing:
 
-- **Bid/No-Bid Decision Framework**: Evaluate each tender from the supplier portal against criteria like win probability, strategic value, resource availability, and competition level before committing resources.
+- **Bid/No-Bid Decision Framework**: Evaluate each tender from the supplier portal against criteria like bid readiness, strategic value, resource availability, and competition level before committing resources.
 - **Document Library**: Maintain a repository of frequently required documents, pre-written capability statements, and case studies ready for supplier portal submission.
 - **Review Process**: Have at least two people review every bid before submission through the supplier portal — one for content accuracy and one for compliance with all formal requirements.
 - **Post-Bid Analysis**: Track your success rate on the supplier portal and analyze patterns in wins and losses to continuously improve your approach.
@@ -582,10 +582,12 @@ const getCategoryColor = (category: string) => {
 };
 
 function BlogPostCard({ post }: { post: BlogPost }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(
+    typeof window !== "undefined" && window.location.hash === `#${post.slug}`
+  );
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card id={post.slug} className="hover:shadow-lg transition-shadow scroll-mt-24">
       <CardContent className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
@@ -692,6 +694,13 @@ export default function BlogPage() {
             <BlogPostCard key={post.id} post={post} />
           ))}
         </div>
+
+        <p className="mt-8 text-xs text-muted-foreground border rounded-lg p-4">
+          <strong>Disclaimer:</strong> These guides are general information, not legal, tax or financial advice.
+          Laws, fees and portal procedures change — always confirm requirements in the official tender document
+          and with the relevant government body. TenderAlert is an independent service and is not affiliated with
+          the National Treasury, PPRA, KRA or any procuring entity.
+        </p>
 
         <div className="mt-12 text-center">
           <Card className="bg-primary/5 border-primary/20">

@@ -41,7 +41,7 @@ const TIPS: { title: string; body: string; action: string }[] = [
   },
   {
     title: "Never pay for a tender document you can download free",
-    body: "MyGov, eGP and county portals publish documents at no cost. Any 'agent' charging for access is reselling public information.",
+    body: "Official government and county portals publish documents at no cost. Any 'agent' charging for access is reselling public information.",
     action: "Use the source link on every tender here to go straight to the official portal.",
   },
   {

@@ -275,7 +275,7 @@ export default function LearningHub() {
                   <h2 className="text-xl font-bold mb-3">Guest Blog Submissions</h2>
                   <p className="text-muted-foreground mb-6">
                     Share your expertise in procurement, tendering, and business growth with the Tenderzville community.
-                    We welcome articles on AGPO, e-GP, bid writing, compliance, success stories, and industry insights.
+                    We welcome articles on AGPO, supplier registration, bid writing, compliance, success stories, and industry insights.
                   </p>
                   <div className="bg-muted rounded-lg p-6 mb-6 text-left space-y-3">
                     <h3 className="font-semibold">Submission Guidelines:</h3>

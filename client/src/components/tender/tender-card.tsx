@@ -38,7 +38,6 @@ interface TenderCardProps {
  * 
  * VERIFIED URL formats:
  * - tenders.go.ke: https://tenders.go.ke/tenders/{id}  (CONFIRMED WORKING - public, no login)
- * - egpkenya.go.ke: SPA, search-based only
  * - mygov.go.ke: https://www.mygov.go.ke/?s={query}
  * - ppra.go.ke: https://ppra.go.ke/tender-notices/
  */
@@ -67,9 +66,12 @@ function buildSourceUrl(tender: TenderData): { url: string; label: string; needs
     const isGeneric = genericPortals.includes(tender.sourceUrl);
     
     if (!isGeneric) {
+      // Never deep-link into the e-procurement portal; plain homepage link only.
+      if (tender.sourceUrl.includes('egpkenya.go.ke')) {
+        return { url: 'https://egpkenya.go.ke/', label: 'Official portal', needsManualSearch: true };
+      }
       const label = tender.sourceUrl.includes('mygov') ? 'MyGov'
         : tender.sourceUrl.includes('ppra') ? 'PPRA'
-        : tender.sourceUrl.includes('egp') ? 'EGP Kenya'
         : 'Source';
       return { url: tender.sourceUrl, label, needsManualSearch: false };
     }
@@ -107,8 +109,8 @@ function buildSourceUrl(tender: TenderData): { url: string; label: string; needs
 
   if (scrapedFrom.includes('egp')) {
     return {
-      url: 'https://egpkenya.go.ke/tender',
-      label: 'EGP Kenya',
+      url: 'https://egpkenya.go.ke/',
+      label: 'Official portal',
       needsManualSearch: true,
     };
   }
