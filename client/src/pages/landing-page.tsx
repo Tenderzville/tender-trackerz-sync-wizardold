@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { TenderTicker } from "@/components/landing/TenderTicker";
 import { ActivePosters } from "@/components/posters/ActivePosters";
+import { howToPosts } from "@/content/howto-posts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -439,6 +440,28 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* How-to guides */}
+      <section className="py-16 px-4" aria-labelledby="guides-heading">
+        <div className="container mx-auto">
+          <div className="flex items-end justify-between mb-6 gap-4">
+            <div>
+              <h2 id="guides-heading" className="text-3xl font-bold">Free how-to guides for Kenyan suppliers</h2>
+              <p className="text-muted-foreground mt-1">Registration, tax compliance, pricing and bid bonds — explained step by step.</p>
+            </div>
+            <a href="/blog" className="text-primary font-medium whitespace-nowrap hover:underline">All guides →</a>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {howToPosts.map((p) => (
+              <a key={p.slug} href={`/blog#${p.slug}`} className="block rounded-xl border bg-card p-5 hover:shadow-md transition-shadow">
+                <span className="text-xs font-semibold text-primary">How-To · {p.readTime}</span>
+                <h3 className="font-semibold mt-1 mb-2">{p.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">{p.excerpt}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-4 bg-primary text-white">
         <div className="container mx-auto text-center">
@@ -473,8 +496,8 @@ export default function Landing() {
             <div>
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-slate-400">
-                <li><a href="#" className="hover:text-white">Features</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
+                <li><a href="/blog" className="hover:text-white">Blog &amp; Guides</a></li>
+                <li><a href="/subscription" className="hover:text-white">Pricing</a></li>
                 <li><a href="#" className="hover:text-white">API</a></li>
               </ul>
             </div>
@@ -490,13 +513,19 @@ export default function Landing() {
               <h3 className="font-semibold mb-4">Legal</h3>
               <ul className="space-y-2 text-slate-400">
                 <li><a href="#" className="hover:text-white">Privacy</a></li>
-                <li><a href="#" className="hover:text-white">Terms</a></li>
+                <li><a href="/terms" className="hover:text-white">Terms</a></li>
                 <li><a href="#" className="hover:text-white">Security</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2024 TenderAlert Pro. All rights reserved.</p>
+            <p className="text-xs max-w-3xl mx-auto mb-4">
+              TenderAlert is an independent service and is not affiliated with, endorsed by or acting for the National Treasury,
+              PPRA, KRA or any procuring entity. Tender details are summarised from public notices for information only — always
+              confirm requirements, deadlines and contacts in the official tender document on the official government portal.
+              AI insights are guidance, not a prediction or guarantee of any award.
+            </p>
+            <p>&copy; 2026 TenderAlert Pro. All rights reserved.</p>
           </div>
         </div>
       </footer>

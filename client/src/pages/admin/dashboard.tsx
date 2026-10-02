@@ -13,6 +13,7 @@ import { Shield, Users, FileText, Activity, Database, AlertCircle, Download, Zap
 import { useLocation } from 'wouter';
 import { useI18n } from '@/lib/i18n';
 import { PosterManager } from '@/components/admin/PosterManager';
+import { DemoVideoManager } from '@/components/admin/DemoVideoManager';
 
 interface Stats {
   totalUsers: number;
@@ -582,6 +583,7 @@ export default function AdminDashboard() {
 
         {/* Posters Tab */}
         <TabsContent value="posters" className="space-y-4">
+          <DemoVideoManager />
           <PosterManager />
         </TabsContent>
 
