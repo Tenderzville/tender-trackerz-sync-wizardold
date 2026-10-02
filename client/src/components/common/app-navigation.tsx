@@ -4,7 +4,7 @@ import { ThemeToggle } from './theme-toggle';
 import { LanguageToggle, useI18n } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsAdmin } from '@/hooks/use-admin-role';
-import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown, CreditCard, User, Megaphone, GraduationCap, BarChart3, TrendingUp } from 'lucide-react';
+import { Bell, Home, Search, Bookmark, Users, Brain, Package, FileText, Settings, Shield, Target, Receipt, Menu, ChevronDown, CreditCard, User, Megaphone, GraduationCap, BarChart3, TrendingUp, BookOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,7 @@ export function AppNavigation() {
       { path: '/marketplace', icon: Megaphone, label: t('nav.marketplace') },
       { path: '/rfq-system', icon: FileText, label: t('nav.rfq') },
       { path: '/learning', icon: GraduationCap, label: t('nav.learning') },
+      { path: '/blog', icon: BookOpen, label: 'Blog' },
       { path: '/performance', icon: TrendingUp, label: t('nav.performance') },
       { path: '/analytics', icon: BarChart3, label: t('nav.analytics') },
     ];
@@ -67,6 +68,9 @@ export function AppNavigation() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" asChild>
+              <Link href="/blog">Blog</Link>
+            </Button>
             <LanguageToggle />
             <ThemeToggle />
             <Button asChild>
