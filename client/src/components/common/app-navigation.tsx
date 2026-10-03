@@ -71,7 +71,9 @@ export function AppNavigation() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild>
               <Link href="/blog">Blog</Link>
-              <Link href="/tutorials" className="ml-4">Tutorials</Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/tutorials">Tutorials</Link>
             </Button>
             <LanguageToggle />
             <ThemeToggle />
