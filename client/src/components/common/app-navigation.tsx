@@ -48,6 +48,7 @@ export function AppNavigation() {
       { path: '/rfq-system', icon: FileText, label: t('nav.rfq') },
       { path: '/learning', icon: GraduationCap, label: t('nav.learning') },
       { path: '/blog', icon: BookOpen, label: 'Blog' },
+      { path: '/tutorials', icon: BookOpen, label: 'Tutorials' },
       { path: '/performance', icon: TrendingUp, label: t('nav.performance') },
       { path: '/analytics', icon: BarChart3, label: t('nav.analytics') },
     ];
@@ -70,6 +71,7 @@ export function AppNavigation() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" asChild>
               <Link href="/blog">Blog</Link>
+              <Link href="/tutorials" className="ml-4">Tutorials</Link>
             </Button>
             <LanguageToggle />
             <ThemeToggle />
