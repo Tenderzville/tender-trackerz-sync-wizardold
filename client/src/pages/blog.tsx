@@ -673,7 +673,7 @@ export default function BlogPage() {
             headline: p.title,
             description: p.excerpt,
             datePublished: p.date,
-            url: `https://tenderproapp.tenderzville-portal.co.ke/blog#${p.slug}`,
+            url: `https://tenderproapp.tenderzville-portal.co.ke/blog/${p.slug}`,
             author: { "@type": "Organization", name: "TenderAlert Pro" },
           })),
         }}

@@ -35,6 +35,8 @@ import SubscriptionCallback from "@/pages/subscription-callback";
 import TermsPage from "@/pages/terms";
 import TransactionHistory from "@/pages/transaction-history";
 import BlogPage from "@/pages/blog";
+import BlogPostPage from "@/pages/blog-post";
+import TutorialsPage from "@/pages/tutorials";
 
 // Global unhandled rejection handler
 function useGlobalErrorHandler() {
@@ -127,6 +129,8 @@ function Router() {
         <Route path="/auth" component={AuthPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/blog" component={BlogPage} />
+        <Route path="/blog/:slug" component={BlogPostPage} />
+        <Route path="/tutorials" component={TutorialsPage} />
         <Route component={Landing} />
       </Switch>
     );
@@ -156,6 +160,8 @@ function Router() {
         <Route path="/trigger-scraper" component={TriggerScraper} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/blog" component={BlogPage} />
+        <Route path="/blog/:slug" component={BlogPostPage} />
+        <Route path="/tutorials" component={TutorialsPage} />
         <Route path="/admin/automation" component={AutomationPage} />
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/profile" component={ProfilePage} />
