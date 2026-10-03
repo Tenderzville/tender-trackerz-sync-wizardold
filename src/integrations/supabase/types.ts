@@ -1492,6 +1492,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tutorials: {
+        Row: {
+          audience: string
+          created_at: string
+          description: string | null
+          duration: string | null
+          id: string
+          is_published: boolean
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+          youtube_url: string | null
+        }
+        Insert: {
+          audience?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       user_alerts: {
         Row: {
           created_at: string | null
