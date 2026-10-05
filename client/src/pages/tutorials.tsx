@@ -33,6 +33,7 @@ export default function TutorialsPage() {
       .then(({ data }: { data: Tutorial[] | null }) => { setItems(data ?? []); setLoading(false); });
   }, []);
 
+  const isMp4 = (url: string | null) => !!url && /\.mp4($|\?)/i.test(url);
   const shown = items.filter((t) => filter === 'all' || t.audience === filter || t.audience === 'all');
   const videos = items.filter((t) => toEmbedUrl(t.youtube_url ?? '')).map((t) => ({
     '@type': 'VideoObject',
@@ -69,7 +70,9 @@ export default function TutorialsPage() {
             return (
               <Card key={t.id} className="overflow-hidden flex flex-col">
                 <div className="aspect-video bg-muted flex items-center justify-center">
-                  {embed && playing === t.id ? (
+                  {isMp4(t.youtube_url) ? (
+                    <video src={t.youtube_url!} controls preload="metadata" className="w-full h-full object-cover" title={t.title} />
+                  ) : embed && playing === t.id ? (
                     <iframe src={`${embed}?autoplay=1`} title={t.title} className="w-full h-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
                   ) : embed ? (
                     <button onClick={() => setPlaying(t.id)} className="w-full h-full relative group" aria-label={`Play ${t.title}`}>
