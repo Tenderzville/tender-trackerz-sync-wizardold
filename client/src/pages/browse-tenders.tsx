@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SEO } from '@/components/SEO';
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TenderCard } from "@/components/tender/tender-card";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { KENYA_COUNTIES } from "@/components/landing/TenderTicker";
 
 interface FilterState {
   search: string;
@@ -32,6 +33,23 @@ interface Tender {
   tenderNumber?: string | null;
 }
 
+const PAGE_SIZE = 20;
+
+const CATEGORY_OPTIONS: { value: string; match: string[] }[] = [
+  { value: "Construction", match: ["Construction"] },
+  { value: "ICT", match: ["ICT", "IT Services"] },
+  { value: "Consultancy", match: ["Consultancy"] },
+  { value: "Supply", match: ["Supply", "Supplies"] },
+  { value: "Transport", match: ["Transport"] },
+  { value: "Healthcare", match: ["Healthcare"] },
+  { value: "Education", match: ["Education"] },
+  { value: "Agriculture", match: ["Agriculture"] },
+  { value: "Environment", match: ["Environment"] },
+  { value: "Other", match: ["Other"] },
+];
+
+const COUNTY_OPTIONS = [...KENYA_COUNTIES].sort((a, b) => a.localeCompare(b));
+
 export default function BrowseTenders() {
   const { toast } = useToast();
   const [filters, setFilters] = useState<FilterState>({
@@ -41,27 +59,55 @@ export default function BrowseTenders() {
     sortBy: "latest",
   });
 
-  const { data: tenders, isLoading } = useQuery({
-    queryKey: ["tenders", filters.category, filters.location, filters.search],
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(filters.search.trim()), 300);
+    return () => clearTimeout(id);
+  }, [filters.search]);
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["browse-tenders", filters.category, filters.location, debouncedSearch, filters.sortBy, limit],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
       let query = supabase
         .from("tenders")
-        .select("*")
-        .eq("status", "active");
-      
+        .select("*", { count: "exact" })
+        .eq("status", "active")
+        .gte("deadline", today);
+
       if (filters.category) {
-        query = query.eq("category", filters.category);
+        const option = CATEGORY_OPTIONS.find((o) => o.value === filters.category);
+        query = query.in("category", option ? option.match : [filters.category]);
       }
       if (filters.location) {
-        query = query.eq("location", filters.location);
+        query = query.ilike("location", `%${filters.location}%`);
       }
-      if (filters.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      if (debouncedSearch) {
+        const term = debouncedSearch.replace(/[%,()*]/g, " ").trim();
+        if (term) {
+          query = query.or(
+            `title.ilike.%${term}%,description.ilike.%${term}%,organization.ilike.%${term}%`
+          );
+        }
       }
-      
-      const { data, error } = await query.order("created_at", { ascending: false });
+
+      switch (filters.sortBy) {
+        case "deadline":
+          query = query.order("deadline", { ascending: true });
+          break;
+        case "budget":
+          query = query.order("budget_estimate", { ascending: false, nullsFirst: false });
+          break;
+        default:
+          query = query.order("created_at", { ascending: false });
+      }
+
+      const { data, error, count } = await query.range(0, limit - 1);
       if (error) throw error;
-      return (data || []).map(t => ({
+      const rows = (data || []).map(t => ({
         id: t.id,
         title: t.title,
         description: t.description,
@@ -75,11 +121,16 @@ export default function BrowseTenders() {
         sourceUrl: t.source_url,
         tenderNumber: t.tender_number,
       })) as Tender[];
+      return { rows, total: count ?? rows.length };
     },
   });
 
+  const sortedTenders: Tender[] = data?.rows ?? [];
+  const totalTenders = data?.total ?? 0;
+
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+    if (key !== "sortBy") setLimit(PAGE_SIZE);
   };
 
   const handleExportCSV = () => {
@@ -107,30 +158,13 @@ export default function BrowseTenders() {
     link.download = `tenders-export-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Exported!", description: `${sortedTenders.length} tenders exported to CSV. Open in Google Sheets to manage.` });
+    toast({ title: "Exported!", description: `${sortedTenders.length} tenders loaded tenders exported to CSV. Use Load more first to include more.` });
   };
-
-  const sortedTenders = tenders ? [...tenders].sort((a, b) => {
-    switch (filters.sortBy) {
-      case "deadline":
-        const aDeadline = a.deadline ? new Date(a.deadline) : new Date(0);
-        const bDeadline = b.deadline ? new Date(b.deadline) : new Date(0);
-        return aDeadline.getTime() - bDeadline.getTime();
-      case "budget":
-        return (b.budgetEstimate || 0) - (a.budgetEstimate || 0);
-      case "latest":
-      default:
-        const aCreated = a.createdAt ? new Date(a.createdAt) : new Date(0);
-        const bCreated = b.createdAt ? new Date(b.createdAt) : new Date(0);
-        return bCreated.getTime() - aCreated.getTime();
-    }
-  }) : [];
 
   return (
     <div className="min-h-screen bg-background">
       <SEO title="Browse Kenya Government Tenders — MyGov, PPRA & Counties" description="Search verified, real-time Kenyan government tenders from MyGov, PPRA and county portals. Filter by sector, county, deadline and budget." path="/browse" jsonLd={{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Kenya Government Tenders', url: 'https://tenderproapp.tenderzville-portal.co.ke/browse', about: 'Real-time tender opportunities from Kenyan government portals.' }} />
       <div className="container mx-auto py-8 px-4">
-        {/* Header */}
         <section className="mb-8">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
@@ -140,7 +174,6 @@ export default function BrowseTenders() {
               </p>
             </div>
 
-            {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -153,18 +186,15 @@ export default function BrowseTenders() {
               </div>
               
               <div className="flex flex-wrap gap-3">
-              <Select value={filters.category || "all"} onValueChange={(value) => handleFilterChange("category", value === "all" ? "" : value)}>
+                <Select value={filters.category || "all"} onValueChange={(value) => handleFilterChange("category", value === "all" ? "" : value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Construction">Construction</SelectItem>
-                    <SelectItem value="IT Services">IT Services</SelectItem>
-                    <SelectItem value="Consultancy">Consultancy</SelectItem>
-                    <SelectItem value="Supplies">Supplies</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.value}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 
@@ -174,11 +204,9 @@ export default function BrowseTenders() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Locations</SelectItem>
-                    <SelectItem value="Nairobi County">Nairobi County</SelectItem>
-                    <SelectItem value="Mombasa County">Mombasa County</SelectItem>
-                    <SelectItem value="Kiambu County">Kiambu County</SelectItem>
-                    <SelectItem value="Machakos County">Machakos County</SelectItem>
-                    <SelectItem value="Multi-County">Multi-County</SelectItem>
+                    {COUNTY_OPTIONS.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 
@@ -197,14 +225,13 @@ export default function BrowseTenders() {
           </div>
         </section>
 
-        {/* Results */}
         <section className="p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <h2 className="text-xl font-semibold">Tender Results</h2>
                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                  {sortedTenders.length} results
+                  {isLoading ? "Loading…" : `${totalTenders} ${totalTenders === 1 ? "result" : "results"}`}
                 </span>
               </div>
               
@@ -232,12 +259,17 @@ export default function BrowseTenders() {
                   <TenderCard key={tender.id} tender={tender} />
                 ))}
                 
-                {/* Load More Button */}
-                <div className="text-center mt-8">
-                  <Button variant="outline">
-                    Load More Tenders
-                  </Button>
-                </div>
+                {sortedTenders.length < totalTenders && (
+                  <div className="text-center mt-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => setLimit((l) => l + PAGE_SIZE)}
+                      disabled={isFetching}
+                    >
+                      {isFetching ? "Loading…" : `Load more (${totalTenders - sortedTenders.length} left)`}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <Card>
