@@ -204,14 +204,18 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
   const items = pages.flat();
   console.log(`tenders.go.ke: fetched ${items.length} items across ${MAX_PAGES} pages`);
 
+  let skippedNoDeadline = 0;
   for (const item of items) {
     const sourceUrl = `https://tenders.go.ke/tenders/${item.id}`;
     const category = mapProcurementCategory(
       item.procurement_category?.title || item.procurement_category?.code || ''
     );
-    const deadline = item.close_at
-      ? new Date(item.close_at).toISOString().split('T')[0]
-      : getFutureDate(30);
+    // Real closing date only. Missing / invalid / already-closed => skip the tender.
+    const deadline = validateDate(item.close_at);
+    if (!deadline) {
+      skippedNoDeadline++;
+      continue;
+    }
     const location = item.pe?.city || item.pe?.physical_address || 'Kenya';
 
     tenders.push({
@@ -230,6 +234,9 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
     });
   }
 
+  if (skippedNoDeadline > 0) {
+    console.log(`tenders.go.ke: skipped ${skippedNoDeadline} tender(s) with no valid future deadline`);
+  }
   return tenders;
 }
 
@@ -304,7 +311,7 @@ async function parseWithAI(source: string, markdown: string, deepLinks: string[]
     : 'https://egpkenya.go.ke';
 
   const deepLinkHint = deepLinks.length
-    ? `\n\nAUTHORITATIVE DEEP LINKS (eGP Kenya tender detail URLs found on the page — match each tender to one of these by the numeric tender ID embedded in the URL after /view-tender-notice/):\n${deepLinks.slice(0, 200).join('\n')}\n\nFor each tender, set sourceLink to the FULL matching URL from the list above when the tender ID matches.`
+    ? `\n\nAUTHORITATIVE DEEP LINKS (eGP Kenya tender detail URLs found on the page — match each tender to one of these by the numeric tender ID embedded in the URL after /view-tender-notice/):[...]`
     : '';
 
   try {
@@ -330,7 +337,7 @@ Each tender must have:
 - organization (required): EXACT procuring entity name as written
 - category: One of: Construction, ICT, Consultancy, Supply, Transport, Healthcare, Education, Agriculture, Environment, Other
 - location: County or region in Kenya (default: "Nairobi" if not specified)
-- deadline: Date in YYYY-MM-DD format (estimate 30 days from now if not specified)
+- deadline: Closing date in YYYY-MM-DD format, EXACTLY as written on the page. If no closing date is shown, return null. Never guess or estimate a date.
 - tenderNumber: Official reference/tender number if available
 - description: Brief description
 - tenderId: The numeric tender ID if visible (e.g., "Tender ID : 13401" → 13401)
@@ -367,7 +374,11 @@ Return ONLY a valid JSON array. If no tenders, return []`
       if (m) egpLinkById.set(m[1], link);
     }
 
-    return parsed.map((t: any) => {
+    const mapped: (TenderData | null)[] = parsed.map((t: any) => {
+      // Never invent a deadline: no valid future closing date => drop the tender.
+      const deadline = validateDate(t.deadline);
+      if (!deadline) return null;
+
       // Build the best possible source URL
       let sourceUrl: string;
       const tid = t.tenderId ? String(t.tenderId).match(/\d+/)?.[0] : undefined;
@@ -394,7 +405,7 @@ Return ONLY a valid JSON array. If no tenders, return []`
         organization: t.organization || 'Government of Kenya',
         category: validateCategory(t.category),
         location: t.location || 'Nairobi',
-        deadline: validateDate(t.deadline),
+        deadline,
         budgetEstimate: 0, // Never fabricate budgets
         scrapedFrom: source,
         sourceUrl,
@@ -402,6 +413,12 @@ Return ONLY a valid JSON array. If no tenders, return []`
         requirements: [],
       };
     });
+
+    const kept = mapped.filter((t): t is TenderData => t !== null);
+    if (kept.length < mapped.length) {
+      console.log(`AI parse (${source}): skipped ${mapped.length - kept.length} tender(s) with no valid future deadline`);
+    }
+    return kept;
   } catch (error) {
     console.error('AI parsing error:', error);
     return [];
@@ -526,22 +543,18 @@ function validateCategory(category: string): string {
   return 'Other';
 }
 
-function validateDate(dateStr: string): string {
-  if (!dateStr) return getFutureDate(30);
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return getFutureDate(30);
-    if (date < new Date()) return getFutureDate(30);
-    return date.toISOString().split('T')[0];
-  } catch {
-    return getFutureDate(30);
-  }
-}
-
-function getFutureDate(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
+/**
+ * Returns the tender's real closing date (YYYY-MM-DD), or null when it is
+ * missing, unparseable or already in the past. We never invent a deadline:
+ * a made-up "30 days left" makes suppliers bid on tenders that have closed.
+ */
+function validateDate(dateStr?: string | null): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return null;
+  const iso = date.toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  return iso >= today ? iso : null;
 }
 
 function hasMinimumPreparationWindow(deadline: string): boolean {
