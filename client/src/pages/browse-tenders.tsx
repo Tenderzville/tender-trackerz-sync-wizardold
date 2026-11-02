@@ -107,7 +107,7 @@ export default function BrowseTenders() {
     link.download = `tenders-export-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    toast({ title: "Exported!", description: `${sortedTenders.length} tenders exported to CSV. Open in Google Sheets to manage.` });
+    toast({ title: "Exported!", description: `${sortedTenders.length} loaded tenders exported to CSV. Use Load more first to include more.` });
   };
 
   const sortedTenders = tenders ? [...tenders].sort((a, b) => {
