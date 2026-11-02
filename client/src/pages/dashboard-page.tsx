@@ -11,7 +11,7 @@ import {
   FileText, 
   Heart, 
   Users, 
-  Trophy, 
+  Clock, 
   Plus,
   Brain,
   ArrowRight,
@@ -156,11 +156,32 @@ export default function Dashboard() {
     (preferences.keywords?.length > 0)
   );
 
+  // Real counts over ALL open tenders (not just the 10 rows fetched for the list),
+  // using the same filters as the "Your numbers this week" card so the two always agree.
+  const { data: openCounts } = useQuery({
+    queryKey: ["dashboard-open-counts", new Date().toISOString().slice(0, 10)],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const in7 = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      const open = () =>
+        supabase
+          .from("tenders")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active")
+          .gte("deadline", today);
+      const [all, closing] = await Promise.all([open(), open().lt("deadline", in7)]);
+      if (all.error) throw all.error;
+      if (closing.error) throw closing.error;
+      return { open: all.count ?? 0, closingSoon: closing.count ?? 0 };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const stats = {
-    activeTenders: tenders?.length || 0,
+    activeTenders: openCounts?.open ?? 0,
     savedTenders: savedTenders?.length || 0,
     consortiums: consortiums?.length || 0,
-    winRate: 68,
+    closingSoon: openCounts?.closingSoon ?? 0,
   };
 
   const recentTenders = tenders?.slice(0, 3) || [];
@@ -277,7 +298,6 @@ export default function Dashboard() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <FileText className="h-5 w-5 text-primary" />
-                  <Badge variant="secondary" className="text-xs">+12%</Badge>
                 </div>
                 <p className="text-2xl font-bold">{stats.activeTenders}</p>
                 <p className="text-sm text-muted-foreground">{t('dash.activeTenders')}</p>
@@ -306,11 +326,10 @@ export default function Dashboard() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <Trophy className="h-5 w-5 text-yellow-500" />
-                  <Badge variant="secondary" className="text-xs">+5%</Badge>
+                  <Clock className="h-5 w-5 text-destructive" />
                 </div>
-                <p className="text-2xl font-bold">{stats.winRate}%</p>
-                <p className="text-sm text-muted-foreground">{t('dash.winRate')}</p>
+                <p className="text-2xl font-bold">{stats.closingSoon}</p>
+                <p className="text-sm text-muted-foreground">{t('dash.closingSoon')}</p>
               </CardContent>
             </Card>
           </div>

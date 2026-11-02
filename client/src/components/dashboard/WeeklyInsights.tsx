@@ -149,7 +149,7 @@ export function WeeklyInsights() {
             <div>
               <div className="mb-1 flex items-center gap-2 text-muted-foreground">
                 <MapPin className="h-4 w-4" />
-                <span className="text-xs">Open to you</span>
+                <span className="text-xs">{kpis?.tailored ? "Open to you" : "Open now"}</span>
               </div>
               <p className="text-2xl font-bold">{kpis?.matched ?? "—"}</p>
               <p className="text-xs text-muted-foreground">{kpis?.newThisWeek ?? 0} added in 7 days</p>

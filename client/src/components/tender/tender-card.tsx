@@ -274,7 +274,7 @@ export function TenderCard({ tender, showSaveButton = true }: TenderCardProps) {
             
             <p className="text-muted-foreground text-sm line-clamp-2 mb-4">{tender.description}</p>
             
-            <AiEstimate tenderId={tender.id} />
+            <AiEstimate tenderId={tender.id} tender={tender} />
           </div>
           
           <div className="flex flex-col lg:items-end space-y-3">

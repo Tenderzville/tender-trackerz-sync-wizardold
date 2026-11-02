@@ -208,7 +208,8 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
   for (const item of items) {
     const sourceUrl = `https://tenders.go.ke/tenders/${item.id}`;
     const category = mapProcurementCategory(
-      item.procurement_category?.title || item.procurement_category?.code || ''
+      item.procurement_category?.title || item.procurement_category?.code || '',
+      item.title || ''
     );
     // Real closing date only. Missing / invalid / already-closed => skip the tender.
     const deadline = validateDate(item.close_at);
@@ -311,7 +312,7 @@ async function parseWithAI(source: string, markdown: string, deepLinks: string[]
     : 'https://egpkenya.go.ke';
 
   const deepLinkHint = deepLinks.length
-    ? `\n\nAUTHORITATIVE DEEP LINKS (eGP Kenya tender detail URLs found on the page — match each tender to one of these by the numeric tender ID embedded in the URL after /view-tender-notice/):[...]`
+    ? `\n\nAUTHORITATIVE DEEP LINKS (eGP Kenya tender detail URLs found on the page — match each tender to one of these by the numeric tender ID embedded in the URL after /view-tender-notice/):\n${deepLinks.slice(0, 200).join('\n')}\n\nFor each tender, set sourceLink to the FULL matching URL from the list above when the tender ID matches.`
     : '';
 
   try {
@@ -403,7 +404,7 @@ Return ONLY a valid JSON array. If no tenders, return []`
         title: t.title || 'Untitled Tender',
         description: t.description || `${t.title} - Procurement by ${t.organization}`,
         organization: t.organization || 'Government of Kenya',
-        category: validateCategory(t.category),
+        category: validateCategory(t.category, t.title),
         location: t.location || 'Nairobi',
         deadline,
         budgetEstimate: 0, // Never fabricate budgets
@@ -514,33 +515,54 @@ async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boole
 // ============================================================
 // Utility functions
 // ============================================================
-function mapProcurementCategory(cat: string): string {
+/**
+ * Keyword fallback for tenders whose portal category is generic ("Non Consultancy
+ * Services", "Other", blank). Returns null when nothing clearly matches so we
+ * never force a wrong label.
+ */
+function categoryFromTitle(title: string): string | null {
+  const t = (title || '').toLowerCase();
+  if (/\b(transport|clearing|forwarding|cargo|freight|haulage|logistics|courier|shipping|fleet|vehicle hire|car hire)\b/.test(t)) return 'Transport';
+  if (/\b(medical|hospital|pharmaceutical|laborator(y|ies)|surgical|health ?care)\b/.test(t)) return 'Healthcare';
+  if (/\b(software|ict|computers?|laptops?|servers?|network(ing)?|website|internet|digital)\b/.test(t)) return 'ICT';
+  if (/\b(construction|renovation|rehabilitation|borehole|drilling|classrooms?|fencing|roofing)\b/.test(t)) return 'Construction';
+  if (/\b(seeds?|fertili[sz]ers?|livestock|agricultur(e|al)|irrigation)\b/.test(t)) return 'Agriculture';
+  return null;
+}
+
+function mapProcurementCategory(cat: string, title = ''): string {
   const lower = cat.toLowerCase();
+  // "non consultancy services" CONTAINS "consultancy", so test the non- variants
+  // first. Previously these were mislabelled Consultancy (e.g. cargo/clearing tenders).
+  if (/non[\s-]*consultancy/.test(lower)) return categoryFromTitle(title) ?? 'Other';
   if (lower.includes('work')) return 'Construction';
   if (lower.includes('good')) return 'Supply';
   if (lower.includes('consultancy')) return 'Consultancy';
-  if (lower.includes('non consultancy') || lower.includes('non-consultancy')) return 'Other';
   if (lower.includes('ict') || lower.includes('software') || lower.includes('technology')) return 'ICT';
-  return 'Other';
+  return categoryFromTitle(title) ?? 'Other';
 }
 
-function validateCategory(category: string): string {
+function validateCategory(category: string, title = ''): string {
   const valid = ['Construction', 'ICT', 'Consultancy', 'Supply', 'Transport', 'Healthcare', 'Education', 'Agriculture', 'Environment', 'Other'];
   if (valid.includes(category)) return category;
 
-  const map: Record<string, string> = {
-    'it': 'ICT', 'technology': 'ICT', 'software': 'ICT',
-    'building': 'Construction', 'infrastructure': 'Construction', 'works': 'Construction',
-    'goods': 'Supply', 'equipment': 'Supply',
-    'services': 'Consultancy', 'medical': 'Healthcare',
-    'school': 'Education', 'training': 'Education',
-  };
+  // Word-boundary patterns: a bare substring test like includes('it') matched
+  // "security", "facilities" etc. and 'services' was blanket-mapped to Consultancy.
+  const patterns: [RegExp, string][] = [
+    [/\b(it|ict|technology|software)\b/, 'ICT'],
+    [/\b(building|infrastructure|works|construction)\b/, 'Construction'],
+    [/\b(goods|equipment|supplies|supply)\b/, 'Supply'],
+    [/\b(consultancy|consulting|advisory)\b/, 'Consultancy'],
+    [/\b(transport|logistics|cargo|freight)\b/, 'Transport'],
+    [/\b(medical|health|healthcare)\b/, 'Healthcare'],
+    [/\b(school|education|training)\b/, 'Education'],
+  ];
 
   const lower = (category || '').toLowerCase();
-  for (const [key, value] of Object.entries(map)) {
-    if (lower.includes(key)) return value;
+  for (const [re, value] of patterns) {
+    if (re.test(lower)) return value;
   }
-  return 'Other';
+  return categoryFromTitle(title) ?? 'Other';
 }
 
 /**

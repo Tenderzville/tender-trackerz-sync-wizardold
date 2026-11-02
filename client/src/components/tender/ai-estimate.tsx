@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,9 @@ export function AiEstimate({ tenderId, showExpanded = false, tender }: AiEstimat
   };
 
   const confidence = getConfidenceLevel(analysis.confidence_score);
+  // Estimates only exist when the tender published a budget; otherwise say so.
+  const hasEstimate = !!analysis.estimated_value_min && !!analysis.estimated_value_max;
+  const rangeText = `${formatCurrency(analysis.estimated_value_min)} - ${formatCurrency(analysis.estimated_value_max)}`;
 
   if (!showExpanded) {
     return (
@@ -79,15 +83,23 @@ export function AiEstimate({ tenderId, showExpanded = false, tender }: AiEstimat
           <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
             AI Estimate
           </span>
-          <Badge variant="outline" className="text-xs border-purple-300 text-purple-600">
-            {confidence.label} confidence
-          </Badge>
+          {hasEstimate && (
+            <Badge variant="outline" className="text-xs border-purple-300 text-purple-600">
+              {confidence.label} confidence
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-purple-700 dark:text-purple-300">
-          Estimated winning bid:
-          <span className="font-semibold ml-1">
-             {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
-          </span>
+          {hasEstimate ? (
+            <>
+              Estimated winning bid:
+              <span className="font-semibold ml-1">{rangeText}</span>
+            </>
+          ) : (
+            <span className="text-purple-600 dark:text-purple-400">
+              No budget published — value estimate unavailable
+            </span>
+          )}
           {tender && <BidReadiness tender={tender} />}
         </p>
       </div>
@@ -111,9 +123,11 @@ export function AiEstimate({ tenderId, showExpanded = false, tender }: AiEstimat
               </p>
             </div>
           </div>
-          <Badge className={`${confidence.color} bg-white dark:bg-slate-800`}>
-            {confidence.label} Confidence
-          </Badge>
+          {hasEstimate && (
+            <Badge className={`${confidence.color} bg-white dark:bg-slate-800`}>
+              {confidence.label} Confidence
+            </Badge>
+          )}
         </div>
 
         {/* Key Metrics */}
@@ -123,11 +137,13 @@ export function AiEstimate({ tenderId, showExpanded = false, tender }: AiEstimat
               <TrendingUp className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium">Estimated Range</span>
             </div>
-            <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-              {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
-            </p>
+            {hasEstimate ? (
+              <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{rangeText}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">No budget published — estimate unavailable</p>
+            )}
           </div>
-          
+
           {tender && (
             <div className="md:col-span-2">
               <BidReadinessPanel tender={tender} />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { checkEmail } from "@/lib/email";
 import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
@@ -119,7 +120,10 @@ export function useAuth(): AuthState {
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (rawEmail: string, password: string, metadata?: any) => {
+    const check = checkEmail(rawEmail);
+    if (!check.ok) return { error: new Error(check.reason) };
+    const email = check.email;
     try {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/`;
@@ -149,7 +153,10 @@ export function useAuth(): AuthState {
     });
   };
 
-  const signInWithMagicLink = async (email: string) => {
+  const signInWithMagicLink = async (rawEmail: string) => {
+    const check = checkEmail(rawEmail);
+    if (!check.ok) return { error: new Error(check.reason) };
+    const email = check.email;
     try {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/auth`;
@@ -158,6 +165,9 @@ export function useAuth(): AuthState {
         email,
         options: {
           emailRedirectTo: redirectUrl,
+          // Magic link is for existing accounts only. Without this, a typo here
+          // CREATES a new user and sends an email to an address that may not exist.
+          shouldCreateUser: false,
         },
       });
       return { error };
@@ -168,7 +178,10 @@ export function useAuth(): AuthState {
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const resetPassword = async (rawEmail: string) => {
+    const check = checkEmail(rawEmail);
+    if (!check.ok) return { error: new Error(check.reason) };
+    const email = check.email;
     try {
       setIsLoading(true);
       const redirectUrl = `${window.location.origin}/auth`;

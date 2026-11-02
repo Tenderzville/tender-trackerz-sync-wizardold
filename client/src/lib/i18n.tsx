@@ -40,6 +40,7 @@ const translations: Record<string, Record<Language, string>> = {
   'dash.savedTenders': { en: 'Saved Tenders', sw: 'Zabuni Zilizohifadhiwa' },
   'dash.consortiums': { en: 'Consortiums', sw: 'Mashirika' },
   'dash.winRate': { en: 'Win Rate', sw: 'Kiwango cha Ushindi' },
+  'dash.closingSoon': { en: 'Closing in 7 days', sw: 'Zinafungwa ndani ya siku 7' },
   'dash.latestTenders': { en: 'Latest Tenders', sw: 'Zabuni za Hivi Karibuni' },
   'dash.viewAll': { en: 'View All', sw: 'Tazama Zote' },
   'dash.smartMatches': { en: 'Smart Matches', sw: 'Mechi Bora' },
