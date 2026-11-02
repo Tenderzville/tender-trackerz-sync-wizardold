@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Brain, TrendingUp, AlertCircle, Lightbulb, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BidReadiness, BidReadinessPanel } from "./bid-readiness";
+import type { AlignmentTender } from "@/lib/bid-readiness";
 
 interface AiEstimateProps {
   tenderId: number;
   showExpanded?: boolean;
+  /** Needed to compute Bid Readiness from the supplier's own preferences. */
+  tender?: AlignmentTender;
 }
 
 interface AiAnalysis {
@@ -19,7 +23,7 @@ interface AiAnalysis {
   recommendations: string[] | null;
 }
 
-export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) {
+export function AiEstimate({ tenderId, showExpanded = false, tender }: AiEstimateProps) {
   const { data: analysis, isLoading } = useQuery<AiAnalysis | null>({
     queryKey: ["ai-analysis", tenderId],
     queryFn: async () => {
@@ -33,21 +37,6 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
 
       return data || null;
     },
-  });
-
-  const { data: hasPrefs } = useQuery<boolean>({
-    queryKey: ["user-has-preferences"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return false;
-      const { data } = await supabase
-        .from("user_preferences")
-        .select("sectors, counties, keywords")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      return !!(data && ((data.sectors?.length ?? 0) > 0 || (data.counties?.length ?? 0) > 0 || (data.keywords?.length ?? 0) > 0));
-    },
-    staleTime: 5 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -73,13 +62,6 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
     }).format(amount);
   };
 
-  const getWinProbabilityColor = (probability: number | null) => {
-    if (!probability) return "text-gray-500";
-    if (probability >= 70) return "text-green-600 dark:text-green-400";
-    if (probability >= 50) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
-
   const getConfidenceLevel = (score: number | null) => {
     if (!score) return { label: "Unknown", color: "text-gray-600" };
     if (score >= 90) return { label: "Very High", color: "text-green-600" };
@@ -89,6 +71,9 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
   };
 
   const confidence = getConfidenceLevel(analysis.confidence_score);
+  // Estimates only exist when the tender published a budget; otherwise say so.
+  const hasEstimate = !!analysis.estimated_value_min && !!analysis.estimated_value_max;
+  const rangeText = `${formatCurrency(analysis.estimated_value_min)} - ${formatCurrency(analysis.estimated_value_max)}`;
 
   if (!showExpanded) {
     return (
@@ -98,26 +83,24 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
           <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
             AI Estimate
           </span>
-          <Badge variant="outline" className="text-xs border-purple-300 text-purple-600">
-            {confidence.label} confidence
-          </Badge>
+          {hasEstimate && (
+            <Badge variant="outline" className="text-xs border-purple-300 text-purple-600">
+              {confidence.label} confidence
+            </Badge>
+          )}
         </div>
         <p className="text-sm text-purple-700 dark:text-purple-300">
-          Estimated winning bid:
-          <span className="font-semibold ml-1">
-             {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
-          </span>
-          <span className="mx-2">•</span>
-          Bid Readiness:
-          {hasPrefs ? (
-            <span className={`font-semibold ml-1 ${getWinProbabilityColor(analysis.win_probability)}`}>
-              {analysis.win_probability ?? '—'}%
-            </span>
+          {hasEstimate ? (
+            <>
+              Estimated winning bid:
+              <span className="font-semibold ml-1">{rangeText}</span>
+            </>
           ) : (
-            <a href="/settings" className="font-medium ml-1 text-primary underline inline-flex items-center gap-1">
-              <Settings className="h-3 w-3" /> Set preferences to see your alignment score
-            </a>
+            <span className="text-purple-600 dark:text-purple-400">
+              No budget published — value estimate unavailable
+            </span>
           )}
+          {tender && <BidReadiness tender={tender} />}
         </p>
       </div>
     );
@@ -140,9 +123,11 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
               </p>
             </div>
           </div>
-          <Badge className={`${confidence.color} bg-white dark:bg-slate-800`}>
-            {confidence.label} Confidence
-          </Badge>
+          {hasEstimate && (
+            <Badge className={`${confidence.color} bg-white dark:bg-slate-800`}>
+              {confidence.label} Confidence
+            </Badge>
+          )}
         </div>
 
         {/* Key Metrics */}
@@ -152,27 +137,18 @@ export function AiEstimate({ tenderId, showExpanded = false }: AiEstimateProps) 
               <TrendingUp className="h-4 w-4 text-green-500" />
               <span className="text-sm font-medium">Estimated Range</span>
             </div>
-            <p className="text-lg font-bold text-purple-900 dark:text-purple-100">
-              {formatCurrency(analysis.estimated_value_min)} - {formatCurrency(analysis.estimated_value_max)}
-            </p>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-lg">
-            <div className="flex items-center space-x-2 mb-1">
-              <AlertCircle className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium">Bid Readiness</span>
-            </div>
-            {hasPrefs ? (
-              <p className={`text-lg font-bold ${getWinProbabilityColor(analysis.win_probability)}`}>
-                {analysis.win_probability ?? '—'}%
-              </p>
+            {hasEstimate ? (
+              <p className="text-lg font-bold text-purple-900 dark:text-purple-100">{rangeText}</p>
             ) : (
-              <a href="/settings" className="text-sm font-medium text-primary underline inline-flex items-center gap-1">
-                <Settings className="h-3.5 w-3.5" /> Set preferences to see your alignment score
-              </a>
+              <p className="text-sm text-muted-foreground">No budget published — estimate unavailable</p>
             )}
-            <p className="text-[10px] text-muted-foreground mt-1">Informational only · not a prediction</p>
           </div>
+
+          {tender && (
+            <div className="md:col-span-2">
+              <BidReadinessPanel tender={tender} />
+            </div>
+          )}
         </div>
 
         {/* Recommendations */}

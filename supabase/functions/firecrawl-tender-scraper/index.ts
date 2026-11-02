@@ -204,14 +204,19 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
   const items = pages.flat();
   console.log(`tenders.go.ke: fetched ${items.length} items across ${MAX_PAGES} pages`);
 
+  let skippedNoDeadline = 0;
   for (const item of items) {
     const sourceUrl = `https://tenders.go.ke/tenders/${item.id}`;
     const category = mapProcurementCategory(
-      item.procurement_category?.title || item.procurement_category?.code || ''
+      item.procurement_category?.title || item.procurement_category?.code || '',
+      item.title || ''
     );
-    const deadline = item.close_at
-      ? new Date(item.close_at).toISOString().split('T')[0]
-      : getFutureDate(30);
+    // Real closing date only. Missing / invalid / already-closed => skip the tender.
+    const deadline = validateDate(item.close_at);
+    if (!deadline) {
+      skippedNoDeadline++;
+      continue;
+    }
     const location = item.pe?.city || item.pe?.physical_address || 'Kenya';
 
     tenders.push({
@@ -230,6 +235,9 @@ async function fetchFromTendersGoKeAPI(): Promise<TenderData[]> {
     });
   }
 
+  if (skippedNoDeadline > 0) {
+    console.log(`tenders.go.ke: skipped ${skippedNoDeadline} tender(s) with no valid future deadline`);
+  }
   return tenders;
 }
 
@@ -330,7 +338,7 @@ Each tender must have:
 - organization (required): EXACT procuring entity name as written
 - category: One of: Construction, ICT, Consultancy, Supply, Transport, Healthcare, Education, Agriculture, Environment, Other
 - location: County or region in Kenya (default: "Nairobi" if not specified)
-- deadline: Date in YYYY-MM-DD format (estimate 30 days from now if not specified)
+- deadline: Closing date in YYYY-MM-DD format, EXACTLY as written on the page. If no closing date is shown, return null. Never guess or estimate a date.
 - tenderNumber: Official reference/tender number if available
 - description: Brief description
 - tenderId: The numeric tender ID if visible (e.g., "Tender ID : 13401" → 13401)
@@ -367,7 +375,11 @@ Return ONLY a valid JSON array. If no tenders, return []`
       if (m) egpLinkById.set(m[1], link);
     }
 
-    return parsed.map((t: any) => {
+    const mapped: (TenderData | null)[] = parsed.map((t: any) => {
+      // Never invent a deadline: no valid future closing date => drop the tender.
+      const deadline = validateDate(t.deadline);
+      if (!deadline) return null;
+
       // Build the best possible source URL
       let sourceUrl: string;
       const tid = t.tenderId ? String(t.tenderId).match(/\d+/)?.[0] : undefined;
@@ -392,9 +404,9 @@ Return ONLY a valid JSON array. If no tenders, return []`
         title: t.title || 'Untitled Tender',
         description: t.description || `${t.title} - Procurement by ${t.organization}`,
         organization: t.organization || 'Government of Kenya',
-        category: validateCategory(t.category),
+        category: validateCategory(t.category, t.title),
         location: t.location || 'Nairobi',
-        deadline: validateDate(t.deadline),
+        deadline,
         budgetEstimate: 0, // Never fabricate budgets
         scrapedFrom: source,
         sourceUrl,
@@ -402,6 +414,12 @@ Return ONLY a valid JSON array. If no tenders, return []`
         requirements: [],
       };
     });
+
+    const kept = mapped.filter((t): t is TenderData => t !== null);
+    if (kept.length < mapped.length) {
+      console.log(`AI parse (${source}): skipped ${mapped.length - kept.length} tender(s) with no valid future deadline`);
+    }
+    return kept;
   } catch (error) {
     console.error('AI parsing error:', error);
     return [];
@@ -497,51 +515,68 @@ async function saveTenderIfNew(supabase: any, tender: TenderData): Promise<boole
 // ============================================================
 // Utility functions
 // ============================================================
-function mapProcurementCategory(cat: string): string {
+/**
+ * Keyword fallback for tenders whose portal category is generic ("Non Consultancy
+ * Services", "Other", blank). Returns null when nothing clearly matches so we
+ * never force a wrong label.
+ */
+function categoryFromTitle(title: string): string | null {
+  const t = (title || '').toLowerCase();
+  if (/\b(transport|clearing|forwarding|cargo|freight|haulage|logistics|courier|shipping|fleet|vehicle hire|car hire)\b/.test(t)) return 'Transport';
+  if (/\b(medical|hospital|pharmaceutical|laborator(y|ies)|surgical|health ?care)\b/.test(t)) return 'Healthcare';
+  if (/\b(software|ict|computers?|laptops?|servers?|network(ing)?|website|internet|digital)\b/.test(t)) return 'ICT';
+  if (/\b(construction|renovation|rehabilitation|borehole|drilling|classrooms?|fencing|roofing)\b/.test(t)) return 'Construction';
+  if (/\b(seeds?|fertili[sz]ers?|livestock|agricultur(e|al)|irrigation)\b/.test(t)) return 'Agriculture';
+  return null;
+}
+
+function mapProcurementCategory(cat: string, title = ''): string {
   const lower = cat.toLowerCase();
+  // "non consultancy services" CONTAINS "consultancy", so test the non- variants
+  // first. Previously these were mislabelled Consultancy (e.g. cargo/clearing tenders).
+  if (/non[\s-]*consultancy/.test(lower)) return categoryFromTitle(title) ?? 'Other';
   if (lower.includes('work')) return 'Construction';
   if (lower.includes('good')) return 'Supply';
   if (lower.includes('consultancy')) return 'Consultancy';
-  if (lower.includes('non consultancy') || lower.includes('non-consultancy')) return 'Other';
   if (lower.includes('ict') || lower.includes('software') || lower.includes('technology')) return 'ICT';
-  return 'Other';
+  return categoryFromTitle(title) ?? 'Other';
 }
 
-function validateCategory(category: string): string {
+function validateCategory(category: string, title = ''): string {
   const valid = ['Construction', 'ICT', 'Consultancy', 'Supply', 'Transport', 'Healthcare', 'Education', 'Agriculture', 'Environment', 'Other'];
   if (valid.includes(category)) return category;
 
-  const map: Record<string, string> = {
-    'it': 'ICT', 'technology': 'ICT', 'software': 'ICT',
-    'building': 'Construction', 'infrastructure': 'Construction', 'works': 'Construction',
-    'goods': 'Supply', 'equipment': 'Supply',
-    'services': 'Consultancy', 'medical': 'Healthcare',
-    'school': 'Education', 'training': 'Education',
-  };
+  // Word-boundary patterns: a bare substring test like includes('it') matched
+  // "security", "facilities" etc. and 'services' was blanket-mapped to Consultancy.
+  const patterns: [RegExp, string][] = [
+    [/\b(it|ict|technology|software)\b/, 'ICT'],
+    [/\b(building|infrastructure|works|construction)\b/, 'Construction'],
+    [/\b(goods|equipment|supplies|supply)\b/, 'Supply'],
+    [/\b(consultancy|consulting|advisory)\b/, 'Consultancy'],
+    [/\b(transport|logistics|cargo|freight)\b/, 'Transport'],
+    [/\b(medical|health|healthcare)\b/, 'Healthcare'],
+    [/\b(school|education|training)\b/, 'Education'],
+  ];
 
   const lower = (category || '').toLowerCase();
-  for (const [key, value] of Object.entries(map)) {
-    if (lower.includes(key)) return value;
+  for (const [re, value] of patterns) {
+    if (re.test(lower)) return value;
   }
-  return 'Other';
+  return categoryFromTitle(title) ?? 'Other';
 }
 
-function validateDate(dateStr: string): string {
-  if (!dateStr) return getFutureDate(30);
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return getFutureDate(30);
-    if (date < new Date()) return getFutureDate(30);
-    return date.toISOString().split('T')[0];
-  } catch {
-    return getFutureDate(30);
-  }
-}
-
-function getFutureDate(days: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + days);
-  return date.toISOString().split('T')[0];
+/**
+ * Returns the tender's real closing date (YYYY-MM-DD), or null when it is
+ * missing, unparseable or already in the past. We never invent a deadline:
+ * a made-up "30 days left" makes suppliers bid on tenders that have closed.
+ */
+function validateDate(dateStr?: string | null): string | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return null;
+  const iso = date.toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
+  return iso >= today ? iso : null;
 }
 
 function hasMinimumPreparationWindow(deadline: string): boolean {

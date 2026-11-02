@@ -32,6 +32,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { BidReadinessPanel } from "./bid-readiness";
 
 interface TenderDetailsModalProps {
   tenderId: number | null;
@@ -40,24 +41,11 @@ interface TenderDetailsModalProps {
 }
 
 interface AiAnalysis {
-  winProbability: number;
-  confidenceScore: number;
-  marginOfError: number;
-  estimatedValueMin: number;
-  estimatedValueMax: number;
-  competitiveIntensity: string;
-  riskLevel: string;
   recommendations: string[];
   reasoning: string;
-  bidStrategy: {
-    optimalBidRange: { min: number; max: number };
-    timingAdvice: string;
-    keySuccessFactors: string[];
-  };
-  marketInsights: {
-    averageWinningBid: number;
-    typicalCompetitors: number;
-    sectorTrend: string;
+  bidStrategy?: {
+    timingAdvice?: string;
+    keySuccessFactors?: string[];
   };
 }
 
@@ -138,21 +126,6 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  const getProbabilityColor = (prob: number) => {
-    if (prob >= 70) return "text-green-600 dark:text-green-400";
-    if (prob >= 40) return "text-yellow-600 dark:text-yellow-400";
-    return "text-red-600 dark:text-red-400";
-  };
-
-  const getRiskBadgeVariant = (risk: string) => {
-    switch (risk?.toLowerCase()) {
-      case 'low': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'medium': return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case 'high': return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      default: return "bg-gray-100 text-gray-800";
-    }
   };
 
   if (!tenderId) return null;
@@ -329,7 +302,7 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                         <div className="text-center">
                           <p className="font-medium">Analyzing tender with AI...</p>
                           <p className="text-sm text-muted-foreground">
-                            Calculating bid readiness and market insights
+                            Preparing guidance for this tender
                           </p>
                         </div>
                       </div>
@@ -337,81 +310,32 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                   </Card>
                 ) : aiAnalysis ? (
                   <>
-                    {/* Win Probability Card */}
-                    <Card className="border-2 border-primary/20">
-                      <CardContent className="pt-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="text-center">
-                            <div className={`text-4xl font-bold ${getProbabilityColor(aiAnalysis.winProbability)}`}>
-                              {aiAnalysis.winProbability}%
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">Bid Readiness Score</p>
-                            <p className="text-xs text-muted-foreground">
-                              ±{aiAnalysis.marginOfError}% margin of error
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-4xl font-bold text-primary">
-                              {aiAnalysis.confidenceScore}%
-                            </div>
-                            <p className="text-sm text-muted-foreground mt-1">AI Confidence</p>
-                          </div>
-                          <div className="text-center">
-                            <Badge className={`${getRiskBadgeVariant(aiAnalysis.riskLevel)} text-lg px-4 py-1`}>
-                              {aiAnalysis.riskLevel} Risk
-                            </Badge>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              {aiAnalysis.competitiveIntensity}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    {/* Bid Readiness: fit with the supplier's own preferences + time to prepare */}
+                    <BidReadinessPanel tender={tender} />
 
-                    {/* Estimated Winning Bid Range */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4" />
-                          Estimated Winning Bid Range
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-2xl font-bold text-green-600">
-                              {formatCurrency(aiAnalysis.estimatedValueMin)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Minimum</p>
-                          </div>
-                          <div className="flex-1 mx-4">
-                            <div className="h-2 bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-full" />
-                          </div>
-                          <div className="text-right">
-                            <p className="text-2xl font-bold text-red-600">
-                              {formatCurrency(aiAnalysis.estimatedValueMax)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Maximum</p>
-                          </div>
-                        </div>
-                        {aiAnalysis.bidStrategy && (
-                          <div className="mt-4 p-3 bg-primary/5 rounded-lg">
-                            <p className="text-sm font-medium">💡 Optimal Bid Range</p>
-                            <p className="text-lg font-bold text-primary">
-                              {formatCurrency(aiAnalysis.bidStrategy.optimalBidRange.min)} - {formatCurrency(aiAnalysis.bidStrategy.optimalBidRange.max)}
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
+                    {/* Only the budget the procuring entity actually published */}
+                    {tender?.budget_estimate ? (
+                      <Card>
+                        <CardContent className="py-4 flex items-center justify-between">
+                          <span className="text-sm font-medium flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4" />
+                            Published budget
+                          </span>
+                          <span className="text-lg font-bold">{formatCurrency(Number(tender.budget_estimate))}</span>
+                        </CardContent>
+                      </Card>
+                    ) : null}
 
                     {/* AI Reasoning */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base flex items-center gap-2">
                           <Brain className="h-4 w-4" />
-                          AI Reasoning
+                          AI Guidance
                         </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Written by AI from this tender's text only. It does not use award history or bidder data.
+                        </p>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
@@ -440,36 +364,27 @@ export function TenderDetailsModal({ tenderId, open, onOpenChange }: TenderDetai
                       </CardContent>
                     </Card>
 
-                    {/* Market Insights */}
-                    {aiAnalysis.marketInsights && (
+                    {aiAnalysis.bidStrategy?.keySuccessFactors && aiAnalysis.bidStrategy.keySuccessFactors.length > 0 && (
                       <Card>
                         <CardHeader>
-                          <CardTitle className="text-base">Market Insights</CardTitle>
+                          <CardTitle className="text-base">Key success factors</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div>
-                              <p className="text-lg font-bold">
-                                {formatCurrency(aiAnalysis.marketInsights.averageWinningBid)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Avg. Winning Bid</p>
-                            </div>
-                            <div>
-                              <p className="text-lg font-bold">
-                                {aiAnalysis.marketInsights.typicalCompetitors}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Typical Competitors</p>
-                            </div>
-                            <div>
-                              <p className="text-lg font-bold">
-                                {aiAnalysis.marketInsights.sectorTrend}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Sector Trend</p>
-                            </div>
-                          </div>
+                          <ul className="space-y-2">
+                            {aiAnalysis.bidStrategy.keySuccessFactors.map((factor, index) => (
+                              <li key={index} className="flex items-start gap-2 text-sm">
+                                <Target className="h-4 w-4 mt-0.5 text-primary" />
+                                <span>{factor}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {aiAnalysis.bidStrategy.timingAdvice && (
+                            <p className="text-sm text-muted-foreground mt-3">{aiAnalysis.bidStrategy.timingAdvice}</p>
+                          )}
                         </CardContent>
                       </Card>
                     )}
+
 
                     <Button 
                       onClick={() => refetchAnalysis()} 

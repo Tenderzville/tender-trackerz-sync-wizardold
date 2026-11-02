@@ -30,18 +30,20 @@ const analyzeWithBasicLogic = (tender: any) => {
   const multiplier = categoryMultipliers[tender.category?.toLowerCase()] || 1.0;
   const winProbability = Math.min(95, Math.max(15, Math.round(baseWinRate * multiplier)));
   
-  // Estimate value based on budget with some variance
-  const budgetEstimate = tender.budget_estimate || 1000000;
-  const minValue = Math.round(budgetEstimate * 0.8);
-  const maxValue = Math.round(budgetEstimate * 1.2);
-  
+  // Only estimate a value range when the tender actually publishes a budget.
+  // Never invent a default: an unrelated tender must not get the same range.
+  const publishedBudget = Number(tender.budget_estimate) > 0 ? Number(tender.budget_estimate) : null;
+  const minValue = publishedBudget ? Math.round(publishedBudget * 0.8) : null;
+  const maxValue = publishedBudget ? Math.round(publishedBudget * 1.2) : null;
+
   const recommendations = generateRecommendations(tender, winProbability);
   
   return {
     win_probability: winProbability,
     estimated_value_min: minValue,
     estimated_value_max: maxValue,
-    confidence_score: 75,
+    // Crude +/-20% band around a published budget = medium at best; no budget = no score.
+    confidence_score: publishedBudget ? 60 : null,
     recommendations
   };
 };

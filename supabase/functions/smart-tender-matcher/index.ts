@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { matchesAnySector, locationMatchKind } from '../_shared/alignment.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -143,15 +144,21 @@ Deno.serve(async (req) => {
         const matchReasons: string[] = [];
 
         // 1. Category/Sector match (30 points)
-        if (inferredCategories.has(tender.category)) {
+        // Preferences store labels like "Supplies & Equipment" while tenders store
+        // "Supply"; an exact string compare never matched those. Shared rules fix that.
+        if (matchesAnySector(inferredCategories, tender)) {
           matchScore += 30;
           matchReasons.push(`Sector match: ${tender.category}`);
         }
 
-        // 2. Location/County match (25 points)
-        if (inferredLocations.has(tender.location)) {
+        // 2. Location/County match (25 points; half for nationwide tenders)
+        const locationMatch = locationMatchKind(inferredLocations, tender.location);
+        if (locationMatch === 'county') {
           matchScore += 25;
           matchReasons.push(`Location: ${tender.location}`);
+        } else if (locationMatch === 'national') {
+          matchScore += 12;
+          matchReasons.push('Nationwide tender');
         }
 
         // 3. Budget range match (20 points) — only score when an official budget exists
