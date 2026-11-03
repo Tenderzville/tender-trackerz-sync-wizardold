@@ -1,3 +1,4 @@
+import { legacyPosts } from "@/content/legacy-posts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -668,7 +669,7 @@ export default function BlogPage() {
           "@type": "Blog",
           name: "TenderAlert Blog",
           url: "https://tenderproapp.tenderzville-portal.co.ke/blog",
-          blogPost: blogPosts.map((p) => ({
+          blogPost: [...blogPosts, ...legacyPosts].map((p) => ({
             "@type": "BlogPosting",
             headline: p.title,
             description: p.excerpt,
@@ -692,6 +693,32 @@ export default function BlogPage() {
         <div className="grid gap-6">
           {blogPosts.map((post) => (
             <BlogPostCard key={post.id} post={post} />
+          ))}
+        </div>
+
+        <h2 className="text-2xl font-bold mt-12 mb-6 flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-primary" /> More guides — read on their own page
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {legacyPosts.map((post) => (
+            <Card key={post.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-5">
+                <Badge className={getCategoryColor(post.category)}>{post.category}</Badge>
+                <Link href={`/blog/${post.slug}`} className="block mt-3 text-lg font-semibold leading-snug hover:text-primary">
+                  {post.title}
+                </Link>
+                <p className="text-sm text-muted-foreground mt-2 mb-3">{post.excerpt}</p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(post.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{post.readTime} read</span>
+                  </div>
+                  <Link href={`/blog/${post.slug}`} className="flex items-center gap-1 text-primary font-medium">
+                    Read <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 

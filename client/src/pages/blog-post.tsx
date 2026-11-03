@@ -1,5 +1,6 @@
 import { Link, useRoute } from 'wouter';
 import { howToPosts } from '@/content/howto-posts';
+import { legacyPosts } from '@/content/legacy-posts';
 import { SEO } from '@/components/SEO';
 import { Badge } from '@/components/ui/badge';
 import NotFound from '@/pages/not-found';
@@ -26,7 +27,7 @@ function render(content: string) {
 
 export default function BlogPostPage() {
   const [, params] = useRoute('/blog/:slug');
-  const post = howToPosts.find((p) => p.slug === params?.slug);
+  const post = [...howToPosts, ...legacyPosts].find((p) => p.slug === params?.slug);
   if (!post) return <NotFound />;
   const path = `/blog/${post.slug}`;
   return (
