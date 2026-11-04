@@ -13,6 +13,7 @@
     { "source": "/register", "destination": "/auth", "permanent": true },
     { "source": "/dashboard", "destination": "/", "permanent": true },
     { "source": "/home", "destination": "/", "permanent": true },
+    { "source": "/blog/egp-kenya-portal-walkthrough", "destination": "/blog/kenya-tender-portals-walkthrough", "permanent": true },
     { "source": "/sitemap_index.xml", "destination": "/sitemap-index.xml", "permanent": true }
   ],
   "rewrites": [
